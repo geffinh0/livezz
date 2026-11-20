@@ -1,0 +1,262 @@
+# API.md — Contrato REST
+
+> Contrato único usado pelo app, pelo painel, pelo mock-server e (depois) pelo backend real.
+> **Regra:** endpoint novo ou alterado é escrito aqui **antes** de ser implementado, com status. Mudança que quebra compatibilidade exige ADR.
+> Status: `proposto` · `no mock` · `no backend`. Detalhes de request/response são preenchidos quando o endpoint é implementado pela primeira vez (seção "Detalhes").
+
+## Convenções
+- Base: `{apiBaseUrl}/v1`. JSON UTF-8. Campos em `camelCase` no JSON.
+- **Autenticação:** `Authorization: Bearer <accessToken>` (expira em 15 min, provisório); `POST /v1/auth/refresh` com refresh token rotativo.
+- **Idempotência:** toda operação que mexe em valor ou cria recurso aceita `Idempotency-Key: <uuid>` e devolve o mesmo resultado se repetida.
+- **Paginação:** por cursor: `?cursor=...&limit=20` → `{ "items": [...], "nextCursor": "..." | null }`.
+- **Erros:** status HTTP adequado + corpo:
+  ```json
+  { "error": { "code": "saldo_insuficiente", "message": "Texto seguro para o usuário", "details": { }, "requestId": "..." } }
+  ```
+  Códigos de erro são estáveis e listados em "Catálogo de erros". O app traduz por `code`, nunca por `message`.
+- **Datas:** ISO-8601 UTC. **Dinheiro:** inteiros (moedas, diamantes, centavos).
+- **Idioma:** header `Accept-Language` (`pt-BR` ou `en`); textos vindos do servidor (nomes de presentes, motivos, banners) respeitam o idioma.
+- **Sessão única:** login em um novo aparelho revoga a sessão anterior (RN-06); requisições do aparelho antigo recebem `401` com `code: sessao_substituida`.
+- **Versão do app:** header `X-App-Version`; resposta `426` com `code: atualizacao_obrigatoria` quando abaixo da mínima.
+- **Rate limit:** `429` com `Retry-After`.
+- **Admin:** rotas `/v1/admin/*` exigem token de admin com papel; toda escrita gera `LogAuditoria`.
+- **Mock-only:** rotas `/__mock/*` existem apenas no mock-server.
+
+## Catálogo de erros (inicial)
+`nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `erro_interno`.
+
+## Endpoints
+
+### Sistema e configuração
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /config | Config pública do app (flags, versão mínima, abas, limites, textos legais) | ENT01, TRV04 | proposto |
+| POST | /devices | Registrar/atualizar dispositivo e token de push | ENT01, TRV05 | proposto |
+
+### Autenticação e conta
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| POST | /auth/code/send | Enviar código (telefone/e-mail; canal sms/whatsapp/email) | ENT04, ENT05, ENT07 | proposto |
+| POST | /auth/code/verify | Verificar código → tokens ou token de cadastro | ENT04 | proposto |
+| POST | /auth/email/signup | Cadastro por e-mail e senha | ENT05 | proposto |
+| POST | /auth/email/login | Login por e-mail e senha | ENT05 | proposto |
+| POST | /auth/google | Login/cadastro com Google | ENT06 | proposto |
+| POST | /auth/password/reset | Definir nova senha com código | ENT07 | proposto |
+| POST | /auth/refresh | Renovar tokens | ENT19 | proposto |
+| POST | /auth/logout | Sair (sessão atual ou todas) | CFG02 | proposto |
+| GET | /me | Meu perfil completo e situação da conta | ENT01, PER01 | proposto |
+| PATCH | /me | Editar perfil, preferências e privacidade | ENT08, PER02, CFG03, CFG04 | proposto |
+| POST | /me/username | Definir/trocar @ | ENT11, PER02 | proposto |
+| GET | /usernames/{u}/availability | Disponibilidade de @ | ENT11 | proposto |
+| GET | /me/login-methods · POST · DELETE /me/login-methods/{id} | Métodos vinculados | ENT15 | proposto |
+| GET | /me/sessions · DELETE /me/sessions/{id} | Sessões ativas | ENT19, CFG02 | proposto |
+| POST | /me/terms/accept | Aceitar versão de termo/política/regras | ENT16, TRA01 | proposto |
+| POST | /me/age-verification | Iniciar verificação de idade | ENT09 | proposto |
+| GET | /me/age-verification | Situação da verificação | ENT09 | proposto |
+| POST | /me/interests | Salvar interesses | ENT12 | proposto |
+| POST | /me/tutorials/{key}/seen | Marcar tutorial visto | NAV04 | proposto |
+| POST | /me/export | Pedir exportação de dados (LGPD) | CFG12 | proposto |
+| POST | /me/delete | Agendar exclusão de conta | CFG12 | proposto |
+| POST | /me/delete/cancel | Cancelar exclusão | CFG12 | proposto |
+| POST | /media/uploads | Pedir URL de upload (tipo, tamanho) | PER02, MSG09, FEED02 | proposto |
+| POST | /media/{id}/complete | Confirmar upload (dispara moderação) | idem | proposto |
+
+### Usuários e social
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /users/{id} | Perfil público | PER03, ASS07 | proposto |
+| POST · DELETE | /users/{id}/follow | Seguir / deixar de seguir | ASS05, PER03 | proposto |
+| GET | /users/{id}/followers · /following | Listas | PER04 | proposto |
+| POST · DELETE | /users/{id}/block | Bloquear / desbloquear | MSG08, CFG05 | proposto |
+| GET | /me/blocked | Bloqueados | CFG05 | proposto |
+| GET | /me/visitors | Quem visitou | PER05 | proposto |
+| GET | /search?q=&type= | Busca de usuários e lives | DES05 | proposto |
+| GET | /rankings?type=&period=&country= | Rankings | DES07 | proposto |
+| GET | /me/level · /me/badges | Nível, XP e selos | PER06, PER07 | proposto |
+| POST | /me/verification-badge | Solicitar selo de verificado | PER08 | proposto |
+
+### Descoberta e notificações
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /discover/tabs | Abas ativas | DES01 | proposto |
+| GET | /discover/lives?tab=&country=&cursor= | Lista de lives | DES01–DES04 | proposto |
+| GET | /discover/suggestions | Sugestões | DES06 | proposto |
+| GET | /following/live | Quem sigo ao vivo | DES09 | proposto |
+| GET | /banners?position= | Banners | NAV03 | proposto |
+| GET | /notifications · POST /notifications/read | Central | DES08 | proposto |
+
+### Live
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /lives/eligibility | Pré-requisitos para transmitir | TRA01 | proposto |
+| POST | /lives | Criar/iniciar live (tipo, título, capa, preço) | TRA02 | proposto |
+| GET | /lives/{id} | Estado completo da live | ASS01, TRA04 | proposto |
+| PATCH | /lives/{id} | Editar título, tipo, meta | TRA09, ASS15, TRA14 | proposto |
+| POST | /lives/{id}/end | Encerrar | TRA10 | proposto |
+| POST | /lives/{id}/resume | Retomar após queda | TRA12 | proposto |
+| GET | /lives/{id}/summary | Resumo pós-live | TRA11 | proposto |
+| POST | /lives/{id}/join | Entrar como espectador (modo normal/sussurro/incógnito; aceita preço se privada) | ASS01, ASS12, ASS13, TRA14 | proposto |
+| POST | /lives/{id}/leave | Sair | ASS01 | proposto |
+| GET | /lives/{id}/viewers · /top-senders | Espectadores e top doadores | ASS06 | proposto |
+| POST | /lives/{id}/chat | Enviar mensagem | ASS02 | proposto |
+| POST | /lives/{id}/chat/{msgId}/translate | Traduzir | ASS03 | proposto |
+| POST | /lives/{id}/likes | Enviar curtidas agrupadas | ASS04 | proposto |
+| POST | /lives/{id}/share | Compartilhar | ASS08 | proposto |
+| POST | /lives/{id}/stage/requests | Pedir palco / convidar | ASS09, TRA07 | proposto |
+| POST | /lives/{id}/stage/requests/{reqId}/{accept|reject|cancel} | Responder pedido | TRA07 | proposto |
+| DELETE | /lives/{id}/stage/{userId} | Remover do palco | TRA07 | proposto |
+| PATCH | /lives/{id}/stage/{userId} | Mutar/posição | TRA07, TRA08 | proposto |
+| POST | /lives/{id}/moderation/{mute|kick|unmute|unkick} | Moderação na live | TRA06 | proposto |
+| POST · DELETE | /lives/{id}/moderators/{userId} | Moderadores da live | TRA06 | proposto |
+| PUT | /lives/{id}/media-state | Microfone, câmera, pausa | TRA05 | proposto |
+| POST | /lives/{id}/detections | Resultado da detecção no aparelho (rosto ausente / conteúdo proibido); servidor aplica RN-48 | TRA13 | proposto |
+| POST | /lives/{id}/private-invites | Convidar para live privada | TRA15 | proposto |
+| GET · PUT | /me/tip-menu | Menu de gorjetas | PRE09 | proposto |
+| GET · PUT | /me/charge-menu | Menu de cobrança por minuto (presentes de voz, vídeo, live privada) | PRE12, CHA01, TRA14 | proposto |
+| GET · PUT | /me/wheel | Roleta de pedidos | PRE08 | proposto |
+| POST | /lives/{id}/wheel/spin | Girar roleta | PRE08 | proposto |
+| POST | /lives/{id}/sticker-goal | Definir sticker com meta | PRE07 | proposto |
+| GET | /video/token?liveId=&role= | Token do provedor de vídeo (backend real) | TRV02 | proposto |
+
+### Presentes
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /gifts/catalog | Catálogo com versão (cache) | PRE01 | proposto |
+| POST | /gifts/send | Enviar presente (contexto, destinatário, quantidade, combo) — idempotente | PRE01–PRE11, PK06, CHA05, MSG02 | proposto |
+| POST | /tips/send | Pedir item do menu de gorjetas | PRE09 | proposto |
+
+### PK
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET · PUT | /me/pk-settings | Preferências de PK | PK01 | proposto |
+| GET | /pk/available-hosts | Hosts disponíveis | PK02 | proposto |
+| POST | /pk/invites | Convidar (direto ou aleatório) | PK02 | proposto |
+| POST | /pk/invites/{id}/{accept|reject|cancel} | Responder | PK03, PK04 | proposto |
+| GET | /pk/{id} | Estado da PK | PK06 | proposto |
+| POST | /pk/{id}/leave | Sair da PK | PK10 | proposto |
+
+### Chamadas
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET · PUT | /me/call-settings | Configurar chamadas | CHA01, CHA10 | proposto |
+| POST | /calls | Iniciar chamada (tipo, receptor, aceite do preço) | CHA02 | proposto |
+| POST | /calls/{id}/{accept|reject|cancel|end} | Ações | CHA03–CHA07 | proposto |
+| PUT | /calls/{id}/media-state | Câmera/microfone | CHA05 | proposto |
+| GET | /calls/{id} | Estado e resumo | CHA05, CHA07 | proposto |
+
+### Mensagens
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /conversations?tab= | Caixa de entrada | MSG01 | proposto |
+| POST | /conversations | Abrir conversa com usuário (aceita custo) | MSG02, MSG03 | proposto |
+| GET | /conversations/{id}/messages?cursor= | Mensagens | MSG02 | proposto |
+| POST | /conversations/{id}/messages | Enviar (texto, mídia, mídia paga, compartilhamento) | MSG02, MSG04 | proposto |
+| POST | /conversations/{id}/read | Marcar lida | MSG07 | proposto |
+| PATCH | /conversations/{id} | Fixar, silenciar, apagar | MSG07 | proposto |
+| POST | /messages/{id}/unlock | Desbloquear mídia paga | MSG04 | proposto |
+| GET · PUT | /me/auto-messages | Boas-vindas e modelos | MSG05, MSG06 | proposto |
+| POST | /messages/broadcast | Envio para vários (limitado) | MSG12 | proposto |
+
+### Feed
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /feed?tab= | Feed | FEED01 | proposto |
+| POST | /posts | Criar post | FEED02 | proposto |
+| GET · DELETE | /posts/{id} | Detalhe / apagar | FEED03, FEED06 | proposto |
+| POST · DELETE | /posts/{id}/like | Curtir | FEED04 | proposto |
+| GET | /posts/{id}/likes | Quem curtiu | FEED04 | proposto |
+| GET · POST | /posts/{id}/comments | Comentários | FEED04 | proposto |
+| DELETE | /comments/{id} | Apagar comentário | FEED04 | proposto |
+
+### Economia
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /wallet | Saldos | ECO01 | proposto |
+| GET | /wallet/statement?type=&from=&to=&cursor= | Extrato | ECO06 | proposto |
+| GET | /store/packages · /store/offers | Pacotes e ofertas | ECO02, ECO04, PRE10 | proposto |
+| POST | /store/play/verify | Validar compra da Google Play e creditar | ECO02 | proposto |
+| POST | /store/alternative/verify | Validar compra pelo provedor alternativo configurado | ECO02 | proposto |
+| POST | /portal/links | Gerar link de uso único para o portal (`saque`, `dados_recebimento`, `recarga`, `assinatura`) | POR01, ECO08, SUB02 | proposto |
+| POST | /portal/session | Trocar o link de uso único por sessão do portal | POR01 | proposto |
+| POST | /store/web/charges | Criar cobrança de recarga no portal (Pix/cartão via provedor) | POR04 | proposto |
+| GET | /store/web/charges/{id} | Situação da cobrança | POR04 | proposto |
+| POST | /webhooks/payments/{provider} | Confirmação do provedor de pagamento (assinatura verificada) | POR04, POR05, ECO02 | proposto |
+| POST | /rewards/claim | Resgatar moedas grátis/bônus | ECO05, ENT13, ENT14 | proposto |
+| GET · PUT | /me/payout-details | Dados de recebimento (só no portal) | POR03 | proposto |
+| GET | /payouts/quote?diamonds= | Simular saque (só no portal) | POR02 | proposto |
+| POST · GET | /payouts | Solicitar / listar saques (só no portal) | POR02, POR06, EST06 | proposto |
+| POST | /reseller/transfers | Revenda de moedas 🚩 | ECO10 | proposto |
+| GET | /me/referrals | Indicações 🚩 | ECO11 | proposto |
+
+### VIP, loja e assinaturas
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /vip/levels · /me/vip | Níveis VIP, benefícios e meu status (gasto em 7 dias, progresso) | VIP01, VIP03 | proposto |
+| POST | /vip/rewards/claim | Resgatar recompensas | VIP04 | proposto |
+| GET | /shop/items | Loja VIP | VIP05 | proposto |
+| POST | /shop/purchase | Comprar item (para mim ou presente) | VIP05 | proposto |
+| GET | /me/bag · POST /me/bag/{itemId}/equip | Bolsa de itens | VIP06 | proposto |
+| GET · PUT | /me/creator-plan | Plano de assinatura do criador | SUB01 | proposto |
+| POST | /creators/{id}/subscriptions/checkout | Iniciar checkout web (devolve link do portal) | SUB02, POR05 | proposto |
+| POST | /me/subscriptions/{id}/cancel | Cancelar assinatura de criador | SUB03, POR05 | proposto |
+| GET | /me/subscriptions · /me/subscribers | Minhas assinaturas / assinantes | SUB01, SUB03 | proposto |
+
+### Famílias e agências
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| POST · GET | /families · /families/{id} | Criar / ver | FAM01, FAM02 | proposto |
+| PATCH · DELETE | /families/{id} | Editar / dissolver | FAM04 | proposto |
+| POST | /families/{id}/requests | Pedir para entrar / convidar | FAM03 | proposto |
+| POST | /families/{id}/requests/{reqId}/{accept|reject} | Responder | FAM03 | proposto |
+| PATCH · DELETE | /families/{id}/members/{userId} | Cargo, silenciar, expulsar, transferir | FAM04 | proposto |
+| GET · POST | /agencies/{id} · /agencies/{id}/invites | Agência e convites 🚩 | AGE01, AGE02 | proposto |
+| GET | /agencies/{id}/report | Relatório 🚩 | AGE03 | proposto |
+| POST | /me/agency/leave | Sair da agência 🚩 | AGE04 | proposto |
+
+### Estatísticas, suporte e denúncias
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| GET | /me/stats/{performance|earnings|duration|viewers|followers|payouts} | Estatísticas | EST01–EST06 | proposto |
+| GET | /reports/reasons?target= | Motivos | SEG01 | proposto |
+| POST | /reports | Denunciar | ASS11, CHA08, MSG08, FEED06 | proposto |
+| GET | /me/sanctions · POST /me/sanctions/{id}/appeal | Sanções e apelação | SEG03 | proposto |
+| GET | /support/faq | Perguntas frequentes | CFG10 | proposto |
+| POST · GET | /support/tickets | Abrir / listar chamados | CFG10 | proposto |
+| POST | /support/tickets/{id}/rating | Avaliar | CFG10 | proposto |
+
+### Admin (`/v1/admin/*`)
+| Método | Caminho | Descrição | Usado por | Status |
+| --- | --- | --- | --- | --- |
+| POST | /admin/auth/login · /admin/auth/2fa | Login e 2FA | ADM01 | proposto |
+| GET | /admin/dashboard | Indicadores | ADM02 | proposto |
+| GET · PATCH | /admin/users · /admin/users/{id} | Usuários | ADM03 | proposto |
+| POST | /admin/users/{id}/sanctions · /balance-adjustments | Sanções e ajuste de saldo | ADM03 | proposto |
+| GET · POST | /admin/lives · /admin/lives/{id}/{end|warn} | Lives | ADM04 | proposto |
+| GET · PATCH | /admin/reports · /admin/reports/{id} | Denúncias | ADM05 | proposto |
+| CRUD | /admin/gifts · /admin/gift-categories | Presentes | ADM06 | proposto |
+| CRUD | /admin/packages · /admin/offers | Pacotes e ofertas | ADM07 | proposto |
+| GET · POST | /admin/payouts · /admin/payouts/{id}/{approve|reject|mark-paid} | Saques | ADM08 | proposto |
+| CRUD | /admin/shop-items | Loja VIP (itens em moedas) | ADM09 | proposto |
+| CRUD | /admin/families · /admin/agencies · /admin/resellers | Comunidade e revenda | ADM10, ADM11 | proposto |
+| CRUD | /admin/banners · POST /admin/push | Comunicação | ADM12 | proposto |
+| GET · PUT | /admin/economy-config · /admin/app-config | Configurações | ADM13, ADM14 | proposto |
+| CRUD | /admin/team | Equipe | ADM15 | proposto |
+| GET · POST | /admin/support/tickets | Suporte | ADM16 | proposto |
+| GET | /admin/reports/financial?from=&to=&format=csv | Financeiro | ADM17 | proposto |
+| GET | /admin/audit-logs | Auditoria | ADM18 | proposto |
+| GET · PUT | /admin/integrations · /admin/integrations/{type} | Provedores configuráveis (credenciais só de escrita) | ADM19 | proposto |
+| POST | /admin/integrations/{type}/test | Testar conexão com o provedor | ADM19 | proposto |
+| GET · PUT | /admin/progression-config | XP, níveis, famílias, bônus | ADM20 | proposto |
+| GET · PUT | /admin/guidelines · /admin/detection-config | Diretrizes e detecção | ADM21 | proposto |
+| CRUD | /admin/vip-levels | Limiares e benefícios VIP | ADM09 | proposto |
+
+### Mock-only (`/__mock/*`)
+| Método | Caminho | Descrição |
+| --- | --- | --- |
+| POST | /__mock/reset | Volta aos dados iniciais |
+| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`) |
+| POST | /__mock/emit | Emite um evento de tempo real arbitrário (para testes) |
+| POST | /__mock/bots/{start|stop} | Liga/desliga bots de chat e presentes |
+
+## Detalhes
+> Preencher por endpoint quando for implementado: request, response, erros possíveis, regras aplicadas (RN), eventos emitidos, entidades do DATABASE.md tocadas.

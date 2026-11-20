@@ -1,0 +1,45 @@
+{
+  "id": "liveapp",
+  "appName": "liveapp",
+  "androidPackage": "com.seudominio.liveapp",
+  "iosBundleId": "com.seudominio.liveapp",
+  "apiBaseUrl": "http://localhost:3000",
+  "agoraAppId": "COLOQUE_O_APP_ID_PUBLICO_AQUI",
+  "theme": {
+    "primary": "DEFINIR_Q42",
+    "secondary": "DEFINIR_Q42",
+    "darkBackground": "#0E0E12",
+    "lightBackground": "#FFFFFF"
+  },
+  "assets": {
+    "icon": "icon.png",
+    "splash": "splash.png"
+  },
+  "features": {
+    "pk": true,
+    "groupLive": true,
+    "paidPerMinute": false,
+    "luckyGift": false,
+    "coinReseller": false,
+    "referrals": false,
+    "agencies": false,
+    "facePresence": true,
+    "ageVerification": true,
+    "games": false
+  },
+  "portalBaseUrl": "http://localhost:3002",
+  "defaultLocale": "pt-BR",
+  "supportedLocales": [
+    "pt-BR",
+    "en"
+  ],
+  "rtlReady": true,
+  "themeModes": [
+    "light",
+    "dark",
+    "system"
+  ],
+  "allowedRegions": [
+    "BR"
+  ]
+}

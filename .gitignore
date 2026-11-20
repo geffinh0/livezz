@@ -1,0 +1,15 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+build/
+coverage/
+.next/
+.dart_tool/
+.flutter-plugins*
+*.keystore
+*.jks
+key.properties
+CLAUDE.local.md
+.claude/settings.local.json

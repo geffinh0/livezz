@@ -1,0 +1,66 @@
+# Questões abertas (decisões do usuário)
+
+> O Claude **não decide** estes pontos sozinho. Quando uma tarefa depender de uma questão aberta:
+> 1. pergunte ao usuário (com opções, prós e contras e uma recomendação);
+> 2. registre a resposta aqui (data e decisão) e mova a linha para "Respondidas";
+> 3. aplique a decisão em `docs/REGRAS-DE-NEGOCIO.md`, `docs/ESPECIFICACAO.md`, `docs/DATABASE.md` e no código.
+> Enquanto não houver resposta, use o valor provisório e deixe-o configurável.
+> Novas dúvidas descobertas durante o trabalho entram aqui com o próximo número.
+> **Princípio geral (decisão do usuário, 2026-11-20):** tudo que é valor de negócio, limite ou provedor deve ser **configurável pelo comprador do app no painel admin**, sem depender de nós.
+
+## Abertas
+
+| ID | Questão | Bloqueia | Sugestão inicial do Claude |
+| --- | --- | --- | --- |
+| Q-26 | Framework do backend real | Fase 11 | NestJS + TypeScript |
+| Q-27 | Banco de dados | Fase 11 | Decidir com base no `docs/DATABASE.md` pronto (relacional recomendado pela natureza financeira) |
+| Q-33 | Exclusão de conta: carência e retenção (RN-80) | CFG12 | 30 dias; retenção definida pelo jurídico |
+| Q-35 | Verificação de idade: comparar preço e conformidade de Yoti e provedores brasileiros (ProtegeID, VerifiqueID) | ENT09 (Fase 12) | Pesquisa do `pesquisador` + proposta comercial dos provedores |
+| Q-36 | Verificação de idade no iOS (recursos de idade da Apple) | iOS | Planejar quando o iOS entrar |
+| Q-37 | Confirmar em fonte oficial se o Brasil está no programa de escolha de faturamento do Google e as condições (taxa, exigências) | ECO02, POR04 (Fase 12) | Pesquisa do `pesquisador` + jurídico |
+| Q-38 | Repasse aos criadores: sub-contas por criador num PSP licenciado ou intermediador que já resolve | POR02, POR05 (Fase 12) | Confirmar com PSP/jurídico; intermediador pode dispensar sub-contas |
+| Q-39 | Provedor de moderação de mídia "mais acessível do mercado" | RN-81 (Fase 12) | Pesquisa de preço por imagem/minuto |
+| Q-40 | Provedor de tradução gratuito (no servidor ou no aparelho) | ASS03 (Fase 12) | Avaliar tradução no aparelho (sem custo) vs. API gratuita com limites |
+| Q-41 | Validar com advogado o modelo de idade da Q-08 (autodeclaração + sinal da loja no cadastro; verificação forte só para transmitir e sacar) diante do ECA Digital | publicação | Jurídico antes da Fase 13 |
+| Q-42 | Cores, fonte e ícones do tenant demo `liveapp` | Fase 0 | O Claude propõe 2–3 opções na Fase 0 para o usuário escolher |
+
+## Respondidas
+
+| ID | Questão | Decisão | Data |
+| --- | --- | --- | --- |
+| Q-00a | Mecânicas de risco | Jogos com aposta fora; o resto fica (ajuste jurídico depois). Chamada simulada que se passa por real fica fora (ADR 0006). | 2026-11-20 |
+| Q-00b | Dados antes do backend | Servidor fake local (`mock-server/`) | 2026-11-20 |
+| Q-00c | Vídeo antes do backend | Vídeo simulado primeiro | 2026-11-20 |
+| Q-00d | Escopo | Todo o produto dentro do MVP | 2026-11-20 |
+| Q-00e | Plataforma inicial | Só Android primeiro | 2026-11-20 |
+| Q-01 | Nome do tenant de demonstração | `liveapp` | 2026-11-20 |
+| Q-02 | Identidade visual | Tema claro e escuro; layout preparado para RTL. Cores/fonte do demo seguem em Q-42. | 2026-11-20 |
+| Q-03 | Taxa da plataforma | Não aparece no app; configurável pelo comprador no painel (todas as taxas de retorno); provisório 50% | 2026-11-20 |
+| Q-04 | Conversão e saque | Não aparecem no app; configuráveis no painel. Diamante **normal** separado de diamante **bônus** no ledger. Saque e dados de recebimento são **páginas web** (portal), não telas do app (ADR 0008) | 2026-11-20 |
+| Q-05 | Pacotes de moedas | Vêm do servidor com etiquetas (primeira compra, super, mega…); preços não aparecem fixos; faixas com bônus crescente; tudo editável pelo comprador | 2026-11-20 |
+| Q-06 | Moedas grátis geram diamantes? | Geram diamantes **bônus**, com limites e regras de saque configuráveis pelo comprador | 2026-11-20 |
+| Q-07 | Verificação de idade | Yoti (estimativa facial + documento) + Play Age Signals como base. Verificação **ligável/desligável** pelo comprador e com **provedor escolhido por ele** via conector (ADR 0007). Comparação de preço/conformidade em Q-35; Apple em Q-36 | 2026-11-20 |
+| Q-08 | Momento da verificação | Cadastro com data autodeclarada + sinal de idade/faixa etária da loja bloqueando menores automaticamente; verificação forte obrigatória só para **transmitir** (e para sacar). Validação jurídica em Q-41 | 2026-11-20 |
+| Q-09 | Códigos SMS/WhatsApp | SMS e WhatsApp, validade de 60 s; provedor configurável pelo comprador via conector | 2026-11-20 |
+| Q-10 | Filtros de beleza | Beleza básica da Agora | 2026-11-20 |
+| Q-11 | Tradução | No servidor; melhor provedor gratuito; pode ser fora do servidor se não pesar (provedor em Q-40) | 2026-11-20 |
+| Q-12 | Pagamentos fora da Play | Via intermediador de pagamento ou página web, com provedor configurável pelo comprador via conector. Confirmação oficial do programa do Google em Q-37 | 2026-11-20 |
+| Q-13 | Saque e titularidade | Chave Pix do tipo CPF do próprio titular verificado; repasse por sub-contas ou intermediador (Q-38) | 2026-11-20 |
+| Q-14 | Forma de pagamento | Assinatura de criador em **dinheiro real por checkout web**; loja VIP com moedas; VIP **não** é assinatura (ver item 1) | 2026-11-20 |
+| Q-15 | Limites ao vivo | PK 1x1, de 4 e por times; durações em lista configurável; vagas e qualidade de vídeo configuráveis juntas; tudo vindo do servidor | 2026-11-20 |
+| Q-16 | Anti-bot | App Check (integridade), reCAPTCHA Enterprise e Turnstile, cada um ligado por flag do servidor | 2026-11-20 |
+| Q-17 | Dispositivos | **Um aparelho por conta.** Entrar em outro aparelho encerra a sessão do anterior (ADR 0009) | 2026-11-20 |
+| Q-18 | Jogos | Sem jogos no app, de nenhum tipo | 2026-11-20 |
+| Q-19 | Diretrizes de conteúdo | Proibido: nudez, violência, discurso de ódio, transmitir dirigindo, menores de 18 | 2026-11-20 |
+| Q-20 | Detecção automática | Rosto/corpo detectados no aparelho durante a live. Rosto ausente → live vira privada automaticamente. Conteúdo proibido (nudez etc.) → live encerrada e enviada à moderação (ADR 0010). Provedor de moderação de mídia: o mais acessível (Q-39) | 2026-11-20 |
+| Q-21 | Experiência e níveis | Teto no nível 100; muito fácil no começo, muito difícil no fim (curva em RN-61, configurável) | 2026-11-20 |
+| Q-22 | VIP | Níveis bronze, prata, ouro, platina, diamante e desafiante, calculados por **moedas gastas nos últimos 7 dias**. Limiares sugeridos em RN-70, alteráveis pelo comprador. Assinatura VIP pela loja removida | 2026-11-20 |
+| Q-23 | Custo para iniciar conversa | Mecanismo existe, vindo do servidor; 10 moedas; desligado por padrão; alterável | 2026-11-20 |
+| Q-24 | Cobrança por minuto | O preço por minuto de chamadas e lives privadas é um **presente escolhido pela streamer** num menu próprio de cobrança; janela de reembolso configurável, padrão 10 s | 2026-11-20 |
+| Q-25 | Comissões de agência e indicação | Sugestão do Claude adotada: configuráveis pelo comprador no painel; valores iniciais em RN-27/RN-28 | 2026-11-20 |
+| Q-28 | Analytics e falhas | Sugestão do Claude adotada: Firebase Analytics + Crashlytics, atrás de `AnalyticsProvider` | 2026-11-20 |
+| Q-29 | Regiões | Sugestão do Claude adotada: só Brasil no demo; configurável pelo comprador | 2026-11-20 |
+| Q-30 | Idiomas | Português (pt-BR) e inglês (en); estrutura pronta para RTL | 2026-11-20 |
+| Q-31 | Famílias | Nível mínimo + custo em moedas + limite de membros, configuráveis pelo comprador no painel | 2026-11-20 |
+| Q-32 | Assinatura de criador: limites e divisão | Sugestão do Claude adotada: configuráveis pelo comprador no painel; valores iniciais em RN-62 | 2026-11-20 |
+| Q-34 | Confirmação de envio e super presente | Sugestão do Claude adotada: confirmação acima de 10.000 moedas; intervalo de 60 s entre anúncios; configuráveis | 2026-11-20 |
