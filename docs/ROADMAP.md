@@ -7,7 +7,7 @@
 ## Fase 0 — Fundação
 - [ ] Monorepo: `apps/mobile`, `apps/admin`, `apps/portal`, `mock-server`, `tenants/liveapp`
 - [ ] Flutter Android com flavor `liveapp` gerado de `tenants/liveapp/tenant.json`; tema claro/escuro; pt-BR e inglês; layout pronto para RTL
-- [ ] Escolher cores e fonte do demo (Q-42)
+- [x] Escolher cores e fonte do demo (Q-42)
 - [ ] Núcleo do app: tema a partir do design system, rotas, HTTP, erros padronizados, i18n pt-BR, flags (TRV03, TRV04, TRV07, TRV09)
 - [ ] Cliente de tempo real com reconexão (TRV01)
 - [ ] `VideoProvider` + `FakeVideoProvider` (TRV02)

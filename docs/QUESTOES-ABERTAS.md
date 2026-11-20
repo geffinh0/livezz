@@ -22,7 +22,6 @@
 | Q-39 | Provedor de moderação de mídia "mais acessível do mercado" | RN-81 (Fase 12) | Pesquisa de preço por imagem/minuto |
 | Q-40 | Provedor de tradução gratuito (no servidor ou no aparelho) | ASS03 (Fase 12) | Avaliar tradução no aparelho (sem custo) vs. API gratuita com limites |
 | Q-41 | Validar com advogado o modelo de idade da Q-08 (autodeclaração + sinal da loja no cadastro; verificação forte só para transmitir e sacar) diante do ECA Digital | publicação | Jurídico antes da Fase 13 |
-| Q-42 | Cores, fonte e ícones do tenant demo `liveapp` | Fase 0 | O Claude propõe 2–3 opções na Fase 0 para o usuário escolher |
 
 ## Respondidas
 
@@ -64,3 +63,5 @@
 | Q-31 | Famílias | Nível mínimo + custo em moedas + limite de membros, configuráveis pelo comprador no painel | 2026-11-20 |
 | Q-32 | Assinatura de criador: limites e divisão | Sugestão do Claude adotada: configuráveis pelo comprador no painel; valores iniciais em RN-62 | 2026-11-20 |
 | Q-34 | Confirmação de envio e super presente | Sugestão do Claude adotada: confirmação acima de 10.000 moedas; intervalo de 60 s entre anúncios; configuráveis | 2026-11-20 |
+| Q-42 | Cores, fonte e ícones do tenant demo `liveapp` | Paleta Magenta + Laranja: marca `#E91E8C`, ação com texto branco `#D6157E` (4,92:1, AA), secundária `#FF9100` sempre com texto escuro `#0E0E12` (8,5:1). Fonte Plus Jakarta Sans. Ícones Material Symbols. Valores em `tenants/liveapp/tenant.json` | 2026-11-20 |
+| Q-43 | Como o app sabe de mudanças de config antes do login (sem token não há tempo real) | Rebuscar `GET /v1/config` ao abrir e ao voltar do segundo plano; logado, `config.updated` pelo tempo real. Sem conexão anônima (ADR 0011) | 2026-11-20 |

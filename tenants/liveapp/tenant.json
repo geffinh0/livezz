@@ -6,10 +6,15 @@
   "apiBaseUrl": "http://localhost:3000",
   "agoraAppId": "COLOQUE_O_APP_ID_PUBLICO_AQUI",
   "theme": {
-    "primary": "DEFINIR_Q42",
-    "secondary": "DEFINIR_Q42",
+    "primary": "#E91E8C",
+    "primaryAction": "#D6157E",
+    "onPrimaryAction": "#FFFFFF",
+    "secondary": "#FF9100",
+    "onSecondary": "#0E0E12",
     "darkBackground": "#0E0E12",
-    "lightBackground": "#FFFFFF"
+    "lightBackground": "#FFFFFF",
+    "fontFamily": "Plus Jakarta Sans",
+    "iconSet": "material-symbols"
   },
   "assets": {
     "icon": "icon.png",
