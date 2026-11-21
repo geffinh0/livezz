@@ -18,6 +18,7 @@ import '../helpers/harness.dart';
 class Server {
   Map<String, dynamic> config = sampleConfig();
   String? country;
+  bool deviceBlocked = false;
   final devicesPosted = <Object?>[];
 
   ResponseBody handle(RequestOptions o) {
@@ -34,6 +35,8 @@ class Server {
       return jsonBody(201, {
         'deviceId': 'srv-device',
         'deviceSecret': 'srv-secret',
+        'blocked': deviceBlocked,
+        if (deviceBlocked) 'protocol': 'P-ABCD1234',
       });
     }
     return jsonBody(200, {
@@ -189,6 +192,18 @@ void main() {
     expect(find.text('Entre para continuar'), findsNothing);
   });
 
+  testWidgets('aparelho marcado por menor abre direto o bloqueio (ENT10)', (
+    t,
+  ) async {
+    server.deviceBlocked = true;
+    await pumpApp(t);
+    await settle(t);
+    expect(find.bySemanticsIdentifier('minor.blocked'), findsOneWidget);
+    expect(find.textContaining('P-ABCD1234'), findsOneWidget);
+    expect(find.textContaining('suporte@'), findsOneWidget);
+    expect(find.text('Criar conta'), findsNothing);
+  });
+
   testWidgets('fora da região mostra o portão de região (ENT18)', (t) async {
     server.country = 'PT';
     await pumpApp(t);
@@ -240,5 +255,33 @@ void main() {
       Routes.gate,
     );
     expect(redirectFor(EntryDestination.splash, Routes.welcome), Routes.start);
+    // Cadastro (plano 1c) e bloqueio de menor (ENT10).
+    expect(
+      redirectFor(EntryDestination.onboardingProfile, Routes.discover),
+      Routes.onboardingProfile,
+    );
+    expect(
+      redirectFor(
+        EntryDestination.onboardingUsername,
+        Routes.onboardingProfile,
+      ),
+      Routes.onboardingUsername,
+    );
+    expect(
+      redirectFor(EntryDestination.home, Routes.onboardingInterests),
+      Routes.discover,
+    );
+    expect(
+      redirectFor(EntryDestination.minorBlocked, '/legal/terms'),
+      Routes.minorBlocked,
+    );
+    expect(
+      redirectFor(EntryDestination.home, Routes.minorBlocked),
+      Routes.discover,
+    );
+    expect(
+      redirectFor(EntryDestination.visitorHome, Routes.onboardingProfile),
+      Routes.discover,
+    );
   });
 }

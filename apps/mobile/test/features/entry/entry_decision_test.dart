@@ -10,6 +10,8 @@ void main() {
     bool? visitor = false,
     bool session = false,
     bool ended = false,
+    bool terms = false,
+    List<OnboardingStep> steps = const [],
   }) => decideEntry(
     config: config,
     gate: gate,
@@ -18,6 +20,8 @@ void main() {
     visitorMode: visitor,
     hasSession: session,
     sessionEnded: ended,
+    pendingTerms: terms,
+    pendingSteps: steps,
   );
 
   final table = <String, (EntryDestination, EntryDestination)>{
@@ -27,6 +31,33 @@ void main() {
       EntryDestination.visitorHome,
     ),
     'com sessão → home': (d(session: true), EntryDestination.home),
+    'cadastro: dados primeiro (ENT08)': (
+      d(session: true, steps: OnboardingStep.values),
+      EntryDestination.onboardingProfile,
+    ),
+    'cadastro: depois o @ (ENT11)': (
+      d(
+        session: true,
+        steps: [OnboardingStep.username, OnboardingStep.interests],
+      ),
+      EntryDestination.onboardingUsername,
+    ),
+    'cadastro: por fim interesses (ENT12)': (
+      d(session: true, steps: [OnboardingStep.interests]),
+      EntryDestination.onboardingInterests,
+    ),
+    'termos antes do cadastro (ENT16)': (
+      d(session: true, terms: true, steps: OnboardingStep.values),
+      EntryDestination.acceptTerms,
+    ),
+    'menor bloqueado vence termos e sessão (ENT10)': (
+      d(gate: GateKind.minorBlocked, session: true, terms: true),
+      EntryDestination.minorBlocked,
+    ),
+    'menor bloqueado mesmo sem sessão (aparelho marcado)': (
+      d(gate: GateKind.minorBlocked, visitor: true),
+      EntryDestination.minorBlocked,
+    ),
     'sessão caiu de quem explorava sem conta → boas-vindas com aviso (ENT19)': (
       d(visitor: true, ended: true),
       EntryDestination.welcome,

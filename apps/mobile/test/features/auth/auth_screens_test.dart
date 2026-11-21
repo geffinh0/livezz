@@ -117,6 +117,7 @@ void main() {
 
   Future<void> tapId(WidgetTester t, String id) async {
     await t.ensureVisible(find.bySemanticsIdentifier(id));
+    await t.pump(const Duration(milliseconds: 300)); // termina a rolagem
     await t.tap(find.bySemanticsIdentifier(id));
     await t.pump();
     await t.pump(const Duration(milliseconds: 50));
