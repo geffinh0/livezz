@@ -1,0 +1,5 @@
+[
+  { "id": "u-ana", "username": "ana.teste", "displayName": "Ana Teste", "locale": "pt-BR" },
+  { "id": "u-bruno", "username": "bruno.teste", "displayName": "Bruno Teste", "locale": "pt-BR" },
+  { "id": "u-carla", "username": "carla.teste", "displayName": "Carla Teste", "locale": "en" }
+]

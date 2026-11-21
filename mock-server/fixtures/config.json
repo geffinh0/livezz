@@ -1,0 +1,10 @@
+{
+  "minAppVersion": "0.1.0",
+  "loginMethods": { "loginPhone": true, "loginEmail": true, "loginGoogle": true },
+  "discoverTabs": ["popular", "nearby", "new", "pk", "multi", "calls"],
+  "legalTexts": {
+    "terms": { "version": 1, "path": "/legal/termos" },
+    "privacy": { "version": 1, "path": "/legal/privacidade" },
+    "guidelines": { "version": 1, "path": "/legal/diretrizes" }
+  }
+}
