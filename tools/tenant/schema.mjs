@@ -5,7 +5,7 @@
 
 const HEX = /^#[0-9A-Fa-f]{6}$/;
 const PACKAGE = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
-const ID = /^[a-z][a-z0-9-]{1,30}$/;
+const ID = /^[a-z][a-z0-9]{1,30}$/; // sem hífen: vira nome de flavor do Android
 const LOCALES = new Set(['pt-BR', 'en']);
 const THEME_MODES = new Set(['light', 'dark', 'system']);
 const THEME_COLORS = [
@@ -33,7 +33,7 @@ function isUrl(v) {
 export function validateTenant(t, expectedId) {
   const e = [];
   if (typeof t !== 'object' || t === null) return ['tenant.json deve ser um objeto'];
-  if (!ID.test(t.id ?? '')) e.push('id inválido (minúsculas, números e hífen)');
+  if (!ID.test(t.id ?? '')) e.push('id inválido (minúsculas e números, sem hífen)');
   if (expectedId && t.id !== expectedId) e.push(`id "${t.id}" difere da pasta "${expectedId}"`);
   if (typeof t.appName !== 'string' || !t.appName.trim()) e.push('appName obrigatório');
   if (!PACKAGE.test(t.androidPackage ?? '')) e.push('androidPackage inválido');
