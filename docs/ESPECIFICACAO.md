@@ -484,13 +484,13 @@
 
 ## TRV · Transversais técnicos
 
-- [~] **TRV01 Cliente de tempo real** (envelope versionado, reconexão exponencial, heartbeat, re-entrada em salas, ignorar tipos desconhecidos)
+- [x] **TRV01 Cliente de tempo real** (envelope versionado, reconexão exponencial, heartbeat, re-entrada em salas, ignorar tipos desconhecidos)
 - [~] **TRV02 Camada de vídeo** (`VideoProvider` com fake completo; Agora na Fase 12)
 - [~] **TRV03 Camada de dados** (repositórios por feature, erros padronizados, paginação por cursor, idempotência)
-- [~] **TRV04 Config remota e flags** (lidas no início e atualizadas por evento)
+- [x] **TRV04 Config remota e flags** (lidas no início e atualizadas por evento)
 - [ ] **TRV05 Push** (tipos, deep link, permissão no Android 13+)
 - [ ] **TRV06 Analytics e crash** (eventos do funil: cadastro, primeira live assistida, primeira compra, primeiro presente, primeira live transmitida)
-- [~] **TRV07 Internacionalização** (pt-BR e inglês completos; layout preparado para RTL; nenhum texto fixo no código)
+- [x] **TRV07 Internacionalização** (pt-BR e inglês completos; layout preparado para RTL; nenhum texto fixo no código)
 - [~] **TRV08 White-label** (tenant por configuração; script de novo cliente)
 - [~] **TRV09 Erros e conexão** (mensagens amigáveis, offline, tentar de novo, versão mínima)
 - [ ] **TRV10 Acessibilidade** (leitor de tela, fonte grande, contraste, reduzir animações)

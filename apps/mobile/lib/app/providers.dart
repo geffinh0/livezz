@@ -9,6 +9,7 @@ import '../core/config/application/config_controller.dart';
 import '../core/config/data/config_repository.dart';
 import '../core/config/data/key_value_store.dart';
 import '../core/env/app_env.dart';
+import '../core/env/version.dart';
 import '../core/http/api_client.dart';
 import '../core/http/app_gate.dart';
 import '../core/i18n/locales.dart';
@@ -57,7 +58,15 @@ class AppGateController extends Notifier<AppGate> {
     // Config nova sem manutenção (refresh ou config.updated) libera o portão.
     ref.listen(configControllerProvider, (_, next) {
       final c = next.value;
-      if (c != null && !c.maintenance.active && state is GateMaintenance) {
+      if (c == null) return;
+      // Versão mínima vem na config (GET /config nunca responde 426).
+      final appVersion = ref.read(envProvider).appVersion;
+      if (compareVersions(appVersion, c.minAppVersion) < 0) {
+        state = GateUpdateRequired(c.minAppVersion);
+        return;
+      }
+      if (state is GateUpdateRequired) state = const GateOpen();
+      if (!c.maintenance.active && state is GateMaintenance) {
         state = const GateOpen();
       }
     });

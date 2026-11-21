@@ -78,6 +78,14 @@ async function visible(page, id, timeout = 20000) {
   check('tentar de novo recupera', await visible(page, 'showcase.appName'));
   await page.screenshot({ path: `${out}/07-recuperado.png` });
 
+  // Versão mínima acima da do app → portão de atualização
+  await mock('/__mock/reset');
+  await mock('/__mock/scenario/versao-minima');
+  await open(page);
+  check('versão mínima abre o portão de atualização', await visible(page, 'gate.update'));
+  await page.screenshot({ path: `${out}/09-atualizacao.png` });
+  await mock('/__mock/reset');
+
   // Manutenção ao abrir
   await mock('/__mock/scenario/manutencao');
   await open(page);

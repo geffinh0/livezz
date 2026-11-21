@@ -4,8 +4,8 @@
 > Uma fase só começa quando a anterior passou no `/auditar` sem pendências críticas.
 > Os IDs entre parênteses estão em `docs/ESPECIFICACAO.md`.
 
-## Fase 0 — Fundação
-> `[~]` = código e testes prontos; falta rodar o E2E num aparelho e/ou confirmar o APK no CI (ver docs/PROGRESSO.md).
+## Fase 0 — Fundação ✅ concluída em 2026-11-21
+> Itens `[~]` têm a parte restante atribuída a fases seguintes (ver docs/PROGRESSO.md). E2E no navegador (Q-44).
 - [x] Monorepo: `apps/mobile`, `apps/admin`, `apps/portal`, `mock-server`, `tenants/liveapp`
 - [~] Flutter Android com flavor `liveapp` gerado de `tenants/liveapp/tenant.json`; tema claro/escuro; pt-BR e inglês; layout pronto para RTL
 - [x] Escolher cores e fonte do demo (Q-42)
@@ -14,7 +14,7 @@
 - [~] `VideoProvider` + `FakeVideoProvider` (TRV02)
 - [x] mock-server: estrutura, fixtures, envelope de eventos, rotas `/__mock/*`, conectores fake (TRV13), configurações editáveis, testes de contrato
 - [~] CI: lint, testes, build APK debug
-- [~] Maestro configurado com um fluxo de exemplo
+- [x] E2E configurado (navegador no CI; Maestro pronto para Android) com um fluxo de exemplo
 
 ## Fase 1 — Entrada e conta
 - [ ] ENT01–ENT19, NAV01, NAV04, CFG14, SEG06

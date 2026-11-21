@@ -18,9 +18,10 @@ import 'package:material_ui/material_ui.dart';
 Map<String, dynamic> sampleConfig({
   int version = 1,
   bool maintenance = false,
+  String minAppVersion = '0.1.0',
 }) => {
   'configVersion': version,
-  'minAppVersion': '0.1.0',
+  'minAppVersion': minAppVersion,
   'maintenance': {
     'active': maintenance,
     'retryAfterSeconds': maintenance ? 300 : null,

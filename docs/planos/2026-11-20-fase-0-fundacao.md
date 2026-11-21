@@ -133,4 +133,4 @@ Ordem dos passos revisada: 1, 2, 3, 4, 5, 6, 7, 8, **17 (CI)**, 9, 10, 11, 12, 1
 - Revisões: arquiteto (plano), revisor, revisor-seguranca, revisor-ux, guardiao-dados, verificador-spec. Problemas reais corrigidos nos commits `fix(mobile)` e `fix(mock)`; sugestões em `docs/MELHORIAS.md` (M-004 a M-022).
 - Pendente para fechar a fase: rodar `apps/mobile/e2e/TRV-fundacao.yaml` num aparelho (sem aparelho na sessão da nuvem) e confirmar o APK no CI. Por isso os TRV ficam `[~]`.
 
-Status: aprovado pelo usuário em 2026-11-21 · implementado, aguardando E2E no aparelho
+Status: aprovado pelo usuário em 2026-11-21 · concluído em 2026-11-21 (E2E no navegador, Q-44)

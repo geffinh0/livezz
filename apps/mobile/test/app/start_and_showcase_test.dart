@@ -65,6 +65,24 @@ void main() {
     expect(find.byKey(const ValueKey('gate.maintenance')), findsNothing);
   });
 
+  testWidgets('versão mínima acima da do app abre o portão de atualização', (
+    t,
+  ) async {
+    var min = '99.0.0';
+    final adapter = StubAdapter(
+      (_) => jsonBody(200, sampleConfig(minAppVersion: min)),
+    );
+    await t.pumpWidget(
+      harness(const StartScreen(), overrides: testOverrides(adapter)),
+    );
+    await t.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('gate.update')), findsOneWidget);
+    min = '0.1.0';
+    await t.tap(find.text('Tentar de novo'));
+    await t.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('gate.update')), findsNothing);
+  });
+
   group('vitrine', () {
     final adapter = StubAdapter((_) => jsonBody(200, sampleConfig(version: 7)));
 
