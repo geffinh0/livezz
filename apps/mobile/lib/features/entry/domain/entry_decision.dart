@@ -11,6 +11,8 @@ enum EntryDestination {
   maintenance,
   regionBlocked,
   welcome,
+  acceptTerms,
+  completeProfile,
   home,
 }
 
@@ -22,6 +24,8 @@ EntryDestination decideEntry({
   required bool? visitorMode,
   required bool hasSession,
   bool sessionReady = true,
+  bool pendingTerms = false,
+  bool needsProfile = false,
 }) {
   // Portões têm prioridade: atualização > região > manutenção.
   if (gate == GateKind.updateRequired) return EntryDestination.updateRequired;
@@ -38,7 +42,12 @@ EntryDestination decideEntry({
   if (!regionAllowed) return EntryDestination.regionBlocked;
   if (maintenance) return EntryDestination.maintenance;
   if (!sessionReady) return EntryDestination.splash;
-  if (hasSession) return EntryDestination.home;
+  if (hasSession) {
+    // ENT16 antes de tudo; depois o cadastro inicial (1c); então a Home.
+    if (pendingTerms) return EntryDestination.acceptTerms;
+    if (needsProfile) return EntryDestination.completeProfile;
+    return EntryDestination.home;
+  }
   if (visitorMode == null) return EntryDestination.splash;
   return visitorMode ? EntryDestination.home : EntryDestination.welcome;
 }

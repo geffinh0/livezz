@@ -4,9 +4,11 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../app/providers.dart';
 import '../../../app/routes.dart';
+import '../../../core/auth/session.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
 import '../../../core/ui/test_id.dart';
+import '../../../l10n/error_messages.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../application/entry_providers.dart';
 
@@ -58,6 +60,20 @@ class WelcomeScreen extends ConsumerWidget {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        if (ref.watch(sessionEndNoticeProvider)
+                            case final code?)
+                          TestId(
+                            'entry.sessionNotice',
+                            child: Semantics(
+                              liveRegion: true,
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpace.lg),
+                                  child: Text(errorMessageFor(l, code)),
+                                ),
+                              ),
+                            ),
+                          ),
                         const SizedBox(height: AppSpace.xxl),
                         TestId(
                           'entry.welcome.signup',

@@ -237,5 +237,76 @@
   "errorDispositivoInvalido": "Não reconhecemos este aparelho. Entre de novo.",
   "@errorDispositivoInvalido": {
     "description": "Erro da API: dispositivo_invalido"
+  },
+  "actionSendCode": "Enviar código",
+  "actionSignOut": "Sair",
+  "phoneTitle": "Qual é o seu celular?",
+  "phoneLabel": "Celular",
+  "phoneInvalid": "Confira o número: faltam dígitos.",
+  "channelSms": "SMS",
+  "channelWhatsapp": "WhatsApp",
+  "codeTitle": "Digite o código",
+  "codeSentTo": "Enviamos um código de 6 dígitos para {destination}. Ele vale por 60 segundos.",
+  "@codeSentTo": {
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      }
+    }
+  },
+  "codeLabel": "Código",
+  "codeResend": "Reenviar código",
+  "codeResendIn": "Reenviar em {seconds} s",
+  "@codeResendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "emailLabel": "E-mail",
+  "emailInvalid": "Confira o e-mail.",
+  "passwordLabel": "Senha",
+  "newPasswordLabel": "Nova senha",
+  "passwordShow": "Mostrar senha",
+  "passwordHide": "Esconder senha",
+  "passwordWeak": "A senha ainda não atende às regras abaixo.",
+  "passwordRuleLength": "Pelo menos 8 caracteres",
+  "passwordRuleLetters": "Pelo menos uma letra",
+  "passwordRuleNumbers": "Pelo menos um número",
+  "passwordRuleCommon": "Essa senha é muito comum: escolha outra",
+  "forgotPassword": "Esqueci minha senha",
+  "resetIntro": "Digite o e-mail da conta. Se ele estiver cadastrado, enviaremos um código.",
+  "resetCodeSent": "Se o e-mail estiver cadastrado, o código chegou. Digite-o e escolha a nova senha.",
+  "resetSave": "Salvar nova senha",
+  "resetDone": "Senha alterada. Entre com a nova senha.",
+  "googleTestNotice": "Ambiente de teste: escolha uma conta simulada. O login com Google de verdade chega na versão final.",
+  "googleTestNew": "Conta nova (teste)",
+  "googleTestExisting": "Conta existente: Ana (teste)",
+  "googleTestFailing": "Conta que falha (teste)",
+  "termsTitle": "Termos atualizados",
+  "termsIntro": "Para continuar, leia e aceite:",
+  "termsVersion": "Versão {version}",
+  "@termsVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "termsAgree": "Li e aceito os documentos acima",
+  "termsAccept": "Aceitar e continuar",
+  "completeProfileTitle": "Complete seu cadastro",
+  "completeProfileBody": "Falta pouco: nome e data de nascimento chegam na próxima etapa do app.",
+  "countryOption": "{iso} +{dialCode}",
+  "@countryOption": {
+    "placeholders": {
+      "iso": {
+        "type": "String"
+      },
+      "dialCode": {
+        "type": "String"
+      }
+    }
   }
 }

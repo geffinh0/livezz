@@ -24,10 +24,13 @@ class PendingActionController extends Notifier<PendingAction?> {
         final action = state;
         state = null;
         if (action != null && !action.isExpired(_now())) {
+          // Espera o roteador assentar (ele também reage à sessão nova).
           unawaited(
-            action.run().catchError((Object e) {
-              developer.log('ação pendente falhou: $e', name: 'auth');
-            }),
+            Future<void>.delayed(const Duration(milliseconds: 150))
+                .then((_) => action.run())
+                .catchError((Object e) {
+                  developer.log('ação pendente falhou: $e', name: 'auth');
+                }),
           );
         }
       }

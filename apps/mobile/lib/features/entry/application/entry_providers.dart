@@ -84,6 +84,7 @@ GateKind _gateKind(AppGate g) => switch (g) {
 final entryDestinationProvider = Provider<EntryDestination>((ref) {
   final config = ref.watch(configControllerProvider);
   final c = config.value;
+  final session = ref.watch(sessionProvider);
   return decideEntry(
     config: switch (config) {
       AsyncData() => ConfigStatus.ready,
@@ -99,7 +100,9 @@ final entryDestinationProvider = Provider<EntryDestination>((ref) {
       AsyncError() => false,
       _ => null,
     },
-    hasSession: ref.watch(sessionProvider) != null,
+    hasSession: session != null,
     sessionReady: ref.watch(sessionReadyProvider),
+    pendingTerms: session?.pendingTerms.isNotEmpty ?? false,
+    needsProfile: session?.needsProfile ?? false,
   );
 });

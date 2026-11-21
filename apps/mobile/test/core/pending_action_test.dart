@@ -12,7 +12,7 @@ void main() {
         .read(pendingActionProvider.notifier)
         .hold(PendingAction(() async => ran++));
     c.read(sessionProvider.notifier).set(const Session(userId: 'u-ana'));
-    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     expect(ran, 1);
     expect(c.read(pendingActionProvider), isNull);
   });
@@ -26,7 +26,7 @@ void main() {
       ..setClock(() => t0.add(const Duration(minutes: 6)))
       ..hold(PendingAction(() async => ran++, at: t0));
     c.read(sessionProvider.notifier).set(const Session(userId: 'u-ana'));
-    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     expect(ran, 0);
   });
 }
