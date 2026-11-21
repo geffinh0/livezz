@@ -3,7 +3,11 @@
 Rodam na **sua máquina**, com um celular Android (depuração USB) ou emulador.
 Cada item de tela da especificação ganha um arquivo `e2e/<ID>.yaml`.
 
-## Uma vez
+## Atalho no Linux (Ubuntu/Debian)
+- Instalar tudo uma vez: `bash tools/dev/setup-linux.sh` (Flutter, Android SDK + emulador, Node, Maestro, Claude Code).
+- Testar tudo: `bash tools/dev/e2e-emulador.sh` (sobe emulador e mock-server, instala o app e roda os fluxos; relatório e prints em `build/e2e/`).
+
+## Uma vez (manual)
 1. Flutter estável, Android Studio/SDK e `adb` funcionando (`flutter doctor`).
 2. Maestro: `curl -fsSL "https://get.maestro.mobile.dev" | bash` e confira com `maestro --version`.
 3. Na raiz do repositório: `npm ci`.
