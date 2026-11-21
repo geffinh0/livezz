@@ -29,6 +29,7 @@ EntryDestination decideEntry({
   bool sessionReady = true,
   bool pendingTerms = false,
   bool needsProfile = false,
+  bool sessionEnded = false,
 }) {
   // Portões têm prioridade: atualização > região > manutenção.
   if (gate == GateKind.updateRequired) return EntryDestination.updateRequired;
@@ -51,6 +52,9 @@ EntryDestination decideEntry({
     if (needsProfile) return EntryDestination.completeProfile;
     return EntryDestination.home;
   }
+  // ENT19: a sessão acabou (outro aparelho, expirou): boas-vindas com o
+  // aviso, mesmo para quem tinha escolhido explorar sem conta.
+  if (sessionEnded) return EntryDestination.welcome;
   if (visitorMode == null) return EntryDestination.splash;
   return visitorMode ? EntryDestination.visitorHome : EntryDestination.welcome;
 }

@@ -9,6 +9,7 @@ void main() {
     bool maintenance = false,
     bool? visitor = false,
     bool session = false,
+    bool ended = false,
   }) => decideEntry(
     config: config,
     gate: gate,
@@ -16,6 +17,7 @@ void main() {
     maintenance: maintenance,
     visitorMode: visitor,
     hasSession: session,
+    sessionEnded: ended,
   );
 
   final table = <String, (EntryDestination, EntryDestination)>{
@@ -25,6 +27,10 @@ void main() {
       EntryDestination.visitorHome,
     ),
     'com sessão → home': (d(session: true), EntryDestination.home),
+    'sessão caiu de quem explorava sem conta → boas-vindas com aviso (ENT19)': (
+      d(visitor: true, ended: true),
+      EntryDestination.welcome,
+    ),
     'carregando config → splash': (
       d(config: ConfigStatus.loading),
       EntryDestination.splash,

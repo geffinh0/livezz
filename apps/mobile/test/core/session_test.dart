@@ -19,6 +19,7 @@ class FakeServer implements HttpClientAdapter {
   String? refreshError;
   bool offline = false;
   int? meStatus;
+  Completer<void>? meGate;
   bool termsPendingOnPing = false;
   final paths = <String>[];
   Completer<void>? refreshGate;
@@ -66,6 +67,7 @@ class FakeServer implements HttpClientAdapter {
         'error': {'code': 'token_expirado'},
       });
     }
+    if (o.path == '/me') await meGate?.future;
     if (o.path == '/me' && meStatus != null) {
       return json(meStatus!, {
         'error': {'code': meStatus == 401 ? 'nao_autenticado' : 'erro_interno'},
@@ -335,6 +337,24 @@ void main() {
       );
       await Future<void>.delayed(const Duration(milliseconds: 10));
       expect(c.read(sessionProvider)?.pendingTerms, hasLength(1));
+    },
+  );
+  test(
+    'servidor travado no /me ao abrir não prende o splash (ENT01)',
+    () async {
+      final old = SessionController.restoreTimeout;
+      SessionController.restoreTimeout = const Duration(milliseconds: 50);
+      addTearDown(() => SessionController.restoreTimeout = old);
+      store.data.addAll({
+        'auth.access': 'at-1',
+        'auth.refresh': 'rt-1',
+        'auth.user': 'u1',
+      });
+      server.meGate = Completer<void>();
+      await c.read(sessionProvider.notifier).restore();
+      expect(c.read(sessionReadyProvider), isTrue);
+      expect(c.read(sessionProvider)?.userId, 'u1');
+      server.meGate!.complete();
     },
   );
 }

@@ -97,9 +97,15 @@ class WelcomeScreen extends ConsumerWidget {
                           child: AppButton(
                             label: l.actionExploreAsVisitor,
                             variant: AppButtonVariant.text,
-                            onPressed: () => ref
-                                .read(visitorModeProvider.notifier)
-                                .set(on: true),
+                            onPressed: () {
+                              // Já viu o aviso de fim de sessão: segue como visitante.
+                              ref
+                                  .read(sessionEndNoticeProvider.notifier)
+                                  .set(null);
+                              ref
+                                  .read(visitorModeProvider.notifier)
+                                  .set(on: true);
+                            },
                           ),
                         ),
                       ],

@@ -117,6 +117,7 @@
 ## Andamento (2026-11-21)
 - Passos 1–12 feitos (commits 10f4429 a 56e5469; passos 2–6 e 8–11 agrupados em um commit cada).
 - Testes: mock 76, app 131, E2E web 88/88.
-- Passo 13 pendente: revisões interrompidas pelo limite de uso; retomar e depois rodar o verificador.
+- Passo 13 feito: revisões de segurança, código, UX e dados aplicadas (commits d9a814f a c81d7a8), Q-55 respondida, duas rodadas do verificador. Testes finais: mock 84, app 162, E2E web 102/102.
+- Resultado: ENT01, ENT05, ENT07, ENT16, ENT17 e ENT19 prontos; ENT04, ENT06 e SEG06 `[~]` por decisões registradas (Q-51, Q-52/Q-53, Fase 12).
 
-Status: aprovado pelo usuário em 2026-11-21
+Status: concluído em 2026-11-21 (aprovado pelo usuário em 2026-11-21)

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../errors/app_failure.dart';
@@ -94,6 +95,10 @@ class SessionController extends Notifier<Session?> {
   /// Só para testes de tela.
   void set(Session? session) => state = session;
 
+  /// Prazo para validar a sessão ao abrir (ENT01). Valor técnico.
+  @visibleForTesting
+  static Duration restoreTimeout = const Duration(seconds: 10);
+
   String? get accessToken => _access;
 
   /// ENT01: restaura a sessão guardada e valida no servidor.
@@ -120,7 +125,11 @@ class SessionController extends Notifier<Session?> {
     _refresh = refresh;
     final gen = ++_gen;
     try {
-      final me = await deps.api.me();
+      // ENT01: a abertura tem prazo; servidor travado conta como sem rede.
+      final me = await deps.api.me().timeout(
+        restoreTimeout,
+        onTimeout: () => throw const TimeoutFailure(),
+      );
       if (gen == _gen) state = _fromMe(me);
     } on ApiFailure catch (e) {
       if (gen != _gen) return;

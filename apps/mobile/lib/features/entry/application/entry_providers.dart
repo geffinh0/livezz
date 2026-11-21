@@ -118,5 +118,6 @@ final entryDestinationProvider = Provider<EntryDestination>((ref) {
     sessionReady: ref.watch(sessionReadyProvider),
     pendingTerms: session?.pendingTerms.isNotEmpty ?? false,
     needsProfile: session?.needsProfile ?? false,
+    sessionEnded: ref.watch(sessionEndNoticeProvider) != null,
   );
 });

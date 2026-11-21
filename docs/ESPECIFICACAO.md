@@ -21,7 +21,7 @@
 
 ## ENT · Entrada, conta e identidade
 
-- [~] **ENT01 Splash e inicialização**
+- [x] **ENT01 Splash e inicialização**
   - Aceite: carrega config do tenant e do servidor (flags, textos legais, versão mínima); registra o dispositivo; restaura sessão; decide entre Home, Boas-vindas, Atualização obrigatória ou Manutenção; tempo máximo de espera com tela de erro e "tentar de novo".
   - Dados: Dispositivo, ConfigApp · Depende: TRV03, TRV04
 - [~] **ENT02 Boas-vindas e modo visitante**
@@ -31,11 +31,11 @@
 - [~] **ENT04 Telefone + código (SMS/WhatsApp)** — falta: preenchimento automático do código no Android (Q-51, Fase 12) e provedor real de SMS/WhatsApp (RN-84, Fase 12); o resto feito no plano 1b
   - Aceite: seletor de país (Brasil padrão), máscara, código de 6 dígitos com validade de 60 s (RN-02) e reenvio com contagem regressiva; limite de tentativas; preenchimento automático do código no Android; canal SMS ou WhatsApp conforme flag; provedor de envio configurado pelo comprador (RN-84).
   - Dados: Usuario, MetodoLogin, CodigoVerificacao
-- [ ] **ENT05 E-mail + senha**
+- [x] **ENT05 E-mail + senha**
   - Aceite: cadastro e login; força mínima da senha (RN-03); confirmação de e-mail por código; mensagens de erro que não revelam se o e-mail existe.
 - [~] **ENT06 Login com Google** — falta: conta nova cair no cadastro ENT08 (plano 1c, Q-52) e Google real (Fase 12, Q-53); hoje contas de teste
   - Aceite: conta nova cai em ENT08; conta existente entra direto; erro e cancelamento tratados.
-- [ ] **ENT07 Recuperar senha**
+- [x] **ENT07 Recuperar senha**
   - Aceite: código por e-mail → nova senha → encerra outras sessões (RN-04).
 - [ ] **ENT08 Dados iniciais**
   - Aceite: nome de exibição (RN-05), data de nascimento (não editável depois, RN-01), gênero opcional; o app consulta o sinal de idade/faixa etária da loja (Play Age Signals) e, se indicar menor, ou se a data indicar menor, vai para ENT10.
@@ -54,14 +54,14 @@
   - Aceite: oferecido a quem entrou por e-mail/Google; recompensa configurável; uma vez por número.
 - [ ] **ENT15 Contas vinculadas**
   - Aceite: ver e vincular/desvincular métodos; não permite remover o último método.
-- [ ] **ENT16 Aceite de termos e política**
+- [x] **ENT16 Aceite de termos e política**
   - Aceite: aceite registrado com versão e data; nova versão exige novo aceite antes de continuar. Termos, privacidade e diretrizes da comunidade são obrigatórios para todos ao entrar (Q-55).
   - Dados: AceiteTermos
-- [~] **ENT17 Login exigido (bottom sheet)**
+- [x] **ENT17 Login exigido (bottom sheet)**
   - Aceite: aparece quando visitante tenta interagir; após entrar, retoma a ação que ele tentou.
 - [x] **ENT18 Restrição regional**
   - Aceite: países permitidos configuráveis pelo cliente; fora da região mostra tela informativa (detecção por servidor).
-- [ ] **ENT19 Sessão e dispositivos**
+- [x] **ENT19 Sessão e dispositivos**
   - Aceite: um aparelho por conta (RN-06): entrar em outro aparelho encerra a sessão do anterior, que recebe aviso "sua conta entrou em outro aparelho" e volta ao login; renovação automática do token; sessão expirada leva ao login sem perder o contexto da navegação.
 
 ## NAV · Navegação e estrutura
