@@ -20,7 +20,10 @@ void main() {
 
   final table = <String, (EntryDestination, EntryDestination)>{
     'sem sessão e sem escolha → boas-vindas': (d(), EntryDestination.welcome),
-    'visitante → home': (d(visitor: true), EntryDestination.home),
+    'visitante → home de visitante': (
+      d(visitor: true),
+      EntryDestination.visitorHome,
+    ),
     'com sessão → home': (d(session: true), EntryDestination.home),
     'carregando config → splash': (
       d(config: ConfigStatus.loading),

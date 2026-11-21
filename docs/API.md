@@ -342,5 +342,5 @@ Todas as rotas de login recebem `deviceId` + `deviceSecret` (segredo errado → 
 
 ### Mock-only (Fase 1b)
 - `GET /__mock/outbox?destination=...` → `{ code }` do último código enviado (para E2E). Nunca usado pelo app.
-- Cenários: `exigir-desafio` (anti-bot exigido em todas as rotas da lista), `token-expira-rapido` (access de 5 s).
+- Cenários: `exigir-desafio` (anti-bot exigido em todas as rotas da lista), `token-expira-rapido` (access de 5 s), `termos-novos` (termos passam para a versão 2: quem aceitou a 1 precisa aceitar de novo).
 

@@ -8,6 +8,6 @@ flow('ENT18', async (t) => {
   t.check('texto explica a restrição', await t.text('não está disponível na sua região'));
   await t.shot('regiao');
   await t.mock('/__mock/scenario/regiao-bloqueada', { active: false });
-  await t.button('Tentar de novo').click();
+  await t.tap('gate.region.action');
   t.check('dentro da região libera', await t.visible('entry.welcome'));
 });

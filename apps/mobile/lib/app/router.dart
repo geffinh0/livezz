@@ -63,6 +63,16 @@ String? redirectFor(EntryDestination dest, String path) {
       return outside.contains(path) || _isLoginFlow(path)
           ? Routes.discover
           : null;
+    case EntryDestination.visitorHome:
+      // Visitante: pode abrir as telas de entrada (ENT17); pendências não se aplicam.
+      const blocked = {
+        Routes.start,
+        Routes.gate,
+        Routes.welcome,
+        Routes.terms,
+        Routes.completeProfile,
+      };
+      return blocked.contains(path) ? Routes.discover : null;
     default:
       return null;
   }

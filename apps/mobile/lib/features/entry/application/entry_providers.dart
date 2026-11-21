@@ -8,8 +8,10 @@ import '../../../core/auth/auth_api.dart';
 import '../../../core/auth/session.dart';
 import '../../../core/config/application/config_controller.dart';
 import '../../../core/device/device_registrar.dart';
+import '../../../core/errors/app_failure.dart';
 import '../../../core/http/app_gate.dart';
 import '../../../core/i18n/locales.dart';
+import '../../auth/application/auth_flow.dart';
 import '../data/entry_prefs.dart';
 import '../domain/entry_decision.dart';
 
@@ -50,14 +52,26 @@ String _platform() {
 final deviceRegistrationProvider = FutureProvider<DeviceCredentials?>((
   ref,
 ) async {
+  final registrar = ref.read(deviceRegistrarProvider);
+  Future<DeviceCredentials> register([Map<String, String>? antibot]) =>
+      registrar.register(
+        platform: _platform(),
+        appVersion: ref.read(envProvider).appVersion,
+        locale: acceptLanguageFor(ref.read(localeProvider)),
+        antibot: antibot,
+      );
   try {
-    return await ref
-        .read(deviceRegistrarProvider)
-        .register(
-          platform: _platform(),
-          appVersion: ref.read(envProvider).appVersion,
-          locale: acceptLanguageFor(ref.read(localeProvider)),
-        );
+    try {
+      return await register();
+    } on ApiFailure catch (e) {
+      // Servidor pediu desafio anti-bot (SEG06): resolve e tenta uma vez mais.
+      if (e.code != 'desafio_necessario') rethrow;
+      final providers =
+          (e.details['providers'] as List?)?.cast<String>() ?? const <String>[];
+      final headers = await ref.read(antiBotProvider).solve(providers);
+      if (headers == null) rethrow;
+      return await register(headers);
+    }
   } on Object catch (e) {
     // Não bloqueia a abertura; tenta de novo na próxima (ENT01).
     developer.log('registro do aparelho falhou: $e', name: 'device');

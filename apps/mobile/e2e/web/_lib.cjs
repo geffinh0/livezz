@@ -5,6 +5,16 @@ const fs = require('fs');
 const MOCK = process.env.MOCK_URL || 'http://127.0.0.1:3000';
 const APP = (process.env.APP_URL || 'http://localhost:8080/').replace(/\/?$/, '/');
 
+// Clique no centro do elemento (o nó com o id tem pointer-events: none no
+// Flutter web; o alvo real fica embaixo dele — como o dedo de uma pessoa).
+async function clickId(page, id, timeout = 15000) {
+  const el = page.locator(`[flt-semantics-identifier="${id}"]`).first();
+  await el.waitFor({ state: 'attached', timeout });
+  const box = await el.boundingBox();
+  if (!box) throw new Error(`sem caixa para ${id}`);
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+}
+
 function flow(name, body) {
   const out = process.argv[2] || 'build/e2e-web';
   fs.mkdirSync(out, { recursive: true });
@@ -29,6 +39,11 @@ function flow(name, body) {
       button: (label) => page.getByRole('button', { name: label, exact: true }),
       shot: (file) => page.screenshot({ path: `${out}/${name}-${file}.png` }),
       // Abre o app do zero (sem dados locais) num caminho (rota go_router).
+      newPage: async () => {
+        const p2 = await (await browser.newContext({ viewport: { width: 412, height: 915 } })).newPage();
+        p2.on('pageerror', (e) => errors.push(e.message));
+        return p2;
+      },
       open: async (route = '/', { fresh = true } = {}) => {
         if (fresh) await ctx.clearCookies();
         await page.goto(APP, { waitUntil: 'load' });
@@ -64,6 +79,21 @@ function flow(name, body) {
         }
       },
       wait: (ms) => page.waitForTimeout(ms),
+      // Digita num campo do Flutter web: toca no campo e usa o teclado.
+      type: async (id, text) => {
+        await clickId(page, id);
+        await page.waitForTimeout(300);
+        await page.keyboard.type(text, { delay: 20 });
+        await page.waitForTimeout(200);
+      },
+      tap: (id) => clickId(page, id),
+      outbox: async (destination) =>
+        (await (await fetch(`${MOCK}/__mock/outbox?destination=${encodeURIComponent(destination)}`)).json()).code,
+      // Atalho: entra como visitante → Entrar → método.
+      toMethods: async () => {
+        await clickId(page, 'entry.welcome.login');
+        await page.locator('[flt-semantics-identifier="entry.methods"]').first().waitFor({ state: 'attached', timeout: 15000 });
+      },
       // Fecha bottom sheet/diálogo tocando fora (Escape não fecha no Flutter web).
       dismiss: async () => {
         await page.mouse.click(200, 60);
@@ -76,6 +106,9 @@ function flow(name, body) {
       await body(t);
     } catch (e) {
       crashed = e;
+      // Print do estado no momento da falha, para diagnóstico.
+      await page.screenshot({ path: `${out}/${name}-FALHA.png` }).catch(() => {});
+      console.log(`url na falha: ${page.url()}`);
     } finally {
       await t.mock('/__mock/reset').catch(() => {});
     }
@@ -88,4 +121,4 @@ function flow(name, body) {
   })();
 }
 
-module.exports = { flow };
+module.exports = { flow, clickId };

@@ -11,7 +11,7 @@ flow('ENT01', async (t) => {
   t.check('erro 500 mostra tela de erro', await t.visible('state.error'));
   await t.shot('erro');
   await t.mock('/__mock/scenario/erro-500', { active: false });
-  await t.button('Tentar de novo').click();
+  await t.tap('state.error.action');
   t.check('"tentar de novo" recupera', await t.visible('entry.welcome'));
 
   await t.mock('/__mock/scenario/manutencao');
@@ -19,7 +19,10 @@ flow('ENT01', async (t) => {
   t.check('manutenção mostra o portão', await t.visible('gate.maintenance'));
   await t.shot('manutencao');
   await t.mock('/__mock/scenario/manutencao', { active: false });
-  await t.button('Tentar de novo').click();
+  // O app pode liberar sozinho (rebusca da config) ou pelo "tentar de novo".
+  if (await t.visible('gate.maintenance.action', 1500)) {
+    await t.tap('gate.maintenance.action').catch(() => {});
+  }
   t.check('manutenção acabou: libera', await t.visible('entry.welcome'));
 
   await t.mock('/__mock/scenario/versao-minima');

@@ -229,6 +229,12 @@ void main() {
     expect(redirectFor(EntryDestination.welcome, '/legal/terms'), isNull);
     expect(redirectFor(EntryDestination.home, Routes.welcome), Routes.discover);
     expect(redirectFor(EntryDestination.home, Routes.profile), isNull);
+    expect(redirectFor(EntryDestination.home, Routes.entry), Routes.discover);
+    expect(redirectFor(EntryDestination.visitorHome, Routes.entry), isNull);
+    expect(
+      redirectFor(EntryDestination.visitorHome, Routes.welcome),
+      Routes.discover,
+    );
     expect(
       redirectFor(EntryDestination.maintenance, Routes.discover),
       Routes.gate,

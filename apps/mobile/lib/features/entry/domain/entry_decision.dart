@@ -14,6 +14,9 @@ enum EntryDestination {
   acceptTerms,
   completeProfile,
   home,
+
+  /// Visitante (ENT02): na Home sem sessão; pode abrir as telas de entrada.
+  visitorHome,
 }
 
 EntryDestination decideEntry({
@@ -49,5 +52,5 @@ EntryDestination decideEntry({
     return EntryDestination.home;
   }
   if (visitorMode == null) return EntryDestination.splash;
-  return visitorMode ? EntryDestination.home : EntryDestination.welcome;
+  return visitorMode ? EntryDestination.visitorHome : EntryDestination.welcome;
 }

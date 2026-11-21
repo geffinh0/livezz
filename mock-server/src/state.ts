@@ -40,7 +40,8 @@ export type ScenarioName =
   | 'regiao-bloqueada'
   | 'entrada-desligada'
   | 'exigir-desafio'
-  | 'token-expira-rapido';
+  | 'token-expira-rapido'
+  | 'termos-novos';
 export const scenarioNames: readonly ScenarioName[] = [
   'erro-500',
   'rede-lenta',
@@ -50,6 +51,7 @@ export const scenarioNames: readonly ScenarioName[] = [
   'entrada-desligada',
   'exigir-desafio',
   'token-expira-rapido',
+  'termos-novos',
 ];
 
 /** Dispositivo (DATABASE.md). */

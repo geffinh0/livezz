@@ -6,14 +6,22 @@ flow('ENT17', async (t) => {
   await t.button('Explorar sem conta').click();
   t.check('visitante na Home', await t.visible('tab.discover'));
   for (const tab of ['profile', 'messages', 'live']) {
-    await t.byId(`nav.${tab}`).click();
+    await t.tap(`nav.${tab}`);
     t.check(`${tab} pede conta`, await t.visible('entry.accountRequired'));
     if (tab === 'profile') await t.shot('pedido-de-conta');
     await t.dismiss();
     t.check(`${tab}: pedido de conta fecha ao tocar fora`, await t.gone('entry.accountRequired'));
   }
-  await t.byId('nav.profile').click();
+  await t.tap('nav.profile');
   await t.visible('entry.accountRequired');
-  await t.byId('entry.accountRequired.login').click();
+  await t.tap('entry.accountRequired.login');
   t.check('do pedido de conta vai para a escolha de entrada', await t.visible('entry.methods'));
+
+  // Entra de verdade e volta para a ação que tentou (Perfil).
+  await t.tap('entry.method.email');
+  await t.type('auth.email.input', 'ana@teste.local');
+  await t.type('auth.password.input', 'TEST_ONLY_Ana2026');
+  await t.tap('auth.email.submit');
+  t.check('depois de entrar, continua no Perfil (ação retomada)', await t.visible('tab.profile', 20000));
+  await t.shot('retomou');
 });

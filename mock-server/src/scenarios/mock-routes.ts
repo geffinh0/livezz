@@ -53,6 +53,13 @@ function applyScenario(ctx: MockContext, name: ScenarioName, active: boolean) {
     Object.assign(cfg.flags, changed);
     bumpConfig(ctx, { flags: changed });
   }
+  if (name === 'termos-novos') {
+    const terms = cfg.legalTexts.terms;
+    if (terms) {
+      terms.version = active ? 2 : 1;
+      bumpConfig(ctx, { legalTexts: cfg.legalTexts });
+    }
+  }
   if (name === 'token-expira-rapido') {
     ctx.getState().auth.config.accessTokenSecondsOverride = active ? 5 : null;
   }
