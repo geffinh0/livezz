@@ -76,8 +76,8 @@ Usada por: ENT04, ENT05, ENT07 · campos: id, destino 🔒, finalidade (`login`,
 ### Sessao — proposta
 Usada por: ENT19, CFG02 · campos: id, usuario_id, dispositivo_id, refresh_token_hash 🔒, criada_em, ultimo_uso_em, revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `senha_trocada`, `admin`), ip_aproximado 🔒, user_agent. **Regra:** no máximo uma sessão não revogada por usuário (RN-06).
 
-### Dispositivo — proposta
-Usada por: ENT01, TRV05, SEG05 · campos: id, usuario_id?, plataforma, modelo, versao_app, idioma, token_push 🔒, impressao_antifraude 🔒, registrado_em, visto_em.
+### Dispositivo — em uso no mock
+Usada por: ENT01 (`POST /devices`), TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, plataforma, modelo, versao_app, idioma, registrado_em, visto_em.
 
 ### VerificacaoIdade — proposta
 Usada por: ENT09, TRA01, POR02, SEG07 · campos: id, usuario_id, metodo (`estimativa_facial`, `documento`), provedor (conector configurado em IntegracaoProvedor), referencia_provedor, resultado (`pendente`, `aprovado`, `reprovado`, `expirado`), idade_estimada?, motivo?, criado_em, concluido_em. Não guardar imagens do rosto/documento além do exigido pelo provedor e pelo jurídico.
@@ -375,7 +375,11 @@ erDiagram
 | allowedRegions | regioes_permitidas |
 | limits (chatMaxLength, chatMessagesPerSecond, pkInviteTtlSeconds, stageInviteTtlSeconds, callInviteTtlSeconds) | limites (mesmas chaves em snake_case) |
 | legalTexts.{terms,privacy,guidelines}.{version,url} | textos_legais (versão e caminho; a URL é montada com `portalBaseUrl` do tenant) |
+| region.{country,allowed} | não é guardado: calculado por requisição (país detectado × regioes_permitidas) |
 `alterada_por` e `alterada_em` ainda não existem no mock (entram com o painel, ADM14).
+
+### PreferenciasLocais — em uso no app (aparelho, não vai para o banco)
+Usada por: ENT01, ENT02 · `device.id` (id devolvido por `POST /devices`) e `entry.visitorMode` (o visitante escolheu "Explorar sem conta"). Sem dado pessoal.
 
 ### ConfigCacheLocal — em uso no app (aparelho, não vai para o banco)
 Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = JSON da última `GET /config` válida, mesclado por `config.updated`. Sem dado pessoal. Serve de reserva sem rede. Flags e limites continuam sendo aplicados no servidor (alterar o cache no aparelho não libera nada).
@@ -412,3 +416,4 @@ Valor inicial das flags no mock vem de `tenants/<id>/tenant.json` → `features`
 | 2026-11-20 | Sessão única por conta; idioma e sinal de idade da loja no Usuario; diamantes normais × bônus e moedas pagas × grátis no ledger; MenuCobranca e cobrança por presente; DeteccaoConteudo; VIP por gasto (NivelVip, VipStatus) no lugar de assinatura; assinatura de criador em reais; LinkPortal; IntegracaoProvedor; ConfigProgressao; ConfigEconomia ampliada | Respostas do usuário às questões Q-01 a Q-34 |
 | 2026-11-21 | ConfigApp: campo `versao`, `manutencao` com `retry_after_segundos`, status `em uso no mock`; tabela de correspondência das flags; IntegracaoProvedor em uso no mock (fake, sem credenciais) | Fase 0 (TRV04, TRV13; ADR 0011) |
 | 2026-11-21 | Tabela de correspondência completa de ConfigApp; ConfigCacheLocal (aparelho); dados só de teste do mock (usuários, outbox do fake de SMS, sessões do fake de idade) | Fase 0 (conferência código × docs pelo guardião de dados) |
+| 2026-11-21 | Dispositivo em uso no mock (id gerado pelo servidor); PreferenciasLocais no app; `region` calculado por requisição | Fase 1a (ENT01, ENT02, ENT18) |

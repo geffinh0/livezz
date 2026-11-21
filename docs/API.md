@@ -19,7 +19,8 @@
 - **Sessão única:** login em um novo aparelho revoga a sessão anterior (RN-06); requisições do aparelho antigo recebem `401` com `code: sessao_substituida`.
 - **Versão do app:** header `X-App-Version` (semver `x.y.z`); resposta `426` com `code: atualizacao_obrigatoria` quando abaixo da mínima.
 - **Manutenção:** resposta `503` com `code: manutencao` e `Retry-After` (segundos) enquanto a manutenção estiver ativa.
-- **Exceções:** `GET /config` e o upgrade de `/v1/realtime` nunca respondem `426` nem `503` (o app precisa ler a config para mostrar as telas de atualização e manutenção); rotas `/__mock/*` também não. Sem header `X-App-Version` o `426` não é aplicado. Detalhe do `426`: `details.minAppVersion`. `Retry-After` padrão: 60 s.
+- **Região (ENT18):** fora dos países permitidos (`ConfigApp.regioes_permitidas`), toda rota `/v1/*` responde `403` com `code: regiao_bloqueada` e `details.country`. O país é detectado pelo servidor (nunca informado pelo app).
+- **Exceções:** `GET /config` e o upgrade de `/v1/realtime` nunca respondem `426`, `503` nem `403 regiao_bloqueada` (o app precisa ler a config para mostrar as telas de atualização e manutenção); rotas `/__mock/*` também não. Sem header `X-App-Version` o `426` não é aplicado. Detalhe do `426`: `details.minAppVersion`. `Retry-After` padrão: 60 s.
 - **Rate limit:** `429` com `Retry-After`.
 - **Admin:** rotas `/v1/admin/*` exigem token de admin com papel; toda escrita gera `LogAuditoria`.
 - **Mock-only:** rotas `/__mock/*` existem apenas no mock-server.
@@ -34,7 +35,7 @@
 | Método | Caminho | Descrição | Usado por | Status |
 | --- | --- | --- | --- | --- |
 | GET | /config | Config pública do app (flags, versão mínima, abas, limites, textos legais) | ENT01, TRV04 | no mock |
-| POST | /devices | Registrar/atualizar dispositivo e token de push | ENT01, TRV05 | proposto |
+| POST | /devices | Registrar/atualizar dispositivo e token de push | ENT01, TRV05 | no mock |
 
 ### Autenticação e conta
 | Método | Caminho | Descrição | Usado por | Status |
@@ -257,7 +258,7 @@
 | Método | Caminho | Descrição |
 | --- | --- | --- |
 | POST | /__mock/reset | Volta aos dados iniciais e desliga todos os cenários (no mock) |
-| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima` |
+| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima`, `regiao-bloqueada` |
 | POST | /__mock/emit | Emite um evento de tempo real do catálogo (para testes) (no mock) |
 | POST | /__mock/bots/{start|stop} | Liga/desliga bots de chat e presentes (proposto, Fase 3) |
 
@@ -281,9 +282,11 @@
     "discoverTabs": ["popular", "nearby", "new", "pk", "multi", "calls"],
     "legalTexts": { "terms": { "version": 1, "url": "…" }, "privacy": { "version": 1, "url": "…" },
                     "guidelines": { "version": 1, "url": "…" } },
-    "allowedRegions": ["BR"]
+    "allowedRegions": ["BR"],
+    "region": { "country": "BR", "allowed": true }
   }
   ```
+- `region` é **calculado por requisição** (país detectado pelo servidor × `allowedRegions`). Não faz parte do cache local nem do `config.updated`. Mock: país do header `X-Mock-Country` (só do mock; o app nunca envia), padrão `BR`; o cenário `regiao-bloqueada` força um país fora da lista.
 - Regras: valores vêm de `ConfigApp` (editável pelo comprador, ADR 0007); `configVersion` cresce a cada alteração. Flag desconhecida pelo app é ignorada; flag ausente = desligada.
 - Erros: `500 erro_interno`; `429` (rate limit) no backend real (o mock não limita).
 - Eventos relacionados: `config.updated` (só para conexões autenticadas; sem login o app rebusca ao abrir e ao voltar do segundo plano, ADR 0011).
@@ -301,8 +304,15 @@
   | `rede-lenta` | toda rota `/v1/*` atrasa 3 s |
   | `manutencao` | `ConfigApp.manutencao` ativa (`retryAfterSeconds: 300`): rotas `/v1/*` (exceto `/config`) → `503 manutencao`; `configVersion` sobe e `config.updated` é emitido |
   | `versao-minima` | `minAppVersion` = `99.0.0`: rotas `/v1/*` (exceto `/config`) com `X-App-Version` menor → `426`; `configVersion` sobe e `config.updated` é emitido |
+  | `regiao-bloqueada` | país detectado passa a ser `XX` (fora da lista): `/config` mostra `region.allowed = false` e as demais rotas `/v1/*` → `403 regiao_bloqueada` |
 
 ### POST /__mock/emit — no mock
 - Corpo `{ "type": "...", "data": { }, "target": { "room": "live:123" } | { "userId": "u1" } | { "all": true } }`.
 - `type` precisa existir no catálogo de `docs/EVENTOS-TEMPO-REAL.md` (servidor → cliente); senão `400 validacao`. Resposta `200 { "delivered": n }`.
+
+### POST /v1/devices — no mock (ENT01)
+- Auth: opcional (sem login no primeiro uso). Corpo: `{ "deviceId"?: string, "platform": "android" | "ios" | "web", "appVersion": "x.y.z", "locale": "pt-BR" | "en", "model"?: string }` (`web` só no build de teste).
+- O servidor gera o `deviceId`. `deviceId` conhecido → atualiza (`200`); ausente, desconhecido ou forjado → cria um novo (`201`), nunca adota o id enviado.
+- Resposta: `{ "deviceId": "..." }`. Erros: `400 validacao`; `429` no backend real (limite por IP).
+- Entidades: Dispositivo. Base da sessão única (RN-06) no plano 1b.
 

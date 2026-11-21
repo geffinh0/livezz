@@ -71,4 +71,4 @@
 7. Testes de widget com fonte 2x e RTL também na barra de navegação.
 8. **Voltar (Q-48):** em Descobrir, toque duplo para sair (aviso por 2 s). **Seguindo para visitante (Q-49):** tela vazia com convite e botão Entrar; Ao vivo, Mensagens e Perfil abrem o ENT17.
 
-Status: aguardando aprovação
+Status: aprovado pelo usuário em 2026-11-21
