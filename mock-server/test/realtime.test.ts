@@ -113,6 +113,36 @@ describe('WebSocket /v1/realtime (TRV01)', () => {
     c.ws.close();
   });
 
+  it('sala que exige participação → sem_permissao; teto de salas → limite_excedido', async () => {
+    const { url } = await start();
+    const c = await authed(url);
+    c.send('room.join', { room: 'conversation:alheia' }, 'x1');
+    expect((await c.next('ack')).data).toEqual({ refId: 'x1', ok: false, error: 'sem_permissao' });
+    for (let i = 0; i < 20; i++) {
+      if (i % 10 === 0) await new Promise((r) => setTimeout(r, 1100)); // fica abaixo do limite de taxa
+      c.send('room.join', { room: `live:l${i}` }, `r${i}`);
+      await c.next('ack');
+    }
+    c.send('room.join', { room: 'live:extra' }, 'r21');
+    expect((await c.next('ack')).data).toEqual({ refId: 'r21', ok: false, error: 'limite_excedido' });
+    c.ws.close();
+  });
+
+  it('auth de novo na mesma conexão é recusado', async () => {
+    const { url } = await start();
+    const c = await authed(url);
+    c.send('auth', { token: 'dev-token-u-bruno' }, 'a2');
+    expect((await c.next('ack')).data).toEqual({ refId: 'a2', ok: false, error: 'conflito' });
+    c.ws.close();
+  });
+
+  it('rajada acima do limite fecha com 4008', async () => {
+    const { url } = await start();
+    const c = await authed(url);
+    for (let i = 0; i < 30; i++) c.send('ping');
+    expect(await c.closed).toBe(4008);
+  });
+
   it('segunda conexão da mesma conta substitui a primeira (RN-06)', async () => {
     const { url } = await start();
     const first = await authed(url);

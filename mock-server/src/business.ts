@@ -13,3 +13,7 @@ export const maintenanceRetryAfterSeconds = 300;
 export const slowNetworkDelayMs = 3000;
 export const forcedMinAppVersion = '99.0.0';
 export const realtimeAuthTimeoutMs = 5000;
+
+// Proteções do canal de tempo real (valores do mock; o backend real terá os seus).
+export const realtimeMaxRoomsPerConnection = 20;
+export const realtimeMaxMessagesPerSecond = 20;

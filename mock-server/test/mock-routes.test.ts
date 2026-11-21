@@ -86,6 +86,7 @@ describe('/__mock/reset', () => {
     const r = await mock.app.inject({ method: 'POST', url: '/__mock/reset' });
     expect(r.statusCode).toBe(204);
     expect(mock.state.scenarios.size).toBe(0);
+    expect(mock.state.config.configVersion).toBe(2); // só cresce
     expect(conn.c.close).toHaveBeenCalledWith(1001, 'mock reset');
     expect((await mock.app.inject({ method: 'GET', url: '/v1/config' })).statusCode).toBe(200);
   });

@@ -327,7 +327,7 @@ Usada por: ASS11, CHA08, MSG08, FEED06, SEG01, ADM05 · id, denunciante_id, alvo
 
 ## Configuração
 
-### IntegracaoProvedor — em uso no mock (só tipo, provedor `fake` e ativo; sem credenciais na Fase 0)
+### IntegracaoProvedor — em uso no mock (o mock semeia os 10 tipos com provedor `fake` e ativo; sem credenciais na Fase 0)
 Usada por: ADM19, TRV13, RN-84 · id, tipo (`pagamento_loja_alternativa`, `pagamento_web`, `repasse_saque`, `sms_whatsapp`, `verificacao_idade`, `traducao`, `moderacao_midia`, `antibot`, `push`, `analytics`), provedor, ativo, credenciais 🔒 (criptografadas; nunca devolvidas inteiras), configuracao (objeto), ultimo_teste_em, ultimo_teste_ok, atualizado_por, atualizado_em.
 ### ConfigApp — em uso no mock · Usada por: ENT01, TRV04, `GET /config`, `config.updated` · versao (inteiro crescente a cada alteração; ADR 0007/0011), versao_minima, manutencao (ativa, retry_after_segundos), abas_descobrir, flags (`lucky_gift`, `paid_per_minute`, `coin_reseller`, `referrals`, `agencies`, `face_presence`, métodos de login…), regioes_permitidas, limites (RN-40–RN-59), textos_legais (versões), alterada_por, alterada_em.
 ### FlagHistorico — proposta · flag, valor, alterada_por, aviso_juridico_confirmado, alterada_em.
@@ -365,6 +365,26 @@ erDiagram
   USUARIO ||--o{ DENUNCIA : faz
 ```
 
+### Correspondência de nomes de ConfigApp (JSON ↔ banco)
+| JSON (`GET /config`) | Banco (`ConfigApp`) |
+| --- | --- |
+| configVersion | versao |
+| minAppVersion | versao_minima |
+| maintenance.active / maintenance.retryAfterSeconds | manutencao.ativa / manutencao.retry_after_segundos |
+| discoverTabs | abas_descobrir |
+| allowedRegions | regioes_permitidas |
+| limits (chatMaxLength, chatMessagesPerSecond, pkInviteTtlSeconds, stageInviteTtlSeconds, callInviteTtlSeconds) | limites (mesmas chaves em snake_case) |
+| legalTexts.{terms,privacy,guidelines}.{version,url} | textos_legais (versão e caminho; a URL é montada com `portalBaseUrl` do tenant) |
+`alterada_por` e `alterada_em` ainda não existem no mock (entram com o painel, ADM14).
+
+### ConfigCacheLocal — em uso no app (aparelho, não vai para o banco)
+Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = JSON da última `GET /config` válida, mesclado por `config.updated`. Sem dado pessoal. Serve de reserva sem rede. Flags e limites continuam sendo aplicados no servidor (alterar o cache no aparelho não libera nada).
+
+### Dados só de teste no mock (Fase 0)
+- **Usuários de teste** (`mock-server/fixtures/users.json`): `u-ana`, `u-bruno` (pt-BR) e `u-carla` (en); só id, username, nome_exibicao e idioma. Fictícios. Tokens de teste `dev-token-<id>` (ver EVENTOS-TEMPO-REAL.md).
+- **CodigoVerificacao (fake de SMS):** `FakeOutbox.sms[]` = `{ channel, phoneE164 🔒, code 🔒 }`, só em memória e só para testes; nunca em log nem fixture.
+- **VerificacaoIdade (fake):** sessão → resultado (`aprovada`/`reprovada`), só em memória.
+
 ### Correspondência de nomes das flags (JSON camelCase ↔ banco snake_case)
 | JSON (`GET /config`) | Banco (`ConfigApp.flags`) |
 | --- | --- |
@@ -391,3 +411,4 @@ Valor inicial das flags no mock vem de `tenants/<id>/tenant.json` → `features`
 | 2026-11-20 | Versão inicial com todas as entidades propostas a partir da especificação | Kit inicial |
 | 2026-11-20 | Sessão única por conta; idioma e sinal de idade da loja no Usuario; diamantes normais × bônus e moedas pagas × grátis no ledger; MenuCobranca e cobrança por presente; DeteccaoConteudo; VIP por gasto (NivelVip, VipStatus) no lugar de assinatura; assinatura de criador em reais; LinkPortal; IntegracaoProvedor; ConfigProgressao; ConfigEconomia ampliada | Respostas do usuário às questões Q-01 a Q-34 |
 | 2026-11-21 | ConfigApp: campo `versao`, `manutencao` com `retry_after_segundos`, status `em uso no mock`; tabela de correspondência das flags; IntegracaoProvedor em uso no mock (fake, sem credenciais) | Fase 0 (TRV04, TRV13; ADR 0011) |
+| 2026-11-21 | Tabela de correspondência completa de ConfigApp; ConfigCacheLocal (aparelho); dados só de teste do mock (usuários, outbox do fake de SMS, sessões do fake de idade) | Fase 0 (conferência código × docs pelo guardião de dados) |

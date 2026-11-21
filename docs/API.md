@@ -19,7 +19,7 @@
 - **Sessão única:** login em um novo aparelho revoga a sessão anterior (RN-06); requisições do aparelho antigo recebem `401` com `code: sessao_substituida`.
 - **Versão do app:** header `X-App-Version` (semver `x.y.z`); resposta `426` com `code: atualizacao_obrigatoria` quando abaixo da mínima.
 - **Manutenção:** resposta `503` com `code: manutencao` e `Retry-After` (segundos) enquanto a manutenção estiver ativa.
-- **Exceções:** `GET /config` nunca responde `426` nem `503` (o app precisa ler a config para mostrar as telas de atualização e manutenção); rotas `/__mock/*` também não.
+- **Exceções:** `GET /config` e o upgrade de `/v1/realtime` nunca respondem `426` nem `503` (o app precisa ler a config para mostrar as telas de atualização e manutenção); rotas `/__mock/*` também não. Sem header `X-App-Version` o `426` não é aplicado. Detalhe do `426`: `details.minAppVersion`. `Retry-After` padrão: 60 s.
 - **Rate limit:** `429` com `Retry-After`.
 - **Admin:** rotas `/v1/admin/*` exigem token de admin com papel; toda escrita gera `LogAuditoria`.
 - **Mock-only:** rotas `/__mock/*` existem apenas no mock-server.
@@ -284,12 +284,12 @@
   }
   ```
 - Regras: valores vêm de `ConfigApp` (editável pelo comprador, ADR 0007); `configVersion` cresce a cada alteração. Flag desconhecida pelo app é ignorada; flag ausente = desligada.
-- Erros: `429` (rate limit), `500 erro_interno`.
+- Erros: `500 erro_interno`; `429` (rate limit) no backend real (o mock não limita).
 - Eventos relacionados: `config.updated` (só para conexões autenticadas; sem login o app rebusca ao abrir e ao voltar do segundo plano, ADR 0011).
 - Entidades: ConfigApp.
 
 ### POST /__mock/reset — no mock
-- Corpo vazio. Recarrega fixtures, zera cenários, fecha conexões de tempo real. Resposta `204`.
+- Corpo vazio. Recarrega fixtures, zera cenários, fecha conexões de tempo real (código `1001`). `configVersion` continua crescendo (não volta a 1), para o app não ignorar a config nova. Resposta `204`.
 
 ### POST /__mock/scenario/{nome} — no mock
 - Corpo opcional `{ "active": true|false }` (padrão `true`). Resposta `200 { "scenario": nome, "active": bool }`; nome desconhecido → `404 nao_encontrado`.

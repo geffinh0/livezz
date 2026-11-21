@@ -35,7 +35,7 @@ Respostas: `ack` `{ refId, ok, error? }` (`refId` = `id` do envelope enviado pel
 | pong | `{}` | TRV01 | no mock |
 | ack | `{ refId, ok, error }` | TRV01 | no mock |
 | session.invalid | `{ reason }` | ENT19 | no mock |
-| session.replaced | `{ at }` (a conta entrou em outro aparelho) | ENT19 | proposto |
+| session.replaced | `{ at }` (a conta entrou em outro aparelho) | ENT19 | no mock |
 | config.updated | `{ partial config }` | TRV04 | no mock |
 | account.sanctioned | `{ type, until, reason }` | SEG03 | proposto |
 | age.verification.updated | `{ status }` | ENT09 | proposto |
@@ -129,12 +129,15 @@ Respostas: `ack` `{ refId, ok, error? }` (`refId` = `id` do envelope enviado pel
 | agency.invite | `{ invite }` 🚩 | AGE02 | proposto |
 
 ## Detalhes (Fase 0, no mock)
-- **Envelope do cliente:** mesmo formato `{ v, id, type, ts, data }`. Mensagem que não é JSON ou sem `type`/`id` → `ack { ok:false, error:"validacao" }` (quando houver `id`) ou é ignorada.
+- **Envelope do cliente:** mesmo formato `{ v, id, type, ts, data }`. JSON inválido ou sem `type` → ignorado, sem resposta. O `ack` só é enviado quando a mensagem tem `id`. Tipo desconhecido depois do `auth` → `ack { ok:false, error:"validacao" }`. Frame acima de 16 KB é recusado.
 - **auth:** `data.token`. Válido → `ack { ok:true }`. Inválido → `session.invalid { reason:"token_invalido" }` e fechamento com código `4001`. Sem `auth` em 5 s → fechamento `4000`. Outra mensagem antes do `auth` → `ack { ok:false, error:"nao_autenticado" }`.
   - **Só no mock (Fase 0):** tokens de teste `dev-token-<userId>` para os usuários das fixtures. O login real (Fase 1) troca por access token; o app obtém o token por uma interface (`TokenSource`), sem token fixo.
 - **Uma conexão por conta:** nova conexão autenticada da mesma conta fecha a anterior com `session.replaced` + código `4002` (RN-06).
-- **ping → pong** com o mesmo `data` vazio.
-- **room.join / room.leave:** `data.room` no formato `live:{id}`, `pk:{id}`, `call:{id}`, `conversation:{id}`; formato inválido → `ack { ok:false, error:"validacao" }`. Na Fase 0 o mock só valida o formato; existência e permissão de cada sala entram com a feature dona (Fases 3, 5, 6).
+- **auth repetido** numa conexão já autenticada → `ack { ok:false, error:"conflito" }` (não troca de conta).
+- **ping → pong** com `data` vazio, sem `ack`.
+- **Limites (mock):** até 20 mensagens por segundo por conexão (acima disso fecha com `4008`) e até 20 salas por conexão (`ack limite_excedido`). Valores em `mock-server/src/business.ts`.
+- **room.join / room.leave:** `data.room` no formato `live:{id}`, `pk:{id}`, `call:{id}`, `conversation:{id}`; formato inválido → `ack { ok:false, error:"validacao" }`. Na Fase 0 só salas `live:` são abertas; `pk:`, `call:` e `conversation:` respondem `ack { ok:false, error:"sem_permissao" }` até a feature dona checar participação (Fases 3, 5, 6).
 - **config.updated:** `data = { configVersion, ...campos alterados }` (mesmo formato de `GET /config`). O cliente ignora se `configVersion` ≤ à versão que já tem.
-- **Códigos de fechamento:** `4000` sem auth a tempo · `4001` token inválido · `4002` sessão substituída · `1001` servidor encerrando (mock reset).
+- **Códigos de fechamento:** `4000` sem auth a tempo · `4001` token inválido · `4002` sessão substituída · `4008` limite de mensagens · `1001` servidor encerrando (mock reset). `4001` e `4002` são terminais: o cliente não reconecta.
+- **Cliente (app):** espera o `ack` do `auth` por até 10 s; reconecta com espera de 1 s dobrando até 30 s (±20%); ao reconectar reenvia `auth` e `room.join` das salas ativas e rebusca o estado por REST.
 

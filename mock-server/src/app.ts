@@ -50,7 +50,10 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   registerMockRoutes(app, {
     getState,
     resetState: () => {
+      // A versão da config só cresce: clientes ignoram versões antigas.
+      const nextVersion = holder.state.config.configVersion + 1;
       holder.state = createState(tenantId);
+      holder.state.config.configVersion = nextVersion;
     },
     hub: holder.hub,
     tenantId,

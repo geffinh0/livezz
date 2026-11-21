@@ -11,6 +11,7 @@ export async function fetchConfig(locale: string): Promise<PublicConfig | null> 
     const res = await fetch(`${base.replace(/\/+$/, '')}/v1/config`, {
       headers: { 'Accept-Language': locale },
       cache: 'no-store',
+      signal: AbortSignal.timeout(5000),
     });
     if (!res.ok) return null;
     return (await res.json()) as PublicConfig;
