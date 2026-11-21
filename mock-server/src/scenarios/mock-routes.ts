@@ -45,6 +45,14 @@ function applyScenario(ctx: MockContext, name: ScenarioName, active: boolean) {
       : { active: false, retryAfterSeconds: null };
     bumpConfig(ctx, { maintenance: cfg.maintenance });
   }
+  if (name === 'entrada-desligada') {
+    const original = pristine(ctx.tenantId).flags;
+    const loginFlags = ['loginPhone', 'loginEmail', 'loginGoogle'];
+    const changed: Record<string, boolean> = {};
+    for (const f of loginFlags) changed[f] = active ? false : (original[f] ?? false);
+    Object.assign(cfg.flags, changed);
+    bumpConfig(ctx, { flags: changed });
+  }
   if (name === 'versao-minima') {
     cfg.minAppVersion = active ? forcedMinAppVersion : pristine(ctx.tenantId).minAppVersion;
     bumpConfig(ctx, { minAppVersion: cfg.minAppVersion });

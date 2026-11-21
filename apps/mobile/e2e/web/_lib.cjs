@@ -54,7 +54,15 @@ function flow(name, body) {
           return false;
         }
       },
-      text: async (s) => (await page.getByText(s, { exact: false }).count()) > 0,
+      // Espera o texto aparecer (até 5 s) em vez de olhar uma vez só.
+      text: async (s, timeout = 5000) => {
+        try {
+          await page.getByText(s, { exact: false }).first().waitFor({ state: 'attached', timeout });
+          return true;
+        } catch {
+          return false;
+        }
+      },
       wait: (ms) => page.waitForTimeout(ms),
       // Fecha bottom sheet/diálogo tocando fora (Escape não fecha no Flutter web).
       dismiss: async () => {

@@ -97,5 +97,6 @@
   "followingVisitorBody": "Follow people to see their lives here.",
   "pressBackAgainToExit": "Press back again to exit",
   "methodsNoneTitle": "Sign in unavailable right now",
-  "methodsNoneBody": "No sign-in method is active. Please try again later."
+  "methodsNoneBody": "No sign-in method is active. Please try again later.",
+  "unreadMessages": "{count, plural, =1{1 unread message} other{{count} unread messages}}"
 }

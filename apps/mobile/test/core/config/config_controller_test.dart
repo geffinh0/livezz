@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:fake_async/fake_async.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:livezz_mobile/core/config/application/config_controller.dart';
@@ -34,6 +36,7 @@ class Adapter implements HttpClientAdapter {
   ) async {
     calls++;
     final r = next();
+    if (r is _Never) return Completer<ResponseBody>().future;
     if (r is DioExceptionType) throw DioException(requestOptions: o, type: r);
     return ResponseBody.fromString(
       jsonEncode(r),
@@ -184,4 +187,27 @@ void main() {
     expect(cached.region, isNull);
     expect(cached.regionAllowed, isTrue);
   });
+
+  test('abertura sem resposta em 10 s vira TimeoutFailure (ENT01)', () {
+    fakeAsync((async) {
+      adapter.next = () => const _Never();
+      Object? error;
+      container
+          .read(configControllerProvider.future)
+          .then<void>(
+            (_) {},
+            onError: (Object e) {
+              error = e;
+            },
+          );
+      async.elapse(const Duration(seconds: 9));
+      expect(error, isNull);
+      async.elapse(const Duration(seconds: 2));
+      expect(error, isA<TimeoutFailure>());
+    });
+  });
+}
+
+class _Never {
+  const _Never();
 }

@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../../app/providers.dart';
 import '../../../app/routes.dart';
 import '../../../core/auth/session.dart';
 import '../../../core/ui/app_toast.dart';
@@ -33,9 +36,26 @@ enum HomeTab {
   };
 }
 
-/// Mensagens não lidas (evento `unread.updated`). Sem sessão: 0. O contador
-/// real chega com MSG (Fase 6).
-final unreadMessagesProvider = Provider<int>((ref) => 0);
+/// Mensagens não lidas: evento `unread.updated` `{ messages, notifications }`
+/// do tempo real (só chega com sessão). Sem sessão: 0.
+class UnreadMessagesController extends Notifier<int> {
+  @override
+  int build() {
+    if (ref.watch(sessionProvider) == null) return 0;
+    final sub = ref.watch(realtimeClientProvider).on('unread.updated').listen((
+      e,
+    ) {
+      final n = e.data['messages'];
+      if (n is int && n >= 0) state = n;
+    });
+    ref.onDispose(sub.cancel);
+    return 0;
+  }
+}
+
+final unreadMessagesProvider = NotifierProvider<UnreadMessagesController, int>(
+  UnreadMessagesController.new,
+);
 
 class HomeShell extends ConsumerStatefulWidget {
   const HomeShell({required this.shell, super.key});
@@ -46,8 +66,14 @@ class HomeShell extends ConsumerStatefulWidget {
 }
 
 class _HomeShellState extends ConsumerState<HomeShell> {
-  DateTime? _lastBack;
-  static const _exitWindow = Duration(seconds: 2);
+  Timer? _exitWindow; // aberto após o 1º voltar em Descobrir
+  static const _exitWindowDuration = Duration(seconds: 2);
+
+  @override
+  void dispose() {
+    _exitWindow?.cancel();
+    super.dispose();
+  }
 
   void _select(int index) {
     final tab = HomeTab.values[index];
@@ -67,12 +93,11 @@ class _HomeShellState extends ConsumerState<HomeShell> {
       widget.shell.goBranch(HomeTab.discover.index);
       return;
     }
-    final now = DateTime.now();
-    if (_lastBack != null && now.difference(_lastBack!) < _exitWindow) {
+    if (_exitWindow?.isActive ?? false) {
       SystemNavigator.pop();
       return;
     }
-    _lastBack = now;
+    _exitWindow = Timer(_exitWindowDuration, () {});
     AppToast.show(context, AppLocalizations.of(context).pressBackAgainToExit);
   }
 
@@ -96,7 +121,13 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                 icon: TestId(
                   'nav.${tab.name}',
                   child: tab == HomeTab.messages && unread > 0
-                      ? Badge.count(count: unread, child: Icon(tab.icon))
+                      ? Semantics(
+                          label: l.unreadMessages(unread),
+                          child: Badge.count(
+                            count: unread,
+                            child: Icon(tab.icon),
+                          ),
+                        )
                       : Icon(
                           tab.icon,
                           size: tab == HomeTab.live ? 32 : null,

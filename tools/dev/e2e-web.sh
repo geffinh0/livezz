@@ -11,7 +11,9 @@ OUT="$ROOT/build/e2e-web"
 TENANT="${TENANT:-liveapp}"
 mkdir -p "$OUT"
 PIDS=()
-trap 'for p in "${PIDS[@]:-}"; do [ -n "$p" ] && kill "$p" 2>/dev/null || true; done' EXIT
+# Cada servidor roda no próprio grupo de processos (setsid): no fim, o grupo
+# inteiro é encerrado (inclusive o node filho do npx).
+trap 'for p in "${PIDS[@]:-}"; do [ -n "$p" ] && kill -- "-$p" 2>/dev/null || true; done' EXIT
 
 echo "==> App web ($TENANT, debug)"
 cd "$ROOT"
@@ -31,9 +33,9 @@ for port in 3000 8080; do
     exit 1
   fi
 done
-(cd "$ROOT/mock-server" && PORT=3000 npx tsx src/main.ts > "$OUT/mock-server.log" 2>&1) &
+setsid bash -c "cd '$ROOT/mock-server' && PORT=3000 exec npx tsx src/main.ts" > "$OUT/mock-server.log" 2>&1 &
 PIDS+=($!)
-(cd "$ROOT/apps/mobile/build/web" && python3 -m http.server 8080 --bind 127.0.0.1 > "$OUT/http.log" 2>&1) &
+setsid bash -c "cd '$ROOT/apps/mobile/build/web' && exec python3 -m http.server 8080 --bind 127.0.0.1" > "$OUT/http.log" 2>&1 &
 PIDS+=($!)
 for _ in $(seq 1 30); do
   curl -sf http://127.0.0.1:3000/v1/config >/dev/null && curl -sf http://127.0.0.1:8080/ >/dev/null && break

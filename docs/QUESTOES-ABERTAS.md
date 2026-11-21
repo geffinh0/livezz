@@ -71,3 +71,7 @@
 | Q-46 | Onde abrir termos e política (ENT03, ENT16) | Tela do app com WebView (`webview_flutter`) carregando a página do portal; navegação travada no domínio do portal | 2026-11-21 |
 | Q-48 | Botão voltar na barra principal (NAV01) | Dentro da aba volta na pilha; na raiz de outra aba vai para Descobrir; em Descobrir pede "toque de novo para sair" (2 s) | 2026-11-21 |
 | Q-49 | Aba Seguindo para visitante | Tela vazia com convite ("Entre para ver quem você segue" + Entrar), sem abrir o pedido de login | 2026-11-21 |
+| Q-50 | Validade da sessão (refresh token) | 30 dias sem uso, configurável pelo comprador; token de acesso de 15 min renova sozinho | 2026-11-21 |
+| Q-51 | Preenchimento automático do código SMS no Android (ENT04) | Fica para quando o SMS real entrar (Fase 12); até lá o mock mostra o código para teste e ENT04 fica `[~]` | 2026-11-21 |
+| Q-52 | Cadastro inicial (ENT08) no plano 1b? | Não: plano 1c logo depois; na 1b conta nova vai para "complete seu cadastro (em breve)" | 2026-11-21 |
+| Q-53 | Login com Google antes da Fase 12 | Contas de teste do mock (nova/existente/erro/cancelar) seguindo o mesmo contrato do Google real | 2026-11-21 |

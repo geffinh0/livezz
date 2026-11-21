@@ -46,17 +46,24 @@ class EntryMethodsScreen extends ConsumerWidget {
           child: ListView(
             padding: const EdgeInsets.all(AppSpace.xl),
             children: [
-              Text(
-                l.methodsTitle,
-                style: Theme.of(context).textTheme.titleLarge,
+              Semantics(
+                header: true,
+                child: Text(
+                  l.methodsTitle,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
               ),
               const SizedBox(height: AppSpace.xl),
               if (active.isEmpty)
-                SizedBox(
-                  height: 200,
-                  child: StateView.empty(
-                    title: l.methodsNoneTitle,
-                    message: l.methodsNoneBody,
+                TestId(
+                  'entry.methods.none',
+                  child: SizedBox(
+                    height: 200,
+                    child: StateView.empty(
+                      key: const ValueKey('entry.methods.none'),
+                      title: l.methodsNoneTitle,
+                      message: l.methodsNoneBody,
+                    ),
                   ),
                 ),
               for (final m in active) ...[

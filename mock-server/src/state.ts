@@ -30,13 +30,15 @@ export interface ConfigApp {
   allowedRegions: string[];
 }
 
-export type ScenarioName = 'erro-500' | 'rede-lenta' | 'manutencao' | 'versao-minima' | 'regiao-bloqueada';
+export type ScenarioName =
+  'erro-500' | 'rede-lenta' | 'manutencao' | 'versao-minima' | 'regiao-bloqueada' | 'entrada-desligada';
 export const scenarioNames: readonly ScenarioName[] = [
   'erro-500',
   'rede-lenta',
   'manutencao',
   'versao-minima',
   'regiao-bloqueada',
+  'entrada-desligada',
 ];
 
 /** Dispositivo (DATABASE.md). */

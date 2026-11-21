@@ -21,12 +21,12 @@
 
 ## ENT · Entrada, conta e identidade
 
-- [ ] **ENT01 Splash e inicialização**
+- [~] **ENT01 Splash e inicialização**
   - Aceite: carrega config do tenant e do servidor (flags, textos legais, versão mínima); registra o dispositivo; restaura sessão; decide entre Home, Boas-vindas, Atualização obrigatória ou Manutenção; tempo máximo de espera com tela de erro e "tentar de novo".
   - Dados: Dispositivo, ConfigApp · Depende: TRV03, TRV04
-- [ ] **ENT02 Boas-vindas e modo visitante**
+- [~] **ENT02 Boas-vindas e modo visitante**
   - Aceite: marca do tenant; botões Entrar, Criar conta e "Explorar sem conta"; visitante navega e assiste, mas qualquer interação abre ENT17.
-- [ ] **ENT03 Escolha do método de entrada**
+- [~] **ENT03 Escolha do método de entrada**
   - Aceite: telefone, e-mail e Google (métodos ativos vêm das flags); link para termos e política; aviso 18+.
 - [ ] **ENT04 Telefone + código (SMS/WhatsApp)**
   - Aceite: seletor de país (Brasil padrão), máscara, código de 6 dígitos com validade de 60 s (RN-02) e reenvio com contagem regressiva; limite de tentativas; preenchimento automático do código no Android; canal SMS ou WhatsApp conforme flag; provedor de envio configurado pelo comprador (RN-84).
@@ -57,16 +57,16 @@
 - [ ] **ENT16 Aceite de termos e política**
   - Aceite: aceite registrado com versão e data; nova versão exige novo aceite antes de continuar.
   - Dados: AceiteTermos
-- [ ] **ENT17 Login exigido (bottom sheet)**
+- [~] **ENT17 Login exigido (bottom sheet)**
   - Aceite: aparece quando visitante tenta interagir; após entrar, retoma a ação que ele tentou.
-- [ ] **ENT18 Restrição regional**
+- [x] **ENT18 Restrição regional**
   - Aceite: países permitidos configuráveis pelo cliente; fora da região mostra tela informativa (detecção por servidor).
 - [ ] **ENT19 Sessão e dispositivos**
   - Aceite: um aparelho por conta (RN-06): entrar em outro aparelho encerra a sessão do anterior, que recebe aviso "sua conta entrou em outro aparelho" e volta ao login; renovação automática do token; sessão expirada leva ao login sem perder o contexto da navegação.
 
 ## NAV · Navegação e estrutura
 
-- [ ] **NAV01 Navegação principal**
+- [~] **NAV01 Navegação principal**
   - Aceite: barra inferior com Descobrir, Seguindo, botão central "Ao vivo", Mensagens (com contador), Perfil; estado preservado por aba; voltar do Android com comportamento previsível.
 - [ ] **NAV02 Links diretos (deep links)**
   - Aceite: abrir live, perfil, post, convite de família/agência e indicação por link; funciona com app fechado e aberto; visitante cai em ENT17 quando preciso.

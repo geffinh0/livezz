@@ -95,7 +95,7 @@ class _LegalScreenState extends ConsumerState<LegalScreen> {
     } else if (_controller == null) {
       body = Padding(
         padding: const EdgeInsets.all(AppSpace.xl),
-        child: SelectableText(url.toString()),
+        child: TestId('legal.url', child: Text(url.toString())),
       );
     } else {
       body = Stack(

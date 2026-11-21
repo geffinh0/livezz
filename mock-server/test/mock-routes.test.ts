@@ -126,3 +126,19 @@ describe('/__mock/emit', () => {
     expect(r.statusCode).toBe(400);
   });
 });
+
+describe('cenário entrada-desligada', () => {
+  it('desliga os métodos de login e volta ao original', async () => {
+    const { app, state } = await buildApp();
+    await app.inject({ method: 'POST', url: '/__mock/scenario/entrada-desligada' });
+    const flags = (await app.inject({ method: 'GET', url: '/v1/config' })).json().flags;
+    expect([flags.loginPhone, flags.loginEmail, flags.loginGoogle]).toEqual([false, false, false]);
+    expect(flags.pk).toBe(true);
+    await app.inject({
+      method: 'POST',
+      url: '/__mock/scenario/entrada-desligada',
+      payload: { active: false },
+    });
+    expect(state.config.flags.loginPhone).toBe(true);
+  });
+});

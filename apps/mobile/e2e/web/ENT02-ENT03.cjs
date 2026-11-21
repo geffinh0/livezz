@@ -16,9 +16,10 @@ flow('ENT02-ENT03', async (t) => {
 
   await t.button('Termos de uso').click();
   t.check('termos abrem com a URL do portal', await t.visible('legal.terms'));
-  const legalText = await t.byId('legal.terms').first().evaluate((e) => e.innerText || e.getAttribute('aria-label') || '');
+  await t.visible('legal.url');
+  const url = (await t.byId('legal.url').first().textContent()) ?? '';
   await t.shot('termos');
-  t.check('tela dos termos aberta (WebView no Android; endereço na web)', legalText !== null);
+  t.check('termos apontam para o portal do tenant', url.includes('localhost:3002/legal/termos'));
   await t.page.goBack();
   await t.wait(800);
 
@@ -29,4 +30,12 @@ flow('ENT02-ENT03', async (t) => {
 
   await t.open('/', { fresh: false });
   t.check('escolha de visitante é lembrada', await t.visible('tab.discover'));
+
+  // Erro: nenhum método de entrada ligado pelo comprador
+  await t.mock('/__mock/scenario/entrada-desligada');
+  await t.open('/');
+  await t.button('Entrar').click();
+  t.check('sem métodos ligados mostra aviso', await t.visible('entry.methods.none'));
+  t.check('sem métodos ligados não mostra botões', !(await t.visible('entry.method.phone', 1500)));
+  await t.shot('sem-metodos');
 });

@@ -71,4 +71,8 @@
 7. Testes de widget com fonte 2x e RTL também na barra de navegação.
 8. **Voltar (Q-48):** em Descobrir, toque duplo para sair (aviso por 2 s). **Seguindo para visitante (Q-49):** tela vazia com convite e botão Entrar; Ao vivo, Mensagens e Perfil abrem o ENT17.
 
-Status: aprovado pelo usuário em 2026-11-21
+## Andamento (2026-11-21)
+- Passos 1–9 feitos. Revisões: revisor, revisor-seguranca, revisor-ux, guardiao-dados; correções no commit dcc4645 e seguintes; sugestões M-026 a M-036.
+- Verificador: ENT18 `[x]`; ENT01, ENT02, ENT03, ENT17, NAV01 `[~]` (ver PROGRESSO).
+
+Status: aprovado pelo usuário em 2026-11-21 · concluído em 2026-11-21

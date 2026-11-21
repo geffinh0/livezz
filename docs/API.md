@@ -258,7 +258,7 @@
 | Método | Caminho | Descrição |
 | --- | --- | --- |
 | POST | /__mock/reset | Volta aos dados iniciais e desliga todos os cenários (no mock) |
-| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima`, `regiao-bloqueada` |
+| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima`, `regiao-bloqueada`, `entrada-desligada` |
 | POST | /__mock/emit | Emite um evento de tempo real do catálogo (para testes) (no mock) |
 | POST | /__mock/bots/{start|stop} | Liga/desliga bots de chat e presentes (proposto, Fase 3) |
 
@@ -304,6 +304,7 @@
   | `rede-lenta` | toda rota `/v1/*` atrasa 3 s |
   | `manutencao` | `ConfigApp.manutencao` ativa (`retryAfterSeconds: 300`): rotas `/v1/*` (exceto `/config`) → `503 manutencao`; `configVersion` sobe e `config.updated` é emitido |
   | `versao-minima` | `minAppVersion` = `99.0.0`: rotas `/v1/*` (exceto `/config`) com `X-App-Version` menor → `426`; `configVersion` sobe e `config.updated` é emitido |
+  | `entrada-desligada` | flags `loginPhone`, `loginEmail` e `loginGoogle` desligadas; `configVersion` sobe e `config.updated` é emitido |
   | `regiao-bloqueada` | país detectado passa a ser `XX` (fora da lista): `/config` mostra `region.allowed = false` e as demais rotas `/v1/*` → `403 regiao_bloqueada` |
 
 ### POST /__mock/emit — no mock

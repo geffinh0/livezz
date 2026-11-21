@@ -201,5 +201,13 @@
   "followingVisitorBody": "Siga pessoas para ver as lives delas aqui.",
   "pressBackAgainToExit": "Toque de novo para sair",
   "methodsNoneTitle": "Entrada indisponível no momento",
-  "methodsNoneBody": "Nenhuma forma de entrar está ativa. Tente de novo mais tarde."
+  "methodsNoneBody": "Nenhuma forma de entrar está ativa. Tente de novo mais tarde.",
+  "unreadMessages": "{count, plural, =1{1 mensagem não lida} other{{count} mensagens não lidas}}",
+  "@unreadMessages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }
