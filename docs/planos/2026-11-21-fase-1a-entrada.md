@@ -61,4 +61,13 @@
 8. E2E web dos itens + prints; ajustar `tools/dev/e2e-web.sh` se preciso.
 9. Revisões (revisor, revisor-ux, revisor-seguranca, guardiao-dados), verificador-spec, docs.
 
+## Ajustes da revisão do arquiteto (2026-11-21) — valem sobre o texto acima
+1. **Região é portão HTTP, não campo da config.** O servidor responde `403 regiao_bloqueada` em todas as rotas `/v1/*` (mesmas exceções de 426/503: `/config` e o upgrade do tempo real), com `details.country`. O app trata como portão (`GateRegionBlocked`). Para o app saber já na abertura, `GET /config` inclui `region` **calculado por requisição, fora do cache local e fora do `config.updated`** (escrito em API.md e DATABASE.md). A barreira real é o 403 no servidor.
+2. **`POST /v1/devices`:** o servidor gera o `deviceId`; id desconhecido ou forjado recebe id novo (nunca é adotado); `201` ao criar, `200` ao atualizar; limite de frequência por IP no backend real. Campos batem com a entidade Dispositivo (`modelo` opcional). Esse id é a base da RN-06 no plano 1b. `platform` aceita `android`, `ios` e `web` (só build de teste).
+3. **Tempo de espera:** 10 s é o prazo total da abertura (config); o registro do dispositivo roda em segundo plano e não bloqueia a decisão de rota (falhou → tenta na próxima abertura).
+4. **`PendingAction`:** só em memória, expira em 5 min, a ação é revalidada no servidor quando roda.
+5. **Decisão de rota** em `features/entry/domain` como função Dart pura, com teste de tabela de todas as combinações (portão, região, sessão, visitante).
+6. `X-Mock-Country` documentado como só do mock (o app nunca envia) e incluído no CORS do mock.
+7. Testes de widget com fonte 2x e RTL também na barra de navegação.
+
 Status: aguardando aprovação
