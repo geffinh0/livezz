@@ -132,6 +132,8 @@ No servidor, cada tipo de provedor tem uma **interface de conector**; o comprado
 | Analytics / crash | `AnalyticsProvider` | log no console | Firebase Analytics + Crashlytics |
 | Tradução de mensagens | conector `traducao` | tradução fake | gratuito (Q-40) |
 
+No mock-server: interfaces em `mock-server/src/connectors/types.ts`, fakes em `fakes.ts` e escolha por `IntegracaoProvedor` em `registry.ts`. Contrato detalhado já existe para `sms_whatsapp` (`sendCode`) e `verificacao_idade` (`startSession`, `getResult`); os demais têm só `testConnection` até a feature dona chegar.
+
 ## 13. Segurança e conformidade
 Detalhado em `docs/SEGURANCA.md`. Resumo: tokens curtos + refresh rotativo, segredos só no servidor, rate limit, validação de toda entrada, ledger auditável, verificação de idade confiável (ECA Digital), LGPD (exportar/excluir), moderação em tempo real, logs de auditoria no painel.
 

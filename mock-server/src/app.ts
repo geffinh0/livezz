@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import { ConnectorRegistry } from './connectors/registry.js';
 import { ApiError, errorBody, sendError } from './http/errors.js';
 import { registerGuards } from './http/guards.js';
 import { setDocumentedTypes } from './realtime/catalog.js';
@@ -13,6 +14,7 @@ export interface MockServer {
   app: FastifyInstance;
   state: State;
   hub: Hub;
+  connectors: ConnectorRegistry;
 }
 
 export interface BuildOptions {
@@ -23,7 +25,13 @@ export interface BuildOptions {
 export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   const app = Fastify({ logger: opts.logger ?? false, genReqId: () => crypto.randomUUID() });
   const tenantId = opts.tenantId ?? 'liveapp';
-  const holder: MockServer = { app, state: createState(tenantId), hub: new Hub() };
+  const state = createState(tenantId);
+  const holder: MockServer = {
+    app,
+    state,
+    hub: new Hub(),
+    connectors: new ConnectorRegistry(() => holder.state.integrations),
+  };
   setDocumentedTypes(readDocumentedServerTypes());
 
   app.setErrorHandler((err, req, reply) => {

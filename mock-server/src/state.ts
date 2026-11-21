@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defaultLimits } from './business.js';
+import { defaultIntegrations, type IntegracaoProvedor } from './connectors/registry.js';
 
 // Estado em memória. Cada estrutura corresponde a uma entidade de docs/DATABASE.md.
 
@@ -41,6 +42,7 @@ export interface State {
   config: ConfigApp;
   users: Map<string, User>;
   scenarios: Set<ScenarioName>;
+  integrations: IntegracaoProvedor[];
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -90,5 +92,6 @@ export function createState(tenantId = 'liveapp'): State {
     },
     users: new Map(users.map((u) => [u.id, u])),
     scenarios: new Set(),
+    integrations: defaultIntegrations(),
   };
 }
