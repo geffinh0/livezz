@@ -30,6 +30,11 @@ android {
         versionName = flutter.versionName
     }
 
+    // resValue (nome do app por tenant) precisa ser ligado no AGP recente.
+    buildFeatures {
+        resValues = true
+    }
+
     // Um flavor por tenant, lido de tenants/<id>/tenant.json (white-label, TRV08).
     flavorDimensions += "tenant"
     productFlavors {
