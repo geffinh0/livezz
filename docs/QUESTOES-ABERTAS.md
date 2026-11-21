@@ -69,3 +69,5 @@
 | Q-44 | Como validar E2E de itens sem dependência nativa do Android | Fluxo no navegador (Flutter web + Playwright, `apps/mobile/e2e/web/`) vale como E2E. Maestro no Android (celular ou emulador no CI) passa a ser exigido quando o item depender de recurso nativo (câmera, permissões, vídeo nativo, push, compra na loja). Itens TRV da fundação podem compartilhar um fluxo único | 2026-11-21 |
 | Q-45 | Visual da tela de boas-vindas (ENT02) | Simples e limpa: fundo do tema (claro/escuro), nome/logo do tenant e botões | 2026-11-21 |
 | Q-46 | Onde abrir termos e política (ENT03, ENT16) | Tela do app com WebView (`webview_flutter`) carregando a página do portal; navegação travada no domínio do portal | 2026-11-21 |
+| Q-48 | Botão voltar na barra principal (NAV01) | Dentro da aba volta na pilha; na raiz de outra aba vai para Descobrir; em Descobrir pede "toque de novo para sair" (2 s) | 2026-11-21 |
+| Q-49 | Aba Seguindo para visitante | Tela vazia com convite ("Entre para ver quem você segue" + Entrar), sem abrir o pedido de login | 2026-11-21 |

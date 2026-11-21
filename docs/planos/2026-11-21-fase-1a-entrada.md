@@ -69,5 +69,6 @@
 5. **Decisão de rota** em `features/entry/domain` como função Dart pura, com teste de tabela de todas as combinações (portão, região, sessão, visitante).
 6. `X-Mock-Country` documentado como só do mock (o app nunca envia) e incluído no CORS do mock.
 7. Testes de widget com fonte 2x e RTL também na barra de navegação.
+8. **Voltar (Q-48):** em Descobrir, toque duplo para sair (aviso por 2 s). **Seguindo para visitante (Q-49):** tela vazia com convite e botão Entrar; Ao vivo, Mensagens e Perfil abrem o ENT17.
 
 Status: aguardando aprovação
