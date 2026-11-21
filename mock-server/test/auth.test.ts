@@ -369,7 +369,11 @@ describe('termos (ENT16)', () => {
     const me = (
       await mock.app.inject({ method: 'GET', url: '/v1/me', headers: authed(t.accessToken) })
     ).json();
-    expect(me.pendingTerms.map((p: { document: string }) => p.document)).toEqual(['terms', 'privacy']);
+    expect(me.pendingTerms.map((p: { document: string }) => p.document)).toEqual([
+      'terms',
+      'privacy',
+      'guidelines',
+    ]);
     const blocked = await mock.app.inject({
       method: 'GET',
       url: '/__mock/ping-autenticado',
@@ -383,10 +387,14 @@ describe('termos (ENT16)', () => {
       authed(t.accessToken),
     );
     expect(conflict.statusCode).toBe(409);
-    for (const document of ['terms', 'privacy']) {
+    for (const document of ['terms', 'privacy', 'guidelines']) {
       const ok = await post(mock, '/v1/me/terms/accept', { document, version: 1 }, authed(t.accessToken));
       expect(ok.statusCode).toBe(204);
     }
+    // Aceitar de novo a mesma versão não duplica o registro.
+    await post(mock, '/v1/me/terms/accept', { document: 'terms', version: 1 }, authed(t.accessToken));
+    const rows = mock.state.auth.acceptances.filter((a) => a.userId === t.user.id && a.document === 'terms');
+    expect(rows).toHaveLength(1);
     const free = await mock.app.inject({
       method: 'GET',
       url: '/__mock/ping-autenticado',

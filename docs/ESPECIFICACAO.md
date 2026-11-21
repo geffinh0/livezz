@@ -54,8 +54,8 @@
   - Aceite: oferecido a quem entrou por e-mail/Google; recompensa configurável; uma vez por número.
 - [ ] **ENT15 Contas vinculadas**
   - Aceite: ver e vincular/desvincular métodos; não permite remover o último método.
-- [~] **ENT16 Aceite de termos e política** — feito no plano 1b; aguarda Q-55 (diretrizes obrigatórias ou não)
-  - Aceite: aceite registrado com versão e data; nova versão exige novo aceite antes de continuar.
+- [ ] **ENT16 Aceite de termos e política**
+  - Aceite: aceite registrado com versão e data; nova versão exige novo aceite antes de continuar. Termos, privacidade e diretrizes da comunidade são obrigatórios para todos ao entrar (Q-55).
   - Dados: AceiteTermos
 - [~] **ENT17 Login exigido (bottom sheet)**
   - Aceite: aparece quando visitante tenta interagir; após entrar, retoma a ação que ele tentou.

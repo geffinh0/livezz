@@ -168,7 +168,7 @@ function seedAuth(store: AuthStore): AuthStore {
         verifiedAt: at,
       });
     }
-    for (const document of ['terms', 'privacy'] as const) {
+    for (const document of ['terms', 'privacy', 'guidelines'] as const) {
       store.acceptances.push({
         userId: a.userId,
         document,

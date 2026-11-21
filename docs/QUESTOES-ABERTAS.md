@@ -23,7 +23,6 @@
 | Q-40 | Provedor de tradução gratuito (no servidor ou no aparelho) | ASS03 (Fase 12) | Avaliar tradução no aparelho (sem custo) vs. API gratuita com limites |
 | Q-41 | Validar com advogado o modelo de idade da Q-08 (autodeclaração + sinal da loja no cadastro; verificação forte só para transmitir e sacar) diante do ECA Digital | publicação | Jurídico antes da Fase 13 |
 | Q-47 | Detecção de país no backend real (ENT18): base de geolocalização por IP (ex.: MaxMind GeoLite2 grátis, ou serviço pago) | ENT18 (Fase 11/12) | Base local GeoLite2 no servidor (sem custo por consulta); revisar com o jurídico se precisa de algo mais forte |
-| Q-55 | As diretrizes da comunidade precisam ser aceitas para usar o app (como termos e privacidade), ou só ficam disponíveis para leitura? | ENT16 | Exigir aceite das diretrizes só ao transmitir (TRA01), não para assistir; termos e privacidade continuam obrigatórios para todos |
 
 ## Respondidas
 
@@ -77,3 +76,4 @@
 | Q-52 | Cadastro inicial (ENT08) no plano 1b? | Não: plano 1c logo depois; na 1b conta nova vai para "complete seu cadastro (em breve)" | 2026-11-21 |
 | Q-53 | Login com Google antes da Fase 12 | Contas de teste do mock (nova/existente/erro/cancelar) seguindo o mesmo contrato do Google real | 2026-11-21 |
 | Q-54 | Validade máxima absoluta da sessão | 180 dias desde o login, mesmo com uso diário; configurável pelo comprador (além dos 30 dias sem uso da Q-50) | 2026-11-21 |
+| Q-55 | Diretrizes da comunidade obrigatórias? | Sim: termos, privacidade e diretrizes são aceitos por todos ao entrar; nova versão de qualquer um exige novo aceite (ENT16) | 2026-11-21 |

@@ -556,7 +556,8 @@ export class AuthService {
 
   // ---------- termos (ENT16) ----------
   pendingTerms(userId: string) {
-    const required: Array<'terms' | 'privacy'> = ['terms', 'privacy'];
+    // Q-55: termos, privacidade e diretrizes são obrigatórios para todos, ao entrar.
+    const required = ['terms', 'privacy', 'guidelines'] as const;
     const out: Array<{ document: string; version: number; url: string }> = [];
     for (const doc of required) {
       const current = this.state.config.legalTexts[doc];
@@ -573,6 +574,10 @@ export class AuthService {
     const current = this.state.config.legalTexts[document];
     if (!current || current.version !== version)
       throw new ApiError(409, 'conflito', { currentVersion: current?.version ?? null });
+    const already = this.store.acceptances.some(
+      (a) => a.userId === ctx.user.id && a.document === document && a.version === version,
+    );
+    if (already) return; // (usuario, documento, versão) é único
     this.store.acceptances.push({
       userId: ctx.user.id,
       document,
