@@ -45,7 +45,7 @@ describe('POST /v1/devices (ENT01)', () => {
     for (const payload of [
       { ...body, platform: 'tv' },
       { ...body, appVersion: 'x' },
-      { ...body, extra: 1 },
+      { platform: 'android' },
     ]) {
       const r = await app.inject({ method: 'POST', url: '/v1/devices', payload });
       expect(r.statusCode).toBe(400);
