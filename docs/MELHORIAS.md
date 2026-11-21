@@ -54,3 +54,8 @@
 | M-043 | 2026-11-21 | ux | média | Campo de código em 6 caixas com colar do código inteiro e foco automático; contagem de reenvio lida pelo leitor de tela a cada minuto, não a cada segundo | ENT04, ENT05 | aberta |
 | M-044 | 2026-11-21 | ux | baixa | Termos: indicar quanto falta ler e destacar o que mudou desde a última versão aceita | ENT16 | aberta |
 | M-045 | 2026-11-21 | qualidade | média | Regra/guarda: edição por script (python/sed) precisa conferir que aplicou (o formatador muda o texto e a troca falha calada; aconteceu 4+ vezes) e pipelines de teste com `set -o pipefail` | kit (`/retro`) | aberta |
+| M-046 | 2026-11-21 | segurança | média | Limite absoluto (180 dias) e de ociosidade (30 dias) da sessão checados também em toda requisição autenticada, não só no refresh (hoje um access ainda válido vale até vencer, ≤15 min) | ENT19, ADR 0012 | aberta |
+| M-047 | 2026-11-21 | ux | baixa | WebSocket: ao conectar com token de sessão substituída, responder `session.replaced`/`4002` (hoje `4001` genérico; o aviso certo já vem pelo REST) | ENT19 | aberta |
+| M-048 | 2026-11-21 | segurança | média | AceiteTermos guarda o IP completo no mock; no banco real gravar só o IP aproximado (prefixo) | ENT16, LGPD | aberta |
+| M-049 | 2026-11-21 | qualidade | baixa | Código morto: filtro de método de e-mail não verificado em `mock-server/src/auth/service.ts` (o cadastro pendente fica em outra estrutura) | ENT05 | aberta |
+| M-050 | 2026-11-21 | ux | média | Restaurar a sessão sem rede volta sem `needsProfile`/`pendingTerms`: guardar esses dois no armazenamento seguro para o roteador decidir offline (o servidor já barra com `termos_pendentes`) | ENT01, ENT16 | aberta |

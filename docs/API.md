@@ -6,9 +6,9 @@
 
 ## Convenções
 - Base: `{apiBaseUrl}/v1`. JSON UTF-8. Campos em `camelCase` no JSON.
-- **Autenticação:** `Authorization: Bearer <accessToken>` (15 min, configurável de 5 a 60); `POST /v1/auth/refresh` com refresh token rotativo. Modelo completo na ADR 0012. Access vencido → `401 token_expirado`; sessão revogada → `401 sessao_substituida | sessao_revogada | sessao_expirada`; conta bloqueada → `403 conta_suspensa | conta_banida`.
+- **Autenticação:** `Authorization: Bearer <accessToken>` (15 min, configurável de 5 a 60); `POST /v1/auth/refresh` com refresh token rotativo. Modelo completo na ADR 0012. Access vencido → `401 token_expirado`; sessão revogada → `401 sessao_substituida | sessao_revogada | sessao_expirada`; conta bloqueada → `403 conta_suspensa | conta_banida`. Token com assinatura inválida ou sessão desconhecida → `401 nao_autenticado`. Aparelho sem segredo certo em login/refresh → `401 dispositivo_invalido`. A sessão é checada **antes** da validade do access: access vencido de sessão revogada responde `sessao_*`, não `token_expirado`.
 - **Termos pendentes:** com aceite pendente, rotas autenticadas (exceto `GET /me`, `POST /me/terms/accept`, `POST /auth/logout`) respondem `403 termos_pendentes`.
-- **Anti-bot (RN-85, SEG06):** headers `X-Antibot-Provider` (`appcheck`, `recaptcha`, `turnstile`) e `X-Antibot-Token`. Quando o servidor exige e falta/é inválido → `428 desafio_necessario` com `details.providers`. Vale em `POST /devices`, `/auth/code/send`, `/auth/email/signup`, `/auth/email/login`, `/auth/password/reset`. Token de uso único, preso à rota.
+- **Anti-bot (RN-85, SEG06):** headers `X-Antibot-Provider` (`appcheck`, `recaptcha`, `turnstile`) e `X-Antibot-Token`. Quando o servidor exige e falta/é inválido → `428 desafio_necessario` com `details.providers`. Vale em `POST /devices`, `/auth/code/send`, `/auth/email/signup`, `/auth/email/login`, `/auth/password/reset`. Token de uso único por rota. O servidor só exige com algum provedor ligado por flag (`antibotAppCheck`, `antibotRecaptcha`, `antibotTurnstile`) e quando avalia risco (no mock: cenário `exigir-desafio`, que liga o App Check); `details.providers` lista os provedores ligados. Ordem: anti-bot, depois limite por IP e demais validações. `/auth/code/verify`, `/auth/google` e `/auth/refresh` não têm anti-bot. No mock: token válido = `fake-ok-<8 a 64 caracteres [A-Za-z0-9_-]>`.
 - **Idempotência:** toda operação que mexe em valor ou cria recurso aceita `Idempotency-Key: <uuid>` e devolve o mesmo resultado se repetida.
 - **Paginação:** por cursor: `?cursor=...&limit=20` → `{ "items": [...], "nextCursor": "..." | null }`.
 - **Erros:** status HTTP adequado + corpo:
@@ -26,7 +26,7 @@
 - **Rate limit:** `429` com `Retry-After`.
 - **Admin:** rotas `/v1/admin/*` exigem token de admin com papel; toda escrita gera `LogAuditoria`.
 - **Mock-only:** rotas `/__mock/*` existem apenas no mock-server.
-- **CORS (mock):** liberado só para origens `http://localhost:*` e `http://127.0.0.1:*` (app web de teste, painel e portal em dev). Headers aceitos: Content-Type, Authorization, Accept-Language, X-App-Version, Idempotency-Key, X-Mock-Country (só mock); exposto: Retry-After.
+- **CORS (mock):** liberado só para origens `http://localhost:*` e `http://127.0.0.1:*` (app web de teste, painel e portal em dev). Headers aceitos: Content-Type, Authorization, Accept-Language, X-App-Version, Idempotency-Key, X-Mock-Country (só mock), X-Antibot-Provider, X-Antibot-Token; métodos GET, POST, PUT, PATCH, DELETE, OPTIONS; preflight `204` com `Max-Age: 600`; exposto: Retry-After.
 
 ## Catálogo de erros (inicial)
 `nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `credenciais_invalidas`, `email_nao_confirmado`, `desafio_necessario`, `sessao_revogada`, `sessao_expirada`, `termos_pendentes`, `dispositivo_invalido`, `erro_interno`.
@@ -43,7 +43,7 @@
 | Método | Caminho | Descrição | Usado por | Status |
 | --- | --- | --- | --- | --- |
 | POST | /auth/code/send | Enviar código (telefone/e-mail; canal sms/whatsapp/email) | ENT04, ENT05, ENT07 | no mock |
-| POST | /auth/code/verify | Verificar código → tokens ou token de cadastro | ENT04 | no mock |
+| POST | /auth/code/verify | Verificar código → tokens (cria a conta de telefone se não existir; confirma o cadastro por e-mail) | ENT04, ENT05 | no mock |
 | POST | /auth/email/signup | Cadastro por e-mail e senha | ENT05 | no mock |
 | POST | /auth/email/login | Login por e-mail e senha | ENT05 | no mock |
 | POST | /auth/google | Login/cadastro com Google | ENT06 | no mock |
@@ -260,7 +260,9 @@
 | Método | Caminho | Descrição |
 | --- | --- | --- |
 | POST | /__mock/reset | Volta aos dados iniciais e desliga todos os cenários (no mock) |
-| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima`, `regiao-bloqueada`, `entrada-desligada` |
+| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima`, `regiao-bloqueada`, `entrada-desligada`, `exigir-desafio`, `token-expira-rapido`, `termos-novos` |
+| GET | /__mock/outbox?destination= | Último código enviado (`{ code }`); sem código → `404 nao_encontrado` (no mock) |
+| GET | /__mock/ping-autenticado | Rota autenticada qualquer, para provar o bloqueio por `termos_pendentes` → `{ ok: true, at: <configVersion> }` (no mock) |
 | POST | /__mock/emit | Emite um evento de tempo real do catálogo (para testes) (no mock) |
 | POST | /__mock/bots/{start|stop} | Liga/desliga bots de chat e presentes (proposto, Fase 3) |
 
@@ -276,7 +278,9 @@
     "configVersion": 1,
     "minAppVersion": "0.1.0",
     "maintenance": { "active": false, "retryAfterSeconds": null },
-    "flags": { "loginPhone": true, "loginEmail": true, "loginGoogle": true, "pk": true, "groupLive": true,
+    "flags": { "loginPhone": true, "loginSms": true, "loginWhatsapp": false, "loginEmail": true,
+               "loginGoogle": true, "antibotAppCheck": false, "antibotRecaptcha": false,
+               "antibotTurnstile": false, "pk": true, "groupLive": true,
                "paidPerMinute": false, "luckyGift": false, "coinReseller": false, "referrals": false,
                "agencies": false, "facePresence": true, "ageVerification": true },
     "limits": { "chatMaxLength": 200, "chatMessagesPerSecond": 1, "pkInviteTtlSeconds": 15,
@@ -288,6 +292,7 @@
     "region": { "country": "BR", "allowed": true }
   }
   ```
+- `loginPhone` só liga o telefone com `loginSms` ou `loginWhatsapp` também ligada.
 - `region` é **calculado por requisição** (país detectado pelo servidor × `allowedRegions`). Não faz parte do cache local nem do `config.updated`. Mock: país do header `X-Mock-Country` (só do mock; o app nunca envia), padrão `BR`; o cenário `regiao-bloqueada` força um país fora da lista.
 - Regras: valores vêm de `ConfigApp` (editável pelo comprador, ADR 0007); `configVersion` cresce a cada alteração. Flag desconhecida pelo app é ignorada; flag ausente = desligada.
 - Erros: `500 erro_interno`; `429` (rate limit) no backend real (o mock não limita).
@@ -295,7 +300,7 @@
 - Entidades: ConfigApp.
 
 ### POST /__mock/reset — no mock
-- Corpo vazio. Recarrega fixtures, zera cenários, fecha conexões de tempo real (código `1001`). `configVersion` continua crescendo (não volta a 1), para o app não ignorar a config nova. Resposta `204`.
+- Corpo vazio. Recarrega fixtures, zera cenários, fecha conexões de tempo real (código `1001`). Apaga também aparelhos, sessões, códigos, falhas, avisos e aceites criados (as contas de `fixtures/auth.json` voltam); o app precisa registrar o aparelho de novo. `configVersion` continua crescendo (não volta a 1), para o app não ignorar a config nova. Resposta `204`.
 
 ### POST /__mock/scenario/{nome} — no mock
 - Corpo opcional `{ "active": true|false }` (padrão `true`). Resposta `200 { "scenario": nome, "active": bool }`; nome desconhecido → `404 nao_encontrado`.
@@ -307,38 +312,38 @@
   | `manutencao` | `ConfigApp.manutencao` ativa (`retryAfterSeconds: 300`): rotas `/v1/*` (exceto `/config`) → `503 manutencao`; `configVersion` sobe e `config.updated` é emitido |
   | `versao-minima` | `minAppVersion` = `99.0.0`: rotas `/v1/*` (exceto `/config`) com `X-App-Version` menor → `426`; `configVersion` sobe e `config.updated` é emitido |
   | `entrada-desligada` | flags `loginPhone`, `loginEmail` e `loginGoogle` desligadas; `configVersion` sobe e `config.updated` é emitido |
+  | `exigir-desafio` | liga a flag `antibotAppCheck` (`config.updated`) e o servidor passa a exigir anti-bot em `/devices`, `/auth/code/send`, `/auth/email/signup`, `/auth/email/login`, `/auth/password/reset` (sem token válido → `428`) |
+  | `token-expira-rapido` | access token vale 5 s; não altera `configVersion` |
+  | `termos-novos` | `terms.version` passa a 2 (`privacy` continua 1); `configVersion` sobe e `config.updated` é emitido; ao desligar volta a 1 |
   | `regiao-bloqueada` | país detectado passa a ser `XX` (fora da lista): `/config` mostra `region.allowed = false` e as demais rotas `/v1/*` → `403 regiao_bloqueada` |
 
 ### POST /__mock/emit — no mock
 - Corpo `{ "type": "...", "data": { }, "target": { "room": "live:123" } | { "userId": "u1" } | { "all": true } }`.
 - `type` precisa existir no catálogo de `docs/EVENTOS-TEMPO-REAL.md` (servidor → cliente); senão `400 validacao`. Resposta `200 { "delivered": n }`.
 
-### POST /v1/devices — no mock (ENT01)
-- Auth: opcional (sem login no primeiro uso). Corpo: `{ "deviceId"?: string, "platform": "android" | "ios" | "web", "appVersion": "x.y.z", "locale": "pt-BR" | "en", "model"?: string }` (`web` só no build de teste).
-- O servidor gera o `deviceId`. `deviceId` conhecido → atualiza (`200`); ausente, desconhecido ou forjado → cria um novo (`201`), nunca adota o id enviado.
-- Resposta: `{ "deviceId": "..." }`. Erros: `400 validacao`; `429` no backend real (limite por IP).
-- Entidades: Dispositivo. Base da sessão única (RN-06) no plano 1b.
-
-### POST /v1/devices — atualização (Fase 1b)
-- Criação (`201`) devolve `{ deviceId, deviceSecret }`; o servidor guarda só o hash do segredo. Atualizar exige `deviceId` + `deviceSecret` certos (`200 { deviceId }`); sem segredo certo cria outro aparelho (`201`). Rate limit e anti-bot.
+### POST /v1/devices — no mock (ENT01, Fase 1b)
+- Sem autenticação. Corpo (sem campos extras): `{ "deviceId"?: string, "deviceSecret"?: string (≤128), "platform": "android"|"ios"|"web", "appVersion": "x.y.z", "locale": "pt-BR"|"en", "model"?: string (≤80) }` (`web` só no build de teste).
+- Criação `201 { deviceId, deviceSecret }` (o servidor gera os dois; guarda só o hash do segredo). Atualização `200 { deviceId }` só com `deviceId` + `deviceSecret` certos; id ausente, desconhecido, forjado ou segredo errado → cria outro aparelho (`201`), nunca adota o id enviado.
+- Erros: `400 validacao`; `428 desafio_necessario` (anti-bot); `429 limite_excedido` + `Retry-After` (60 por IP por hora no mock).
+- O login grava o usuário no aparelho (`Dispositivo.usuario_id`). Entidades: Dispositivo. Base da sessão única (RN-06).
 
 ### Autenticação (Fase 1b) — no mock
 Todas as rotas de login recebem `deviceId` + `deviceSecret` (segredo errado → `401 dispositivo_invalido`) e respondem, quando entram, com:
 ```json
 { "accessToken": "...", "refreshToken": "...", "expiresIn": 900, "user": { "id": "u_...", "needsProfile": true } }
 ```
-- **POST /auth/code/send** `{ channel: "sms"|"whatsapp"|"email", destination, purpose: "login"|"signup"|"reset" }` → `200 { expiresInSeconds, resendInSeconds }`. Mesma resposta exista ou não a conta. Limites RN-02 (configuráveis no servidor): 5 envios por destino por hora → `429 limite_excedido` + `Retry-After`; reenvio só após `resendInSeconds`. Canal desligado → `403 funcionalidade_desligada`. Código novo invalida o anterior.
-- **POST /auth/code/verify** `{ destination, code, purpose: "login"|"signup", deviceId, deviceSecret }` → tokens. Telefone sem conta cria a conta (`needsProfile: true`). Erros: `codigo_invalido` (conta tentativa; na 5ª o código morre), `codigo_expirado`, `limite_excedido`.
-- **POST /auth/email/signup** `{ email, password }` → `202 { expiresInSeconds, resendInSeconds }` (código enviado com `purpose: "signup"`; confirmar com `code/verify`). Senha fraca → `400 validacao` com `details.rules`. E-mail com conta confirmada: mesma resposta `202`, e o dono recebe aviso "você já tem conta" em vez de código. Cadastro não confirmado não trava o e-mail (novo cadastro confirmado substitui).
-- **POST /auth/email/login** `{ email, password, deviceId, deviceSecret }` → tokens. Erro único `401 credenciais_invalidas` (e-mail inexistente leva o mesmo tempo). Senha certa com e-mail não confirmado → `403 email_nao_confirmado`.
-- **POST /auth/google** `{ idToken, deviceId, deviceSecret }` → tokens. Liga a conta de e-mail existente só com `email_verified`. **Só no mock:** `idToken = "mock-google:<email>"` (verificado) e `"mock-google:erro"` → `401 credenciais_invalidas`.
-- **POST /auth/password/reset** `{ email, code, newPassword }` → `204`; revoga todas as sessões da conta (RN-04). Código pedido antes com `code/send` `purpose: "reset"`.
-- **POST /auth/refresh** `{ refreshToken, deviceId, deviceSecret }` → tokens novos (rotativo). Reuso fora da tolerância de 10 s → `401 sessao_revogada` (sessão revogada). Expirado → `401 sessao_expirada`.
-- **POST /auth/logout** `{ refreshToken? }` (aceita access vencido) → `204`; revoga a sessão e fecha o tempo real.
-- **Limites de força bruta:** login, verify e reset limitados por conta, IP e aparelho com bloqueio progressivo; `429` igual exista ou não a conta.
-- **GET /me** → `{ id, needsProfile, accountStatus, pendingTerms: [{ document, version, url }] }`.
-- **POST /me/terms/accept** `{ document: "terms"|"privacy"|"guidelines", version }` → `204`. Versão diferente da atual → `409 conflito`.
-- **Logs:** o servidor nunca registra `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination` nem `authorization`.
+- **POST /auth/code/send** `{ channel: "sms"|"whatsapp"|"email", destination, purpose: "login"|"signup"|"reset" }` → `200 { expiresInSeconds, resendInSeconds }`. Mesma resposta exista ou não a conta/cadastro pendente. Limites RN-02 (configuráveis no servidor): 5 envios por destino por hora, reenvio só após `resendInSeconds` e 60 por IP por hora → `429 limite_excedido` + `Retry-After`. Canal desligado → `403 funcionalidade_desligada` (e-mail exige `loginEmail`; telefone exige `loginPhone` e `loginSms`/`loginWhatsapp`). Por e-mail só `signup` (depois de `/auth/email/signup`) e `reset` (conta confirmada) entregam código; `purpose: "login"` com e-mail → `400 validacao` (`field: purpose`), porque e-mail entra com senha; `reset` com telefone → `400 validacao`. Outros erros: `400 validacao` (`details.field`), `428 desafio_necessario`. Código novo invalida o anterior.
+- **POST /auth/code/verify** `{ destination, code (6 dígitos), purpose: "login"|"signup", deviceId, deviceSecret, password? }` → tokens. Telefone sem conta cria a conta (`needsProfile: true`). `password` é **obrigatório no cadastro por e-mail** (a mesma senha de `/auth/email/signup`, contra sequestro de cadastro); senha errada → `400 codigo_invalido` e o código é consumido. Erros: `400 codigo_invalido` (conta tentativa; na 5ª o código morre), `400 codigo_expirado`, `401 dispositivo_invalido`, `403 conta_banida|conta_suspensa`, `429 limite_excedido` + `Retry-After` (5 falhas por destino+aparelho; 50 por IP).
+- **POST /auth/email/signup** `{ email, password }` → `202 { expiresInSeconds, resendInSeconds }` (código enviado com `purpose: "signup"`; confirmar com `code/verify`). Senha fraca → `400 validacao` com `details.field = password` e `details.rules` ⊂ [`min_length`, `letters`, `numbers`, `common`]. Outros erros: `400 validacao` (`field: email`), `403 funcionalidade_desligada` (flag `loginEmail`), `428`, `429` (mesmas regras do `code/send`). E-mail com conta confirmada: mesma resposta `202`, e o mock registra o aviso `ja_tem_conta` (DATABASE.md AvisoConta; envio real na Fase 8) em vez de mandar código. Cadastro não confirmado não trava o e-mail (novo cadastro confirmado substitui).
+- **POST /auth/email/login** `{ email, password, deviceId, deviceSecret }` → tokens. Erro único `401 credenciais_invalidas` (e-mail inexistente leva o mesmo tempo). Senha certa com e-mail não confirmado → `403 email_nao_confirmado`. Falhas por conta+aparelho (5, bloqueio de 60 s dobrando) e por IP (50) → `429 limite_excedido` + `Retry-After`, igual exista ou não a conta. Outros erros: `401 dispositivo_invalido`, `428`, `403 conta_banida|conta_suspensa`.
+- **POST /auth/google** `{ idToken, deviceId, deviceSecret }` → tokens. Liga a conta de e-mail existente só com `email_verified`. **Só no mock:** `idToken = "mock-google:<email>"` (verificado) e `"mock-google:erro"` → `401 credenciais_invalidas`. Erros: `403 funcionalidade_desligada` (flag `loginGoogle`), `401 dispositivo_invalido`, `403 conta_banida|conta_suspensa`. Sem anti-bot e sem contagem de falhas (conector real na Fase 12).
+- **POST /auth/password/reset** `{ email, code, newPassword }` → `204`; revoga todas as sessões da conta com motivo `senha_trocada` (RN-04); não zera o bloqueio por falhas de login. Código pedido antes com `code/send` `purpose: "reset"`. Erros: `400 validacao` (`field: newPassword`, `details.rules`), `400 codigo_invalido|codigo_expirado`, `428`, `429` (por e-mail+IP e por IP).
+- **POST /auth/refresh** `{ refreshToken, deviceId, deviceSecret }` → tokens novos (rotativo). A tolerância de 10 s vale **uma única vez** por troca; o segundo uso do refresh anterior, ou o uso depois de 10 s, revoga a sessão (`reuso_refresh`) e gera aviso `sessao_revogada`. Erros: `401 dispositivo_invalido` (aparelho diferente do da sessão), `401 sessao_substituida|sessao_revogada|sessao_expirada` (conforme o motivo da revogação), `401 sessao_revogada` (token desconhecido), `401 sessao_expirada` (30 dias sem uso ou 180 desde o login), `403 conta_banida|conta_suspensa` (revoga com `conta_bloqueada`).
+- **POST /auth/logout** `{ refreshToken? }` → sempre `204` (mesmo sem sessão correspondente). Não exige autenticação; aceita `Authorization: Bearer` mesmo vencido e/ou `refreshToken`; revoga a sessão e fecha o tempo real.
+- **Limites de força bruta:** login por e-mail = conta+aparelho e IP; verify de código = destino+aparelho e IP; reset = e-mail+IP e IP. Limite 5 por chave de conta/destino (bloqueio de 60 s dobrando a cada falha extra) e 50 por IP (alto por causa de CGNAT). Bloqueado → `429 limite_excedido` + `Retry-After`, igual exista ou não a conta.
+- **GET /me** → `{ id, needsProfile, accountStatus, pendingTerms: [{ document, version, url }] }`. `pendingTerms` lista só `terms` e `privacy` (`guidelines` não bloqueia o uso, Q-55). Erros: `401 nao_autenticado|token_expirado|sessao_*`, `403 conta_banida|conta_suspensa`.
+- **POST /me/terms/accept** `{ document: "terms"|"privacy"|"guidelines", version }` → `204`. Versão diferente da atual → `409 conflito` com `details.currentVersion`; aceitar de novo a mesma versão → `204`.
+- **Logs:** o servidor nunca registra `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination`, `email`, `authorization` nem `X-Antibot-Token`.
 
 ### Mock-only (Fase 1b)
 - `GET /__mock/outbox?destination=...` → `{ code }` do último código enviado (para E2E). Nunca usado pelo app.

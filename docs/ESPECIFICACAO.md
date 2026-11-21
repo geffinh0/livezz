@@ -28,12 +28,12 @@
   - Aceite: marca do tenant; botões Entrar, Criar conta e "Explorar sem conta"; visitante navega e assiste, mas qualquer interação abre ENT17.
 - [~] **ENT03 Escolha do método de entrada**
   - Aceite: telefone, e-mail e Google (métodos ativos vêm das flags); link para termos e política; aviso 18+.
-- [ ] **ENT04 Telefone + código (SMS/WhatsApp)**
+- [~] **ENT04 Telefone + código (SMS/WhatsApp)** — falta: preenchimento automático do código no Android (Q-51, Fase 12) e provedor real de SMS/WhatsApp (RN-84, Fase 12); o resto feito no plano 1b
   - Aceite: seletor de país (Brasil padrão), máscara, código de 6 dígitos com validade de 60 s (RN-02) e reenvio com contagem regressiva; limite de tentativas; preenchimento automático do código no Android; canal SMS ou WhatsApp conforme flag; provedor de envio configurado pelo comprador (RN-84).
   - Dados: Usuario, MetodoLogin, CodigoVerificacao
 - [ ] **ENT05 E-mail + senha**
   - Aceite: cadastro e login; força mínima da senha (RN-03); confirmação de e-mail por código; mensagens de erro que não revelam se o e-mail existe.
-- [ ] **ENT06 Login com Google**
+- [~] **ENT06 Login com Google** — falta: conta nova cair no cadastro ENT08 (plano 1c, Q-52) e Google real (Fase 12, Q-53); hoje contas de teste
   - Aceite: conta nova cai em ENT08; conta existente entra direto; erro e cancelamento tratados.
 - [ ] **ENT07 Recuperar senha**
   - Aceite: código por e-mail → nova senha → encerra outras sessões (RN-04).
@@ -54,7 +54,7 @@
   - Aceite: oferecido a quem entrou por e-mail/Google; recompensa configurável; uma vez por número.
 - [ ] **ENT15 Contas vinculadas**
   - Aceite: ver e vincular/desvincular métodos; não permite remover o último método.
-- [ ] **ENT16 Aceite de termos e política**
+- [~] **ENT16 Aceite de termos e política** — feito no plano 1b; aguarda Q-55 (diretrizes obrigatórias ou não)
   - Aceite: aceite registrado com versão e data; nova versão exige novo aceite antes de continuar.
   - Dados: AceiteTermos
 - [~] **ENT17 Login exigido (bottom sheet)**
@@ -431,7 +431,7 @@
   - Aceite: palavras e links bloqueados globais (painel) e por host; aplicados no servidor.
 - [ ] **SEG05 Antifraude**
   - Aceite: limites de envio/compra/saque; contas múltiplas no mesmo dispositivo (RN-31); estorno bloqueia; padrões suspeitos geram alerta no painel.
-- [ ] **SEG06 Anti-bot no login**
+- [~] **SEG06 Anti-bot no login** — contrato, flags por provedor e fluxo do app com provedor fake feitos (plano 1b); faltam App Check, reCAPTCHA Enterprise e Turnstile reais (Fase 12)
   - Aceite: integridade do app (App Check), reCAPTCHA Enterprise e Turnstile, cada um ligado por flag (RN-85); o servidor decide quando exigir o desafio.
 - [ ] **SEG07 Proteção de menores (ECA Digital)**
   - Aceite: verificação de idade confiável (ENT09), bloqueio de menores (ENT10), denúncia prioritária, preservação de evidências e fluxo de comunicação às autoridades definido com o jurídico do cliente.

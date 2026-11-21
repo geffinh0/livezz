@@ -23,6 +23,7 @@
 | Q-40 | Provedor de tradução gratuito (no servidor ou no aparelho) | ASS03 (Fase 12) | Avaliar tradução no aparelho (sem custo) vs. API gratuita com limites |
 | Q-41 | Validar com advogado o modelo de idade da Q-08 (autodeclaração + sinal da loja no cadastro; verificação forte só para transmitir e sacar) diante do ECA Digital | publicação | Jurídico antes da Fase 13 |
 | Q-47 | Detecção de país no backend real (ENT18): base de geolocalização por IP (ex.: MaxMind GeoLite2 grátis, ou serviço pago) | ENT18 (Fase 11/12) | Base local GeoLite2 no servidor (sem custo por consulta); revisar com o jurídico se precisa de algo mais forte |
+| Q-55 | As diretrizes da comunidade precisam ser aceitas para usar o app (como termos e privacidade), ou só ficam disponíveis para leitura? | ENT16 | Exigir aceite das diretrizes só ao transmitir (TRA01), não para assistir; termos e privacidade continuam obrigatórios para todos |
 
 ## Respondidas
 

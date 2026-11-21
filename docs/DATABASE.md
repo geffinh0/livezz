@@ -29,7 +29,7 @@
 
 ## Conta
 
-### Usuario — status: em uso no mock (parcial: id, situacao_conta, criado_em; perfil na 1c)
+### Usuario — status: em uso no mock (parcial: id, situacao_conta [ativa, suspensa, banida], criado_em; perfil na 1c)
 Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | Campo | Tipo | Regras |
 | --- | --- | --- |
@@ -59,8 +59,10 @@ Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | tutoriais_vistos | lista de texto | NAV04 |
 | criado_em / atualizado_em / excluido_em | data | |
 
+**Derivado (não é coluna):** `precisa_perfil` = `nome_exibicao`, `username` ou `data_nascimento` ainda vazios (JSON `needsProfile`). No mock é um booleano guardado (`true` ao criar, `false` nas contas semeadas) até a 1c. Ids no mock: `u_<uuid>` nas contas criadas por login e `u-ana` etc. nas semeadas.
+
 ### MetodoLogin — em uso no mock
-Usada por: ENT03–ENT07, ENT15 · no mock: tipo, identificador, senha_hash (scrypt), verificado_em
+Usada por: ENT03–ENT07, ENT15 · no mock: usuario_id, tipo, identificador, senha_hash (scrypt), verificado_em; sem `id`/`criado_em` ainda. `google` no mock: identificador = hash do e-mail (no real é o `sub`). Método de e-mail só existe depois de confirmado; antes disso, ver CadastroPendente.
 | Campo | Tipo | Regras |
 | --- | --- | --- |
 | id, usuario_id | id | |
@@ -70,20 +72,32 @@ Usada por: ENT03–ENT07, ENT15 · no mock: tipo, identificador, senha_hash (scr
 | verificado_em | data? | |
 | criado_em | data | |
 
-### CodigoVerificacao — em uso no mock (efêmero, pode ficar em cache com expiração)
-Usada por: ENT04, ENT05, ENT07 · campos: id, destino 🔒, finalidade (`login`, `cadastro`, `recuperar_senha`, `vincular`), codigo_hash, tentativas, expira_em, usado_em, envios_na_hora (RN-02). Código novo invalida o anterior; morre na 5ª tentativa errada.
+### CodigoVerificacao — em uso no mock (efêmero; cache com expiração)
+Usada por: ENT04, ENT05, ENT07 · campos: destino 🔒, finalidade (`login`, `cadastro`, `recuperar_senha`, `vincular`; JSON `login`/`signup`/`reset`; `vincular` ainda não usado; por e-mail só `cadastro` e `recuperar_senha`), codigo_hash 🔒, tentativas, expira_em (60 s, RN-02), usado_em, senha_hash_cadastro 🔒? (hash da senha de **quem pediu** este código, só `cadastro` por e-mail: a confirmação exige a mesma senha, contra sequestro de cadastro; senha errada consome o código). Chave única (finalidade, destino): código novo substitui o anterior; apagado na 5ª tentativa errada, ao expirar ou ao ser usado. Contador de envios: horários por destino (máx. 5/h, reenvio após 60 s, RN-02) e por IP (60/h). `canal` (sms/whatsapp/email) não é guardado. No banco real: guardar como HMAC com chave do servidor (M-037).
+
+### CadastroPendente — em uso no mock (efêmero)
+Usada por: ENT05 · email 🔒 (normalizado), senha_hash 🔒. Criado por `POST /auth/email/signup` quando o e-mail não tem conta confirmada; removido ao confirmar o código. Não bloqueia o e-mail (novo pedido substitui). Quem confirma precisa da senha do código (ver CodigoVerificacao).
+
+### AvisoConta — em uso no mock (vira Notificacao na Fase 8)
+Usada por: ENT05, ENT19, SEGURANCA.md (alerta de novo aparelho) · usuario_id?, destino 🔒?, tipo (`ja_tem_conta`: pedido de cadastro para e-mail que já tem conta; `novo_aparelho`: login em aparelho diferente do das sessões anteriores; `sessao_revogada`: reuso de refresh detectado), criado_em. No mock só em memória (`notices`); envio real (e-mail/push) na Fase 8.
 
 ### Sessao — em uso no mock (ADR 0012)
-Usada por: ENT19, CFG02 · campos: id (`sid` no access token), usuario_id, dispositivo_id, refresh_token_hash 🔒, refresh_anterior_hash 🔒 + trocado_em (tolerância de 10 s), criada_em, ultimo_uso_em, expira_absoluta_em (180 dias, Q-54), revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `senha_trocada`, `reuso_refresh`, `expirada`, `conta_bloqueada`, `admin`), ip_aproximado 🔒, user_agent. **Regra:** no máximo uma sessão não revogada por usuário (RN-06).
+Usada por: ENT19, CFG02 · campos: id (`sid` no access token), usuario_id, dispositivo_id, refresh_token_hash 🔒, refresh_anterior_hash 🔒 + trocado_em (tolerância de 10 s), criada_em, ultimo_uso_em, expira_absoluta_em (180 dias, Q-54), revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `mesmo_aparelho`, `senha_trocada`, `reuso_refresh`, `expirada`, `conta_bloqueada`, `admin`), carencia_usada (o refresh anterior vale **uma vez** dentro dos 10 s; não reabre a janela), ip_aproximado 🔒, user_agent. Ociosidade: expira com 30 dias sem uso (Q-50, derivado de `ultimo_uso_em`). **Regra:** no máximo uma sessão não revogada por usuário (RN-06). No mock não são guardados `ip_aproximado` nem `user_agent`. Motivo → erro HTTP: `outro_aparelho` → `sessao_substituida`; `expirada` → `sessao_expirada`; os demais → `sessao_revogada`. Motivo → evento de tempo real: ver EVENTOS-TEMPO-REAL.md (Detalhes).
 
 ### Dispositivo — em uso no mock
-Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, plataforma, modelo, versao_app, idioma, registrado_em, visto_em.
+Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, segredo_hash 🔒, usuario_id (último usuário que entrou no aparelho), plataforma, modelo, versao_app, idioma, registrado_em, visto_em. Atualizar exige id + segredo certos; senão cria outro aparelho. Limite: 60 criações por IP por hora (mock).
 
 ### VerificacaoIdade — proposta
 Usada por: ENT09, TRA01, POR02, SEG07 · campos: id, usuario_id, metodo (`estimativa_facial`, `documento`), provedor (conector configurado em IntegracaoProvedor), referencia_provedor, resultado (`pendente`, `aprovado`, `reprovado`, `expirado`), idade_estimada?, motivo?, criado_em, concluido_em. Não guardar imagens do rosto/documento além do exigido pelo provedor e pelo jurídico.
 
 ### AceiteTermos — em uso no mock
-Usada por: ENT16, TRA01 · campos: id, usuario_id, documento (`termos`, `privacidade`, `diretrizes`, `regras_transmissao`, `regras_saque`), versao, aceito_em, dispositivo_id, ip_aproximado 🔒. JSON ↔ banco: `terms`↔`termos`, `privacy`↔`privacidade`, `guidelines`↔`diretrizes`.
+Usada por: ENT16, TRA01 · campos: id, usuario_id, documento (`termos`, `privacidade`, `diretrizes`, `regras_transmissao`, `regras_saque`), versao, aceito_em, dispositivo_id, ip_aproximado 🔒. JSON ↔ banco: `terms`↔`termos`, `privacy`↔`privacidade`, `guidelines`↔`diretrizes`. No mock: sem `id`; `ip` guardado completo (no banco real gravar só o aproximado); só `termos` e `privacidade` bloqueiam o uso (`diretrizes` é aceitável, não obrigatória: Q-55); (usuario_id, documento, versao) deve ser único (o mock ainda duplica se aceitar de novo). Contas semeadas: termos e privacidade v1 aceitos, sem dispositivo/ip.
+
+### Controles efêmeros de autenticação — em uso no mock (cache, não vão para o banco relacional)
+Usada por: SEG06, RN-02, ENT04–ENT07
+- **TentativaFalha** (força bruta): chave → { contagem, bloqueado_ate }. Chaves: `acct:<e-mail>|dev:<aparelho>` (login por e-mail), `dest:<destino>|dev:<aparelho>` (confirmação de código), `dest:<e-mail>|ip:<ip>` (recuperar senha) e `ip:<ip>` (limite alto, 50, por causa de CGNAT). 5 falhas por chave de conta/destino; bloqueio de 60 s dobrando a cada falha extra. Sucesso zera só a chave de conta/destino. Outro aparelho errando não tranca o dono.
+- **LimiteIp:** `send|<ip>` (envio de código, 60/h) e `device|<ip>` (registro de aparelho, 60/h): lista de horários.
+- **TokenAntibotUsado:** conjunto de `rota|token` já gastos (uso único por rota). No mock, token válido = `fake-ok-<8 a 64 caracteres [A-Za-z0-9_-]>`.
 
 ### Midia — proposta
 Usada por: PER02, MSG02, MSG04, FEED02, TRA02 · campos: id, dono_id, tipo (`imagem`, `video`, `audio`), url_armazenamento, largura, altura, duracao_s, tamanho_bytes, situacao_moderacao (`pendente`, `aprovada`, `sensivel`, `reprovada`), criado_em.
@@ -327,6 +341,9 @@ Usada por: ASS11, CHA08, MSG08, FEED06, SEG01, ADM05 · id, denunciante_id, alvo
 
 ## Configuração
 
+### ConfigAuth — em uso no mock (fora do `GET /config`; editável pelo comprador no painel, ADR 0007, ADM14)
+Usada por: ENT04–ENT07, ENT19 · access_token_minutos (15; piso 5, teto 60), sessao_ociosa_dias (30, Q-50), sessao_maxima_dias (180, Q-54), refresh_carencia_segundos (10), codigo_validade_s (60), codigo_reenvio_s (60), codigo_envios_hora (5), codigo_tentativas (5, RN-02), login_falhas_max (5), ip_falhas_max (50), bloqueio_base_s (60), envios_codigo_por_ip_hora (60), aparelhos_por_ip_hora (60). Valores provisórios (`mock-server/src/auth/config.ts`).
+
 ### IntegracaoProvedor — em uso no mock (o mock semeia os 10 tipos com provedor `fake` e ativo; sem credenciais na Fase 0)
 Usada por: ADM19, TRV13, RN-84 · id, tipo (`pagamento_loja_alternativa`, `pagamento_web`, `repasse_saque`, `sms_whatsapp`, `verificacao_idade`, `traducao`, `moderacao_midia`, `antibot`, `push`, `analytics`), provedor, ativo, credenciais 🔒 (criptografadas; nunca devolvidas inteiras), configuracao (objeto), ultimo_teste_em, ultimo_teste_ok, atualizado_por, atualizado_em.
 ### ConfigApp — em uso no mock · Usada por: ENT01, TRV04, `GET /config`, `config.updated` · versao (inteiro crescente a cada alteração; ADR 0007/0011), versao_minima, manutencao (ativa, retry_after_segundos), abas_descobrir, flags (`lucky_gift`, `paid_per_minute`, `coin_reseller`, `referrals`, `agencies`, `face_presence`, métodos de login…), regioes_permitidas, limites (RN-40–RN-59), textos_legais (versões), alterada_por, alterada_em.
@@ -379,23 +396,28 @@ erDiagram
 `alterada_por` e `alterada_em` ainda não existem no mock (entram com o painel, ADM14).
 
 ### PreferenciasLocais — em uso no app (aparelho, não vai para o banco)
-Usada por: ENT01, ENT02 · `device.id` (id devolvido por `POST /devices`) e `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"). Sem dado pessoal.
+Usada por: ENT02 · `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"). Sem dado pessoal. (`device.id` passou para TokensLocais.)
 
 ### TokensLocais — em uso no app (aparelho, armazenamento seguro/Keystore, fora do backup)
-Usada por: ENT01, ENT19 · access token, refresh token e `deviceSecret`. Nunca em SharedPreferences nem em log.
+Usada por: ENT01, ENT19 · chaves `auth.access` (access token), `auth.refresh` (refresh token 🔒), `auth.user` (id do usuário, para restaurar sem rede), `device.id` e `device.secret` 🔒 (devolvidos por `POST /devices`). `allowBackup=false`. No fim da sessão apaga `auth.*`; `device.*` permanecem. Nunca em SharedPreferences nem em log.
+
+**Memória do app (não persiste):** `PendingAction` (ação do visitante, ENT17, ou tela onde a sessão expirou, ENT19; validade 5 min) e `sessionEndNotice` (código do motivo do fim de sessão, para o aviso).
 
 ### ConfigCacheLocal — em uso no app (aparelho, não vai para o banco)
 Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = JSON da última `GET /config` válida, mesclado por `config.updated`. Sem dado pessoal. Serve de reserva sem rede. Flags e limites continuam sendo aplicados no servidor (alterar o cache no aparelho não libera nada).
 
 ### Dados só de teste no mock (Fase 0)
 - **Usuários de teste** (`mock-server/fixtures/users.json`): `u-ana`, `u-bruno` (pt-BR) e `u-carla` (en); só id, username, nome_exibicao e idioma. Fictícios. Tokens de teste `dev-token-<id>` (ver EVENTOS-TEMPO-REAL.md).
-- **CodigoVerificacao (fake de SMS):** `FakeOutbox.sms[]` = `{ channel, phoneE164 🔒, code 🔒 }`, só em memória e só para testes; nunca em log nem fixture.
+- **Contas de teste de login** (`mock-server/fixtures/auth.json`, fictícias): `u-ana` (ana@teste.local, senha `TEST_ONLY_Ana2026`, +5511900000001), `u-bruno` (só telefone +5511900000002), `u-carla` (carla@teste.local, `TEST_ONLY_Carla2026`), `u-banido` (banido@teste.local, `status: banida`). Todas confirmadas, `needsProfile=false`, termos e privacidade v1 aceitos. As senhas só existem na fixture e viram scrypt na carga.
+- **Outbox dos fakes:** `FakeOutbox.sms[] = { channel, phoneE164 🔒, code 🔒 }` e `FakeOutbox.email[] = { email 🔒, code 🔒 }` ou `{ email, kind }` (avisos); mais `lastCodes` (destino → último código) para `GET /__mock/outbox`. Só em memória e só para testes; nunca em log nem fixture.
 - **VerificacaoIdade (fake):** sessão → resultado (`aprovada`/`reprovada`), só em memória.
 
 ### Correspondência de nomes das flags (JSON camelCase ↔ banco snake_case)
 | JSON (`GET /config`) | Banco (`ConfigApp.flags`) |
 | --- | --- |
 | loginPhone / loginEmail / loginGoogle | login_telefone / login_email / login_google |
+| loginSms / loginWhatsapp | login_sms / login_whatsapp (padrão `true` / `false`) |
+| antibotAppCheck / antibotRecaptcha / antibotTurnstile | antibot_app_check / antibot_recaptcha / antibot_turnstile (padrão `false`; escolhem os provedores de `details.providers`; nenhum ligado = `appcheck`) |
 | pk / groupLive | pk / live_grupo |
 | paidPerMinute | paid_per_minute |
 | luckyGift | lucky_gift |
@@ -403,7 +425,7 @@ Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = J
 | referrals / agencies | referrals / agencies |
 | facePresence | face_presence |
 | ageVerification | verificacao_idade |
-Valor inicial das flags no mock vem de `tenants/<id>/tenant.json` → `features` (só semente; o app nunca lê flags do tenant).
+Valor inicial no mock: flags de login e anti-bot de `mock-server/fixtures/config.json` (`loginMethods`); as demais de `tenants/<id>/tenant.json` → `features` (só semente; o app nunca lê flags do tenant; `games` nunca vira flag).
 
 ## Notas para o banco (preencher na Fase 11)
 - Natureza financeira e relacional forte (ledger, saques, auditoria) → um banco relacional transacional é a recomendação inicial; dados de altíssimo volume e curta duração (chat da live, presença, contadores, placar) podem ir para cache/fila.
@@ -421,3 +443,4 @@ Valor inicial das flags no mock vem de `tenants/<id>/tenant.json` → `features`
 | 2026-11-21 | Tabela de correspondência completa de ConfigApp; ConfigCacheLocal (aparelho); dados só de teste do mock (usuários, outbox do fake de SMS, sessões do fake de idade) | Fase 0 (conferência código × docs pelo guardião de dados) |
 | 2026-11-21 | Dispositivo em uso no mock (id gerado pelo servidor); PreferenciasLocais no app; `region` calculado por requisição | Fase 1a (ENT01, ENT02, ENT18) |
 | 2026-11-21 | Fase 1b: MetodoLogin, CodigoVerificacao, Sessao (ADR 0012), AceiteTermos e Usuario (parcial) em uso no mock; Dispositivo.segredo_hash; TokensLocais no app; documento `diretrizes` no AceiteTermos | ENT04–ENT07, ENT16, ENT19, SEG06 |
+| 2026-11-21 | CadastroPendente, AvisoConta, ConfigAuth e controles efêmeros (falhas, limites por IP, token anti-bot usado); CodigoVerificacao, Sessao (`mesmo_aparelho`, carência única, ociosidade), Dispositivo, AceiteTermos e Usuario.needsProfile alinhados ao código; flags de login/anti-bot; fixtures `auth.json` e outbox de e-mail; chaves do TokensLocais | Fase 1b (conferência código × docs pelo guardião de dados) |
