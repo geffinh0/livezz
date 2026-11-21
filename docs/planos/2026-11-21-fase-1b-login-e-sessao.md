@@ -79,4 +79,24 @@
 12. E2E web dos itens + prints.
 13. Revisões (revisor, revisor-seguranca, revisor-ux, guardiao-dados), verificador, docs.
 
+## Ajustes da revisão de segurança (2026-11-21) — valem sobre o texto acima
+1. **Força bruta:** limite em `/auth/email/login`, `/auth/password/reset` e `code/verify` por conta, por IP e por aparelho, com bloqueio progressivo; `429` idêntico exista ou não a conta. Código: morre após 5 erros, uso único, código novo invalida o anterior.
+2. **Tempo constante:** login com e-mail inexistente roda o scrypt contra um hash falso; cadastro e recuperação com o mesmo tempo com ou sem conta (teste de contrato compara).
+3. **Refresh preso ao aparelho:** `/auth/refresh` exige `deviceId` + `deviceSecret` da sessão.
+4. **Revogação imediata:** access token carrega `sid`; toda rota autenticada e o WebSocket checam se a sessão está ativa. Logout, troca de senha, reuso de refresh e login em outro aparelho fecham o tempo real.
+5. **Android:** `allowBackup=false` (ou regras de backup excluindo tokens/segredo) e armazenamento seguro com Keystore.
+6. **Google:** liga a uma conta de e-mail existente só com `email_verified`; `mock-google:` só existe no mock (teste garante que o código real recusa).
+7. **Reuso de refresh** responde `401 sessao_revogada` (novo código) e avisa o dono; tolerância de 30 s para a resposta perdida na rede (o refresh anterior ainda vale uma vez nesse intervalo).
+8. **Logs:** redação no logger do mock/backend de `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination` e `authorization`, com teste.
+9. **Tempos:** `accessTokenMinutes` com piso 5 e teto 60 no servidor; validade máxima absoluta da sessão → pergunta ao usuário (Q-54).
+10. **Termos obrigatórios no servidor:** rotas autenticadas (exceto `/me`, `/me/terms/accept`, `/auth/logout`) respondem `403 termos_pendentes` enquanto houver aceite pendente. `AceiteTermos` guarda aparelho e IP 🔒.
+11. **Conta suspensa/banida** não entra nem renova (`conta_suspensa`, `conta_banida`).
+12. **`POST /devices`:** rate limit e anti-bot.
+13. **Anti-bot (`428 desafio_necessario`)** vale em `code/send`, `email/signup`, `email/login`, `password/reset` e `devices`; o token do desafio é de uso único e preso à ação.
+14. **E-mail "ocupado":** cadastro não confirmado não trava o e-mail (novo cadastro confirmado substitui); e-mail com conta confirmada recebe aviso "você já tem conta" em vez de código.
+15. Alerta de novo aparelho ao dono da conta (SEGURANCA.md) — evento/notificação registrado; envio real com push (Fase 8).
+16. Logout limpa o armazenamento local mesmo sem rede.
+17. `/__mock/outbox` fica no módulo de rotas mock; teste garante que o app nunca chama `/__mock/*`.
+- Novos códigos no catálogo: `sessao_revogada`, `termos_pendentes`.
+
 Status: aguardando aprovação
