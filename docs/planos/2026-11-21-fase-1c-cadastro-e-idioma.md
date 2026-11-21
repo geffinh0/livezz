@@ -96,6 +96,20 @@ Decisões do usuário usadas: Q-55 a Q-65 (`docs/QUESTOES-ABERTAS.md`).
 12. E2E web de todos os itens; prints claro/escuro, pt/en.
 13. Conferir a lista de testes deste plano; verificador; revisões (código, UX, segurança, dados); correções; verificador final; documentos.
 
+## Ajustes da revisão de segurança (incorporados)
+- **Reautenticação (crítico):** `POST`/`DELETE /me/login-methods` exigem prova recente (≤ 5 min) de um método existente (código ao telefone/e-mail atual ou senha) → senão `401 reautenticacao_necessaria`. Aviso a todos os métodos antigos (AvisoConta). Desvincular revoga a sessão nos demais aparelhos.
+- **Bônus irrepetível (crítico):** `ConcessaoBonus` nunca é apagada; únicas por (tipo, telefone_hmac), (tipo, aparelho) e (tipo, sujeito da verificação). `telefone_hmac` com chave do servidor (não sha256 puro).
+- **Idempotência e corrida (crítico):** além da `Idempotency-Key`, chave determinística do servidor (`reward:welcome:<userId>`, `reward:phone:<hmac>`); mesma chave com corpo diferente → `422`. Elegibilidade + crédito num passo só; teste com N resgates paralelos e chaves diferentes → um crédito. Valor gravado na transação; contrapartida na conta de sistema "emissão promocional" (única que pode ficar negativa), moedas grátis separadas.
+- **Contornar o bloqueio:** identificadores da conta congelada (telefone_hmac, e-mail, Google sub) recusam cadastro novo; reinstalar o app gera aparelho novo → limitação registrada (Q-41) e atestação do aparelho (Play Integrity) planejada para a Fase 12.
+- **Estado `congelada` na sessão:** `issueSession`, `refresh`, `authenticate` e WebSocket → `403 menor_bloqueado`; aparelho marcado checado antes de criar usuário (sem conta órfã).
+- **Portão de cadastro:** sem data de nascimento, só `GET/PATCH /me`, termos e logout; o resto → `403 cadastro_pendente`. Resgate exige idade adulta decidida.
+- **`PATCH /me`:** lista fechada de campos; data gravada só se nula (atômico, teste concorrente); não futura, ≤ 120 anos; `storeAgeSignal` só pode bloquear, nunca liberar.
+- **ENT09:** status só pelo servidor (consulta/callback do provedor), nunca pelo retorno da WebView; `redirectUrl` com host permitido; sessão ligada ao usuário (outro usuário → 404); limite de sessões por dia; idade estimada < 18 ou divergência com a data → revisão; RN-31 usa identificador estável do provedor.
+- **Enumeração ao vincular:** conflito só checado depois do código validado; código de `link` amarrado ao usuário (`link|userId|destino`); limite por conta; Google não religa e-mail já desvinculado.
+- **Logs e gênero:** redação de `birthDate`, `gender`, `storeAgeSignal`, `ageUpper`, `details`, com teste; gênero só em `GET /me` (teste de contrato) e fora de analytics/descoberta; finalidade escrita na tela.
+- **Atômicos e validação:** último método (dois DELETE concorrentes), `POST /me/username` (checar+gravar), `interests.ids` (tamanho, existentes, sem repetição), `language` e `kind` fechados, valores de recompensa inteiros positivos com teto. Consulta de @ autenticada e limitada por conta e IP; reservados incluem a marca do tenant e variações; @ de conta congelada continua reservado.
+- **Rotas mock-only** só em `scenarios/mock-routes.ts`, com teste.
+
 ## Fora do escopo
 - Plugin nativo do Play Age Signals (Fase 12, Q-64); provedor real de verificação de idade (Fase 12, Q-35).
 - Tela do painel para revisar contas congeladas e configurar recompensas (ADM, fase do painel); suporte para pedir revisão.
