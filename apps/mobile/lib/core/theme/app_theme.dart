@@ -47,7 +47,11 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size(kMinTouchTarget * 2, kMinTouchTarget),
           shape: const StadiumBorder(),
-          textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          textStyle: TextStyle(
+            fontFamily: tenant.fontFamily,
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(

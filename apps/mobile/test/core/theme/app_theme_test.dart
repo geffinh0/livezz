@@ -48,6 +48,13 @@ void main() {
         }
       });
 
+      test('botão principal usa a fonte do tenant', () {
+        final style = entry.value.filledButtonTheme.style?.textStyle?.resolve(
+          <WidgetState>{},
+        );
+        expect(style?.fontFamily, generatedTenant.fontFamily);
+      });
+
       test('usa a fonte do tenant', () {
         expect(
           entry.value.textTheme.bodyMedium?.fontFamily,

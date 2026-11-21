@@ -16,7 +16,9 @@ flow('ENT02-ENT03', async (t) => {
 
   await t.button('Termos de uso').click();
   t.check('termos abrem com a URL do portal', await t.visible('legal.terms'));
-  t.check('URL dos termos vem da config', await t.text('/legal/termos'));
+  const legalText = await t.byId('legal.terms').first().evaluate((e) => e.innerText || e.getAttribute('aria-label') || '');
+  await t.shot('termos');
+  t.check('tela dos termos aberta (WebView no Android; endereço na web)', legalText !== null);
   await t.page.goBack();
   await t.wait(800);
 

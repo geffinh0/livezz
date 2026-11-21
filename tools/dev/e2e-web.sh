@@ -25,6 +25,12 @@ flutter build web --debug --no-web-resources-cdn --no-wasm-dry-run \
   --dart-define=MOCK_DEV_TOKEN=dev-token-u-ana
 
 echo "==> mock-server e servidor estático"
+for port in 3000 8080; do
+  if curl -s -o /dev/null "http://127.0.0.1:$port/"; then
+    echo "Porta $port já está em uso (servidor antigo?). Feche-o antes: o teste rodaria contra a versão errada."
+    exit 1
+  fi
+done
 (cd "$ROOT/mock-server" && PORT=3000 npx tsx src/main.ts > "$OUT/mock-server.log" 2>&1) &
 PIDS+=($!)
 (cd "$ROOT/apps/mobile/build/web" && python3 -m http.server 8080 --bind 127.0.0.1 > "$OUT/http.log" 2>&1) &

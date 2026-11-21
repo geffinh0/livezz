@@ -56,6 +56,11 @@ function flow(name, body) {
       },
       text: async (s) => (await page.getByText(s, { exact: false }).count()) > 0,
       wait: (ms) => page.waitForTimeout(ms),
+      // Fecha bottom sheet/diálogo tocando fora (Escape não fecha no Flutter web).
+      dismiss: async () => {
+        await page.mouse.click(200, 60);
+        await page.waitForTimeout(700);
+      },
     };
     let crashed = null;
     try {

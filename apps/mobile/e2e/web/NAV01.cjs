@@ -9,10 +9,10 @@ flow('NAV01', async (t) => {
     t.check(`barra com ${id}`, await t.visible(id));
   }
   await t.shot('descobrir');
-  await t.button('Seguindo').click();
+  await t.byId('nav.following').click();
   t.check('Seguindo para visitante mostra convite (Q-49)', await t.text('Entre para ver quem você segue'));
   t.check('Seguindo não abre o pedido de conta', !(await t.visible('entry.accountRequired', 1500)));
   await t.shot('seguindo');
-  await t.button('Descobrir').click();
+  await t.byId('nav.discover').click();
   t.check('volta para Descobrir', await t.visible('tab.discover'));
 });
