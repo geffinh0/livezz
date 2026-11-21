@@ -4,6 +4,7 @@ import { registerGuards } from './http/guards.js';
 import { setDocumentedTypes } from './realtime/catalog.js';
 import { readDocumentedServerTypes } from './realtime/docs-catalog.js';
 import { Hub } from './realtime/hub.js';
+import { attachRealtime } from './realtime/server.js';
 import { registerConfigRoutes } from './routes/config.js';
 import { registerMockRoutes } from './scenarios/mock-routes.js';
 import { createState, type State } from './state.js';
@@ -37,6 +38,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   const getState = () => holder.state;
   registerGuards(app, getState);
   registerConfigRoutes(app, getState);
+  attachRealtime(app, holder.hub, getState);
   registerMockRoutes(app, {
     getState,
     resetState: () => {
