@@ -59,6 +59,8 @@ Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | tutoriais_vistos | lista de texto | NAV04 |
 | criado_em / atualizado_em / excluido_em | data | |
 
+**Plano 1c (proposta):** `genero` privado com valores `mulher`, `homem`, `nao_binario`, `prefiro_nao_dizer` (Q-59); `interesses` null = não respondeu, lista vazia = pulou; `faixa_etaria_loja` = { status, ageLower, ageUpper } (Q-64); `situacao_conta = congelada` com `situacao_idade = menor_bloqueado` (Q-58).
+
 **Derivado (não é coluna):** `precisa_perfil` = `nome_exibicao`, `username` ou `data_nascimento` ainda vazios (JSON `needsProfile`). No mock é um booleano guardado (`true` ao criar, `false` nas contas semeadas) até a 1c. Ids no mock: `u_<uuid>` nas contas criadas por login e `u-ana` etc. nas semeadas.
 
 ### MetodoLogin — em uso no mock
@@ -85,7 +87,7 @@ Usada por: ENT05, ENT19, SEGURANCA.md (alerta de novo aparelho) · usuario_id?, 
 Usada por: ENT19, CFG02 · campos: id (`sid` no access token), usuario_id, dispositivo_id, refresh_token_hash 🔒, refresh_anterior_hash 🔒 + trocado_em (tolerância de 10 s), criada_em, ultimo_uso_em, expira_absoluta_em (180 dias, Q-54), revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `mesmo_aparelho`, `senha_trocada`, `reuso_refresh`, `expirada`, `conta_bloqueada`, `admin`), carencia_usada (o refresh anterior vale **uma vez** dentro dos 10 s; não reabre a janela), ip_aproximado 🔒, user_agent. Ociosidade: expira com 30 dias sem uso (Q-50, derivado de `ultimo_uso_em`). **Regra:** no máximo uma sessão não revogada por usuário (RN-06). No mock não são guardados `ip_aproximado` nem `user_agent`. Motivo → erro HTTP: `outro_aparelho` → `sessao_substituida`; `expirada` → `sessao_expirada`; os demais → `sessao_revogada`. Motivo → evento de tempo real: ver EVENTOS-TEMPO-REAL.md (Detalhes).
 
 ### Dispositivo — em uso no mock
-Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, segredo_hash 🔒, usuario_id (último usuário que entrou no aparelho), plataforma, modelo, versao_app, idioma, registrado_em, visto_em. Atualizar exige id + segredo certos; senão cria outro aparelho. Limite: 60 criações por IP por hora (mock).
+Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, segredo_hash 🔒, usuario_id (último usuário que entrou no aparelho), plataforma, modelo, versao_app, idioma, registrado_em, visto_em. Atualizar exige id + segredo certos; senão cria outro aparelho. Limite: 60 criações por IP por hora (mock). Plano 1c (proposta): bloqueado_menor_em, bloqueado_menor_conta_id (Q-65).
 
 ### VerificacaoIdade — proposta
 Usada por: ENT09, TRA01, POR02, SEG07 · campos: id, usuario_id, metodo (`estimativa_facial`, `documento`), provedor (conector configurado em IntegracaoProvedor), referencia_provedor, resultado (`pendente`, `aprovado`, `reprovado`, `expirado`), idade_estimada?, motivo?, criado_em, concluido_em. Não guardar imagens do rosto/documento além do exigido pelo provedor e pelo jurídico.
@@ -187,6 +189,10 @@ Usada por: PRE07 · campos: id, live_id, sticker_id, presente_id, meta_quantidad
 Usada por: PRE*, ADM06 · campos: id, nome (por idioma: pt-BR, en), categoria_id, preco_moedas, tipo (`comum`, `grande`, `super`, `sorte`, `exclusivo`), exige_vip_nivel?, exige_nivel?, elegivel_cobranca_minuto (RN-53), midia (imagem, lottie_url, video_url), duracao_animacao_ms, ativo, ordem, posicoes (`live`, `chamada`, `conversa`, `pk`).
 
 ### CategoriaPresente — proposta · id, nome, ordem, ativa.
+
+### CategoriaInteresse — proposta · Usada por: ENT12, DES (Fase 2) · id, nome_pt, nome_en, ordem, ativa.
+### PalavraReservada — proposta · Usada por: ENT11, RN-05 · termo, tipo (`username`, `nome`), origem (`plataforma`, `comprador`). Inclui a marca do tenant e variações.
+### IdentificadorBloqueado — proposta · Usada por: ENT10 (Q-65) · tipo (`telefone`, `email`, `google`), valor_hmac 🔒 (HMAC com chave do servidor), conta_id, criado_em. Impede cadastro novo com identificador de conta congelada.
 
 ### EnvioPresente — proposta
 Usada por: PRE01–PRE11, PK06, CHA05, MSG02 · `POST /v1/gifts/send`
@@ -445,3 +451,4 @@ Valor inicial no mock: flags de login e anti-bot de `mock-server/fixtures/config
 | 2026-11-21 | Fase 1b: MetodoLogin, CodigoVerificacao, Sessao (ADR 0012), AceiteTermos e Usuario (parcial) em uso no mock; Dispositivo.segredo_hash; TokensLocais no app; documento `diretrizes` no AceiteTermos | ENT04–ENT07, ENT16, ENT19, SEG06 |
 | 2026-11-21 | CadastroPendente, AvisoConta, ConfigAuth e controles efêmeros (falhas, limites por IP, token anti-bot usado); CodigoVerificacao, Sessao (`mesmo_aparelho`, carência única, ociosidade), Dispositivo, AceiteTermos e Usuario.needsProfile alinhados ao código; flags de login/anti-bot; fixtures `auth.json` e outbox de e-mail; chaves do TokensLocais | Fase 1b (conferência código × docs pelo guardião de dados) |
 | 2026-11-21 | AceiteTermos: diretrizes obrigatórias (Q-55) e unicidade (usuario, documento, versão) aplicada no mock | Decisão do usuário (Q-55) |
+| 2026-11-21 | Plano 1c (proposta): CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; Usuario (gênero, interesses, sinal da loja, congelada) e Dispositivo (bloqueio de menor) | ENT08, ENT10, ENT11, ENT12 (Q-58, Q-59, Q-64, Q-65) |

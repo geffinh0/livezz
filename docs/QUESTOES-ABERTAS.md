@@ -87,3 +87,7 @@
 | Q-63 | ENT10: quem desfaz o congelamento e por quanto tempo guardar | Revisão da equipe (pedido pelo suporte); liberar só com verificação forte de idade aprovada; sem prazo de exclusão automática (confirmar com o jurídico, Q-41) | 2026-11-21 |
 | Q-64 | ENT08: sinal de idade da Play Store (Play Age Signals) | Interface `AgeSignalProvider` + fake no plano 1c; plugin nativo próprio com a biblioteca oficial na Fase 12 (API em beta; só testável com o app na loja) | 2026-11-21 |
 | Q-65 | ENT10: bloquear também o aparelho de quem foi congelado por ser menor? | Sim: o aparelho fica marcado; login ou cadastro nele vai para a tela de bloqueio até a revisão da equipe, que pode liberar o aparelho | 2026-11-21 |
+| Q-66 | Plano 1c grande demais? | Dividir: 1c (ENT08, ENT10, ENT11, ENT12, CFG14 + fechamento de ENT06) e 1d (ledger, ENT13, ENT14, ENT15, ENT09) | 2026-11-21 |
+| Q-67 | ENT09: tentativas de verificação forte | 3 sessões por dia, configurável pelo comprador; reprovado tenta de novo no dia seguinte | 2026-11-21 |
+| Q-68 | ENT10: como a conta congelada chega ao suporte | A tela de bloqueio mostra o e-mail de suporte do tenant e um número de protocolo | 2026-11-21 |
+| Q-69 | RN-31 depois da exclusão da conta | Mantém só os HMAC de telefone e aparelho para o anti-abuso (confirmar com o jurídico em Q-33/Q-41) | 2026-11-21 |

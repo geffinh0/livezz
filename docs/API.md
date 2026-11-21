@@ -29,7 +29,7 @@
 - **CORS (mock):** liberado só para origens `http://localhost:*` e `http://127.0.0.1:*` (app web de teste, painel e portal em dev). Headers aceitos: Content-Type, Authorization, Accept-Language, X-App-Version, Idempotency-Key, X-Mock-Country (só mock), X-Antibot-Provider, X-Antibot-Token; métodos GET, POST, PUT, PATCH, DELETE, OPTIONS; preflight `204` com `Max-Age: 600`; exposto: Retry-After.
 
 ## Catálogo de erros (inicial)
-`nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `credenciais_invalidas`, `email_nao_confirmado`, `desafio_necessario`, `sessao_revogada`, `sessao_expirada`, `termos_pendentes`, `dispositivo_invalido`, `erro_interno`.
+`nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `credenciais_invalidas`, `email_nao_confirmado`, `desafio_necessario`, `sessao_revogada`, `sessao_expirada`, `termos_pendentes`, `dispositivo_invalido`, `cadastro_pendente`, `erro_interno`.
 
 ## Endpoints
 
@@ -60,6 +60,7 @@
 | POST | /me/age-verification | Iniciar verificação de idade | ENT09 | proposto |
 | GET | /me/age-verification | Situação da verificação | ENT09 | proposto |
 | POST | /me/interests | Salvar interesses | ENT12 | proposto |
+| GET | /interests | Categorias de interesse (no idioma) | ENT12 | proposto |
 | POST | /me/tutorials/{key}/seen | Marcar tutorial visto | NAV04 | proposto |
 | POST | /me/export | Pedir exportação de dados (LGPD) | CFG12 | proposto |
 | POST | /me/delete | Agendar exclusão de conta | CFG12 | proposto |
@@ -344,6 +345,17 @@ Todas as rotas de login recebem `deviceId` + `deviceSecret` (segredo errado → 
 - **GET /me** → `{ id, needsProfile, accountStatus, pendingTerms: [{ document, version, url }] }`. `pendingTerms` lista `terms`, `privacy` e `guidelines` ainda não aceitos na versão atual (os três obrigatórios, Q-55). Erros: `401 nao_autenticado|token_expirado|sessao_*`, `403 conta_banida|conta_suspensa`.
 - **POST /me/terms/accept** `{ document: "terms"|"privacy"|"guidelines", version }` → `204`. Versão diferente da atual → `409 conflito` com `details.currentVersion`; aceitar de novo a mesma versão → `204`.
 - **Logs:** o servidor nunca registra `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination`, `email`, `authorization` nem `X-Antibot-Token`.
+
+### Cadastro inicial (plano 1c) — proposto
+- **Portão de cadastro:** com `pendingSteps` contendo `profile`, rotas autenticadas (exceto `GET /me`, `PATCH /me`, `POST /me/terms/accept`, `GET /usernames/{u}/availability`, `POST /auth/logout`) → `403 cadastro_pendente`.
+- **GET /me** ganha `displayName`, `username`, `gender` (só nesta rota), `ageStatus` (`nao_verificada`, `pendente`, `verificada`, `reprovada`, `menor_bloqueado`), `language`, `pendingSteps` (`profile`, `username`, `interests`). `needsProfile` = `pendingSteps` não vazio (compatível com a 1b).
+- **PATCH /me** `{ displayName?, birthDate? (AAAA-MM-DD), gender? ("mulher"|"homem"|"nao_binario"|"prefiro_nao_dizer"|null), language? ("pt-BR"|"en"), storeAgeSignal? { status: "shared"|"not_shared"|"verification_required"|"unavailable", ageLower?, ageUpper? } }` → `200` com o `/me`. Campos fora da lista → `400 validacao`. `birthDate` só uma vez (`409 conflito`, `details.reason = "data_imutavel"`), não futura, ≤ 120 anos. Idade < 18 (só datas, fuso do tenant) ou `storeAgeSignal.ageUpper < 18` → `403 menor_de_idade`: conta congelada, sessões revogadas, aparelho marcado. O sinal só restringe.
+- **Conta congelada / aparelho marcado:** login, refresh, rotas autenticadas e `auth` do tempo real → `403 menor_de_idade` (WS: `session.invalid { reason: "conta_bloqueada" }` + `4001`). `POST /devices` devolve `blocked: true` para aparelho marcado.
+- **GET /usernames/{u}/availability** (autenticada; limite por conta e IP) → `{ available, reason?: "formato"|"ocupado"|"reservado", suggestions: string[] }`.
+- **POST /me/username** `{ username }` → `200 { username }`; `409 username_indisponivel` (`details.reason`) se ocupado no meio.
+- **GET /interests** → `{ items: [{ id, name }] }` no idioma do `Accept-Language`. **POST /me/interests** `{ ids: string[] (0–10, existentes, sem repetição) }` → `204` (lista vazia = pulou).
+- **Logs:** nunca registram `birthDate`, `gender`, `storeAgeSignal`, `ageLower`, `ageUpper`.
+- Mock-only: `POST /__mock/minor/unfreeze { userId }`; cenário `sinal-loja-menor` (só para o fake do app; o servidor não muda).
 
 ### Mock-only (Fase 1b)
 - `GET /__mock/outbox?destination=...` → `{ code }` do último código enviado (para E2E). Nunca usado pelo app.

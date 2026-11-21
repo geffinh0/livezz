@@ -60,3 +60,4 @@
 | M-049 | 2026-11-21 | qualidade | baixa | Código morto: filtro de método de e-mail não verificado em `mock-server/src/auth/service.ts` (o cadastro pendente fica em outra estrutura) | ENT05 | aberta |
 | M-050 | 2026-11-21 | ux | média | Restaurar a sessão sem rede volta sem `needsProfile`/`pendingTerms`: guardar esses dois no armazenamento seguro para o roteador decidir offline (o servidor já barra com `termos_pendentes`) | ENT01, ENT16 | aberta |
 | M-051 | 2026-11-21 | ux | baixa | Tela de termos com título "Termos atualizados" também para conta nova (primeiro aceite): usar "Antes de começar" quando nenhum documento foi aceito ainda | ENT16 | aberta |
+| M-052 | 2026-11-21 | segurança | alta | Identidade do aparelho pode ser trocada reinstalando o app: bloqueio de menor (Q-65) e anti-abuso de bônus (RN-31) contornáveis até haver atestação do aparelho (Play Integrity, SEG05) | ENT10, ENT13, Fase 12 | aberta |
