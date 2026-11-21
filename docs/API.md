@@ -17,7 +17,9 @@
 - **Datas:** ISO-8601 UTC. **Dinheiro:** inteiros (moedas, diamantes, centavos).
 - **Idioma:** header `Accept-Language` (`pt-BR` ou `en`); textos vindos do servidor (nomes de presentes, motivos, banners) respeitam o idioma.
 - **Sessão única:** login em um novo aparelho revoga a sessão anterior (RN-06); requisições do aparelho antigo recebem `401` com `code: sessao_substituida`.
-- **Versão do app:** header `X-App-Version`; resposta `426` com `code: atualizacao_obrigatoria` quando abaixo da mínima.
+- **Versão do app:** header `X-App-Version` (semver `x.y.z`); resposta `426` com `code: atualizacao_obrigatoria` quando abaixo da mínima.
+- **Manutenção:** resposta `503` com `code: manutencao` e `Retry-After` (segundos) enquanto a manutenção estiver ativa.
+- **Exceções:** `GET /config` nunca responde `426` nem `503` (o app precisa ler a config para mostrar as telas de atualização e manutenção); rotas `/__mock/*` também não.
 - **Rate limit:** `429` com `Retry-After`.
 - **Admin:** rotas `/v1/admin/*` exigem token de admin com papel; toda escrita gera `LogAuditoria`.
 - **Mock-only:** rotas `/__mock/*` existem apenas no mock-server.
@@ -30,7 +32,7 @@
 ### Sistema e configuração
 | Método | Caminho | Descrição | Usado por | Status |
 | --- | --- | --- | --- | --- |
-| GET | /config | Config pública do app (flags, versão mínima, abas, limites, textos legais) | ENT01, TRV04 | proposto |
+| GET | /config | Config pública do app (flags, versão mínima, abas, limites, textos legais) | ENT01, TRV04 | no mock |
 | POST | /devices | Registrar/atualizar dispositivo e token de push | ENT01, TRV05 | proposto |
 
 ### Autenticação e conta
@@ -253,10 +255,53 @@
 ### Mock-only (`/__mock/*`)
 | Método | Caminho | Descrição |
 | --- | --- | --- |
-| POST | /__mock/reset | Volta aos dados iniciais |
-| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`) |
-| POST | /__mock/emit | Emite um evento de tempo real arbitrário (para testes) |
-| POST | /__mock/bots/{start|stop} | Liga/desliga bots de chat e presentes |
+| POST | /__mock/reset | Volta aos dados iniciais e desliga todos os cenários (no mock) |
+| POST | /__mock/scenario/{nome} | Aplica cenário (ex.: `saldo-zero`, `pk-recebida`, `ban`, `live-encerrada-admin`, `pagamento-falha`, `rede-lenta`, `erro-500`). No mock: `erro-500`, `rede-lenta`, `manutencao`, `versao-minima` |
+| POST | /__mock/emit | Emite um evento de tempo real do catálogo (para testes) (no mock) |
+| POST | /__mock/bots/{start|stop} | Liga/desliga bots de chat e presentes (proposto, Fase 3) |
 
 ## Detalhes
 > Preencher por endpoint quando for implementado: request, response, erros possíveis, regras aplicadas (RN), eventos emitidos, entidades do DATABASE.md tocadas.
+
+### GET /v1/config — no mock (TRV04, ENT01)
+- Auth: não exige (lida antes do login). Header `Accept-Language` escolhe o idioma dos textos.
+- Nunca responde `426`/`503` (ver Convenções).
+- Resposta `200`:
+  ```json
+  {
+    "configVersion": 1,
+    "minAppVersion": "0.1.0",
+    "maintenance": { "active": false, "retryAfterSeconds": null },
+    "flags": { "loginPhone": true, "loginEmail": true, "loginGoogle": true, "pk": true, "groupLive": true,
+               "paidPerMinute": false, "luckyGift": false, "coinReseller": false, "referrals": false,
+               "agencies": false, "facePresence": true, "ageVerification": true },
+    "limits": { "chatMaxLength": 200, "chatMessagesPerSecond": 1, "pkInviteTtlSeconds": 15,
+                "stageInviteTtlSeconds": 15, "callInviteTtlSeconds": 30 },
+    "discoverTabs": ["popular", "nearby", "new", "pk", "multi", "calls"],
+    "legalTexts": { "terms": { "version": 1, "url": "…" }, "privacy": { "version": 1, "url": "…" },
+                    "guidelines": { "version": 1, "url": "…" } },
+    "allowedRegions": ["BR"]
+  }
+  ```
+- Regras: valores vêm de `ConfigApp` (editável pelo comprador, ADR 0007); `configVersion` cresce a cada alteração. Flag desconhecida pelo app é ignorada; flag ausente = desligada.
+- Erros: `429` (rate limit), `500 erro_interno`.
+- Eventos relacionados: `config.updated` (só para conexões autenticadas; sem login o app rebusca ao abrir e ao voltar do segundo plano, ADR 0011).
+- Entidades: ConfigApp.
+
+### POST /__mock/reset — no mock
+- Corpo vazio. Recarrega fixtures, zera cenários, fecha conexões de tempo real. Resposta `204`.
+
+### POST /__mock/scenario/{nome} — no mock
+- Corpo opcional `{ "active": true|false }` (padrão `true`). Resposta `200 { "scenario": nome, "active": bool }`; nome desconhecido → `404 nao_encontrado`.
+- Cenários da Fase 0:
+  | nome | efeito |
+  | --- | --- |
+  | `erro-500` | toda rota `/v1/*` responde `500 erro_interno` |
+  | `rede-lenta` | toda rota `/v1/*` atrasa 3 s |
+  | `manutencao` | `ConfigApp.manutencao` ativa (`retryAfterSeconds: 300`): rotas `/v1/*` (exceto `/config`) → `503 manutencao`; `configVersion` sobe e `config.updated` é emitido |
+  | `versao-minima` | `minAppVersion` = `99.0.0`: rotas `/v1/*` (exceto `/config`) com `X-App-Version` menor → `426`; `configVersion` sobe e `config.updated` é emitido |
+
+### POST /__mock/emit — no mock
+- Corpo `{ "type": "...", "data": { }, "target": { "room": "live:123" } | { "userId": "u1" } | { "all": true } }`.
+- `type` precisa existir no catálogo de `docs/EVENTOS-TEMPO-REAL.md` (servidor → cliente); senão `400 validacao`. Resposta `200 { "delivered": n }`.
+

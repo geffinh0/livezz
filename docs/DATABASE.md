@@ -327,9 +327,9 @@ Usada por: ASS11, CHA08, MSG08, FEED06, SEG01, ADM05 · id, denunciante_id, alvo
 
 ## Configuração
 
-### IntegracaoProvedor — proposta
+### IntegracaoProvedor — em uso no mock (só tipo, provedor `fake` e ativo; sem credenciais na Fase 0)
 Usada por: ADM19, TRV13, RN-84 · id, tipo (`pagamento_loja_alternativa`, `pagamento_web`, `repasse_saque`, `sms_whatsapp`, `verificacao_idade`, `traducao`, `moderacao_midia`, `antibot`, `push`, `analytics`), provedor, ativo, credenciais 🔒 (criptografadas; nunca devolvidas inteiras), configuracao (objeto), ultimo_teste_em, ultimo_teste_ok, atualizado_por, atualizado_em.
-### ConfigApp — proposta · versao_minima, manutencao, abas_descobrir, flags (`lucky_gift`, `paid_per_minute`, `coin_reseller`, `referrals`, `agencies`, `face_presence`, métodos de login…), regioes_permitidas, limites (RN-40–RN-59), textos_legais (versões), alterada_por, alterada_em.
+### ConfigApp — em uso no mock · Usada por: ENT01, TRV04, `GET /config`, `config.updated` · versao (inteiro crescente a cada alteração; ADR 0007/0011), versao_minima, manutencao (ativa, retry_after_segundos), abas_descobrir, flags (`lucky_gift`, `paid_per_minute`, `coin_reseller`, `referrals`, `agencies`, `face_presence`, métodos de login…), regioes_permitidas, limites (RN-40–RN-59), textos_legais (versões), alterada_por, alterada_em.
 ### FlagHistorico — proposta · flag, valor, alterada_por, aviso_juridico_confirmado, alterada_em.
 
 ## Painel e auditoria
@@ -365,6 +365,19 @@ erDiagram
   USUARIO ||--o{ DENUNCIA : faz
 ```
 
+### Correspondência de nomes das flags (JSON camelCase ↔ banco snake_case)
+| JSON (`GET /config`) | Banco (`ConfigApp.flags`) |
+| --- | --- |
+| loginPhone / loginEmail / loginGoogle | login_telefone / login_email / login_google |
+| pk / groupLive | pk / live_grupo |
+| paidPerMinute | paid_per_minute |
+| luckyGift | lucky_gift |
+| coinReseller | coin_reseller |
+| referrals / agencies | referrals / agencies |
+| facePresence | face_presence |
+| ageVerification | verificacao_idade |
+Valor inicial das flags no mock vem de `tenants/<id>/tenant.json` → `features` (só semente; o app nunca lê flags do tenant).
+
 ## Notas para o banco (preencher na Fase 11)
 - Natureza financeira e relacional forte (ledger, saques, auditoria) → um banco relacional transacional é a recomendação inicial; dados de altíssimo volume e curta duração (chat da live, presença, contadores, placar) podem ir para cache/fila.
 - Índices previstos: `Seguir(seguido_id)`, `Live(situacao, pais, espectadores_agora)`, `EnvioPresente(contexto, contexto_id, criado_em)`, `LancamentoLedger(conta_id, criado_em)`, `Mensagem(conversa_id, criada_em)`, `Denuncia(situacao, prioridade, criada_em)`.
@@ -377,3 +390,4 @@ erDiagram
 | --- | --- | --- |
 | 2026-11-20 | Versão inicial com todas as entidades propostas a partir da especificação | Kit inicial |
 | 2026-11-20 | Sessão única por conta; idioma e sinal de idade da loja no Usuario; diamantes normais × bônus e moedas pagas × grátis no ledger; MenuCobranca e cobrança por presente; DeteccaoConteudo; VIP por gasto (NivelVip, VipStatus) no lugar de assinatura; assinatura de criador em reais; LinkPortal; IntegracaoProvedor; ConfigProgressao; ConfigEconomia ampliada | Respostas do usuário às questões Q-01 a Q-34 |
+| 2026-11-21 | ConfigApp: campo `versao`, `manutencao` com `retry_after_segundos`, status `em uso no mock`; tabela de correspondência das flags; IntegracaoProvedor em uso no mock (fake, sem credenciais) | Fase 0 (TRV04, TRV13; ADR 0011) |

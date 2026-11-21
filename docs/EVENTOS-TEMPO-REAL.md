@@ -25,18 +25,18 @@
 | room.leave | `{ room }` | Sair da sala |
 | presence.watch / presence.unwatch | `{ userIds: [] }` | Acompanhar online de usuários |
 
-Respostas: `ack` `{ refId, ok, error? }`.
+Respostas: `ack` `{ refId, ok, error? }` (`refId` = `id` do envelope enviado pelo cliente; `error` usa os códigos do catálogo da API). Status das mensagens do cliente: `auth`, `ping`, `room.join`, `room.leave` **no mock**; `presence.*` proposto.
 
 ## Servidor → cliente
 
 ### Sessão e sistema
 | type | data (resumo) | Usado por | Status |
 | --- | --- | --- | --- |
-| pong | `{}` | TRV01 | proposto |
-| ack | `{ refId, ok, error }` | TRV01 | proposto |
-| session.invalid | `{ reason }` | ENT19 | proposto |
+| pong | `{}` | TRV01 | no mock |
+| ack | `{ refId, ok, error }` | TRV01 | no mock |
+| session.invalid | `{ reason }` | ENT19 | no mock |
 | session.replaced | `{ at }` (a conta entrou em outro aparelho) | ENT19 | proposto |
-| config.updated | `{ partial config }` | TRV04 | proposto |
+| config.updated | `{ partial config }` | TRV04 | no mock |
 | account.sanctioned | `{ type, until, reason }` | SEG03 | proposto |
 | age.verification.updated | `{ status }` | ENT09 | proposto |
 | notification.new | `{ notification }` | DES08 | proposto |
@@ -127,3 +127,14 @@ Respostas: `ack` `{ refId, ok, error? }`.
 | family.updated | `{ familyId, change }` | FAM* | proposto |
 | family.request | `{ request }` | FAM03 | proposto |
 | agency.invite | `{ invite }` 🚩 | AGE02 | proposto |
+
+## Detalhes (Fase 0, no mock)
+- **Envelope do cliente:** mesmo formato `{ v, id, type, ts, data }`. Mensagem que não é JSON ou sem `type`/`id` → `ack { ok:false, error:"validacao" }` (quando houver `id`) ou é ignorada.
+- **auth:** `data.token`. Válido → `ack { ok:true }`. Inválido → `session.invalid { reason:"token_invalido" }` e fechamento com código `4001`. Sem `auth` em 5 s → fechamento `4000`. Outra mensagem antes do `auth` → `ack { ok:false, error:"nao_autenticado" }`.
+  - **Só no mock (Fase 0):** tokens de teste `dev-token-<userId>` para os usuários das fixtures. O login real (Fase 1) troca por access token; o app obtém o token por uma interface (`TokenSource`), sem token fixo.
+- **Uma conexão por conta:** nova conexão autenticada da mesma conta fecha a anterior com `session.replaced` + código `4002` (RN-06).
+- **ping → pong** com o mesmo `data` vazio.
+- **room.join / room.leave:** `data.room` no formato `live:{id}`, `pk:{id}`, `call:{id}`, `conversation:{id}`; formato inválido → `ack { ok:false, error:"validacao" }`. Na Fase 0 o mock só valida o formato; existência e permissão de cada sala entram com a feature dona (Fases 3, 5, 6).
+- **config.updated:** `data = { configVersion, ...campos alterados }` (mesmo formato de `GET /config`). O cliente ignora se `configVersion` ≤ à versão que já tem.
+- **Códigos de fechamento:** `4000` sem auth a tempo · `4001` token inválido · `4002` sessão substituída · `1001` servidor encerrando (mock reset).
+
