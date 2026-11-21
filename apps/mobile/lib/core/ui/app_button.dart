@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
+import 'app_spinner.dart';
+
 enum AppButtonVariant { primary, secondary, text, danger }
 
 /// Botão único do app (DESIGN-SYSTEM §3): primário, secundário, texto e
@@ -24,14 +26,19 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final enabled = onPressed != null && !loading;
+    // Carregando: o botão fica desabilitado (anunciado assim) e o leitor de
+    // tela continua ouvindo o rótulo.
     final child = loading
-        ? SizedBox.square(
-            dimension: 20,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: variant == AppButtonVariant.primary
-                  ? scheme.onPrimary
-                  : scheme.primary,
+        ? Semantics(
+            label: label,
+            liveRegion: true,
+            child: SizedBox.square(
+              dimension: 20,
+              child: AppSpinner(
+                color: variant == AppButtonVariant.primary
+                    ? scheme.onPrimary
+                    : scheme.primary,
+              ),
             ),
           )
         : Text(label);
@@ -64,12 +71,6 @@ class AppButton extends StatelessWidget {
         child: child,
       ),
     };
-    return Semantics(
-      button: true,
-      enabled: enabled,
-      label: loading ? label : null,
-      excludeSemantics: loading,
-      child: button,
-    );
+    return button;
   }
 }

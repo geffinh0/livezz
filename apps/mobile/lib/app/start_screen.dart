@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../core/config/application/config_controller.dart';
 import '../core/http/app_gate.dart';
 import '../core/theme/tokens.dart';
+import '../core/ui/app_button.dart';
 import '../core/ui/state_views.dart';
 import '../core/ui/test_id.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -24,6 +25,10 @@ class StartScreen extends ConsumerWidget {
     final config = ref.watch(configControllerProvider);
     final gate = ref.watch(appGateProvider);
     void retry() => ref.read(configControllerProvider.notifier).refresh();
+    void retryGate() {
+      ref.read(appGateProvider.notifier).set(const GateOpen());
+      retry();
+    }
 
     final Widget body = switch ((config, gate)) {
       (_, GateUpdateRequired()) => _Blocking(
@@ -31,18 +36,24 @@ class StartScreen extends ConsumerWidget {
         icon: Symbols.system_update,
         title: l.updateRequiredTitle,
         message: l.errorAtualizacaoObrigatoria,
+        actionLabel: l.actionRetry,
+        onAction: retryGate,
       ),
       (AsyncData(:final value), _) when value.maintenance.active => _Blocking(
         id: 'gate.maintenance',
         icon: Symbols.construction,
         title: l.maintenanceTitle,
         message: l.errorManutencao,
+        actionLabel: l.actionRetry,
+        onAction: retryGate,
       ),
       (_, GateMaintenance()) => _Blocking(
         id: 'gate.maintenance',
         icon: Symbols.construction,
         title: l.maintenanceTitle,
         message: l.errorManutencao,
+        actionLabel: l.actionRetry,
+        onAction: retryGate,
       ),
       (AsyncError(:final error), _) => StateView.forFailure(
         context,
@@ -75,9 +86,13 @@ class _Blocking extends StatelessWidget {
     required this.title,
     required this.message,
     required this.id,
+    required this.actionLabel,
+    required this.onAction,
   });
 
   final String id;
+  final String actionLabel;
+  final VoidCallback onAction;
 
   final IconData icon;
   final String title;
@@ -95,11 +110,28 @@ class _Blocking extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 56),
+              Icon(
+                icon,
+                size: 56,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(height: AppSpace.lg),
-              Text(title, style: t.headlineSmall, textAlign: TextAlign.center),
+              Semantics(
+                header: true,
+                liveRegion: true,
+                child: Text(
+                  title,
+                  style: t.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
+              ),
               const SizedBox(height: AppSpace.sm),
               Text(message, style: t.bodyLarge, textAlign: TextAlign.center),
+              const SizedBox(height: AppSpace.xl),
+              TestId(
+                '$id.action',
+                child: AppButton(label: actionLabel, onPressed: onAction),
+              ),
             ],
           ),
         ),

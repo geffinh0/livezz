@@ -1,8 +1,5 @@
-import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../errors/app_failure.dart';
 import '../data/config_repository.dart';
 import '../domain/app_config.dart';
 
@@ -21,7 +18,8 @@ class ConfigController extends AsyncNotifier<AppConfig> {
   Future<AppConfig> build() async {
     try {
       return await _repo.fetch();
-    } on AppFailure {
+    } on Object {
+      // Rede, servidor ou resposta fora do contrato: tenta a última válida.
       final cached = await _repo.cached();
       if (cached != null) return cached;
       rethrow;
@@ -36,23 +34,33 @@ class ConfigController extends AsyncNotifier<AppConfig> {
     try {
       final fresh = await _repo.fetch();
       state = AsyncData(fresh);
-    } on AppFailure catch (e, st) {
+    } on Object catch (e, st) {
       state = previous != null ? AsyncData(previous) : AsyncError(e, st);
     }
   }
 
+  Future<void> _pending = Future.value();
+
   /// Evento `config.updated` (`data = { configVersion, ...campos }`).
-  Future<void> applyRemote(Map<String, dynamic> data) async {
+  /// Eventos são aplicados um de cada vez (sem atravessar no `await`).
+  Future<void> applyRemote(Map<String, dynamic> data) =>
+      _pending = _pending.then((_) => _applyRemote(data));
+
+  Future<void> _applyRemote(Map<String, dynamic> data) async {
     final current = state.value;
     final version = data['configVersion'];
     if (current == null || version is! int) return;
     if (version <= current.configVersion) return; // velho ou repetido
-    final merged = await _repo.applyPartial(data);
-    if (merged != null) {
-      state = AsyncData(merged);
-    } else {
-      unawaited(refresh());
+    try {
+      final merged = await _repo.applyPartial(data);
+      if (merged != null) {
+        state = AsyncData(merged);
+        return;
+      }
+    } on Object {
+      // evento malformado: busca a config completa
     }
+    await refresh();
   }
 }
 

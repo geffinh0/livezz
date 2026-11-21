@@ -149,4 +149,23 @@ void main() {
     await ctrl.refresh();
     expect(container.read(configControllerProvider).value!.configVersion, 3);
   });
+
+  test('config.updated malformado cai no refresh sem quebrar', () async {
+    await container.read(configControllerProvider.future);
+    adapter.next = () => cfg(version: 5);
+    await container.read(configControllerProvider.notifier).applyRemote({
+      'configVersion': 4,
+      'flags': 'isso não é um mapa',
+    });
+    expect(container.read(configControllerProvider).value!.configVersion, 5);
+  });
+
+  test('resposta fora do contrato usa o cache', () async {
+    await container.read(configControllerProvider.future);
+    container.dispose();
+    adapter.next = () => {'quebrado': true};
+    container = make();
+    final c = await container.read(configControllerProvider.future);
+    expect(c.configVersion, 1);
+  });
 }

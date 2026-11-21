@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 import '../tenant/tenant_config.dart';
 
 /// Ambiente de execução. A URL da API vem de `--dart-define=API_BASE_URL=...`
@@ -11,14 +13,21 @@ class AppEnv {
       'APP_VERSION',
       defaultValue: '0.1.0',
     );
-    return AppEnv(
+    final env = AppEnv(
       apiBaseUrl: override.isEmpty ? tenant.defaultApiBaseUrl : override,
       appVersion: version,
     );
+    if (!kDebugMode && !env.isSecure) {
+      // Release só fala HTTPS/WSS (docs/SEGURANCA.md). Falha cedo e claro.
+      throw StateError('API_BASE_URL precisa ser https em release');
+    }
+    return env;
   }
 
   final String apiBaseUrl;
   final String appVersion;
+
+  bool get isSecure => Uri.tryParse(apiBaseUrl)?.scheme == 'https';
 
   /// `http(s)://host:porta` → `ws(s)://host:porta/v1/realtime`.
   Uri get realtimeUri {

@@ -6,6 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../errors/app_failure.dart';
 import '../theme/tokens.dart';
 import 'app_button.dart';
+import 'app_spinner.dart';
 import 'test_id.dart';
 
 /// Estados de tela obrigatórios (Definição de pronto): carregando, vazio,
@@ -89,7 +90,8 @@ class StateView extends StatelessWidget {
         key: const ValueKey('state.loading'),
         child: Semantics(
           label: l.stateLoading,
-          child: const CircularProgressIndicator(),
+          liveRegion: true,
+          child: const SizedBox.square(dimension: 40, child: AppSpinner()),
         ),
       );
     }

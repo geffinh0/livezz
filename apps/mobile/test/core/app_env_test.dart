@@ -18,4 +18,18 @@ void main() {
       'wss://api.exemplo.com/v1/realtime',
     );
   });
+
+  test('isSecure só para https', () {
+    expect(
+      const AppEnv(apiBaseUrl: 'https://a.b', appVersion: '1').isSecure,
+      isTrue,
+    );
+    expect(
+      const AppEnv(
+        apiBaseUrl: 'http://localhost:3000',
+        appVersion: '1',
+      ).isSecure,
+      isFalse,
+    );
+  });
 }

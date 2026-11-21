@@ -26,6 +26,18 @@ void main() {
           'onSurface/surface': (s.onSurface, s.surface),
           'onSurface/surfaceContainer': (s.onSurface, s.surfaceContainer),
           'onError/error': (s.onError, s.error),
+          'muted/surface': (
+            Color.alphaBlend(s.onSurfaceVariant, s.surface),
+            s.surface,
+          ),
+          'muted/surfaceContainer': (
+            Color.alphaBlend(s.onSurfaceVariant, s.surfaceContainer),
+            s.surfaceContainer,
+          ),
+          'textButton/surface': (
+            entry.value.textButtonTheme.style!.foregroundColor!.resolve({})!,
+            s.surface,
+          ),
         };
         for (final p in pairs.entries) {
           expect(

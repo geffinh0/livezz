@@ -47,6 +47,24 @@ void main() {
     expect(find.byKey(const ValueKey('gate.maintenance')), findsOneWidget);
   });
 
+  testWidgets('manutenção: "tentar de novo" libera quando ela acaba', (
+    t,
+  ) async {
+    var maintenance = true;
+    final adapter = StubAdapter(
+      (_) => jsonBody(200, sampleConfig(maintenance: maintenance)),
+    );
+    await t.pumpWidget(
+      harness(const StartScreen(), overrides: testOverrides(adapter)),
+    );
+    await t.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('gate.maintenance')), findsOneWidget);
+    maintenance = false;
+    await t.tap(find.text('Tentar de novo'));
+    await t.pump(const Duration(milliseconds: 100));
+    expect(find.byKey(const ValueKey('gate.maintenance')), findsNothing);
+  });
+
   group('vitrine', () {
     final adapter = StubAdapter((_) => jsonBody(200, sampleConfig(version: 7)));
 

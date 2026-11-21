@@ -53,7 +53,17 @@ final appGateProvider = NotifierProvider<AppGateController, AppGate>(
 
 class AppGateController extends Notifier<AppGate> {
   @override
-  AppGate build() => const GateOpen();
+  AppGate build() {
+    // Config nova sem manutenção (refresh ou config.updated) libera o portão.
+    ref.listen(configControllerProvider, (_, next) {
+      final c = next.value;
+      if (c != null && !c.maintenance.active && state is GateMaintenance) {
+        state = const GateOpen();
+      }
+    });
+    return const GateOpen();
+  }
+
   void set(AppGate gate) => state = gate;
 }
 
