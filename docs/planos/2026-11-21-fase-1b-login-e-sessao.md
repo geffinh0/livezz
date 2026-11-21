@@ -114,4 +114,4 @@
 12. `features/auth/` com `domain/` (regras de senha, máscara, estados) puro e `data/` (DTOs, repositório).
 13. **ADR 0012 — Modelo de sessão** (access curto + refresh rotativo com detecção de reuso, ligação ao aparelho por `deviceSecret`, `sid` no token, códigos de fechamento do tempo real) escrita no passo 1.
 
-Status: aguardando aprovação
+Status: aprovado pelo usuário em 2026-11-21

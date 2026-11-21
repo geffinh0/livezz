@@ -6,7 +6,9 @@
 
 ## Convenções
 - Base: `{apiBaseUrl}/v1`. JSON UTF-8. Campos em `camelCase` no JSON.
-- **Autenticação:** `Authorization: Bearer <accessToken>` (expira em 15 min, provisório); `POST /v1/auth/refresh` com refresh token rotativo.
+- **Autenticação:** `Authorization: Bearer <accessToken>` (15 min, configurável de 5 a 60); `POST /v1/auth/refresh` com refresh token rotativo. Modelo completo na ADR 0012. Access vencido → `401 token_expirado`; sessão revogada → `401 sessao_substituida | sessao_revogada | sessao_expirada`; conta bloqueada → `403 conta_suspensa | conta_banida`.
+- **Termos pendentes:** com aceite pendente, rotas autenticadas (exceto `GET /me`, `POST /me/terms/accept`, `POST /auth/logout`) respondem `403 termos_pendentes`.
+- **Anti-bot (RN-85, SEG06):** headers `X-Antibot-Provider` (`appcheck`, `recaptcha`, `turnstile`) e `X-Antibot-Token`. Quando o servidor exige e falta/é inválido → `428 desafio_necessario` com `details.providers`. Vale em `POST /devices`, `/auth/code/send`, `/auth/email/signup`, `/auth/email/login`, `/auth/password/reset`. Token de uso único, preso à rota.
 - **Idempotência:** toda operação que mexe em valor ou cria recurso aceita `Idempotency-Key: <uuid>` e devolve o mesmo resultado se repetida.
 - **Paginação:** por cursor: `?cursor=...&limit=20` → `{ "items": [...], "nextCursor": "..." | null }`.
 - **Erros:** status HTTP adequado + corpo:
@@ -27,7 +29,7 @@
 - **CORS (mock):** liberado só para origens `http://localhost:*` e `http://127.0.0.1:*` (app web de teste, painel e portal em dev). Headers aceitos: Content-Type, Authorization, Accept-Language, X-App-Version, Idempotency-Key, X-Mock-Country (só mock); exposto: Retry-After.
 
 ## Catálogo de erros (inicial)
-`nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `erro_interno`.
+`nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `credenciais_invalidas`, `email_nao_confirmado`, `desafio_necessario`, `sessao_revogada`, `sessao_expirada`, `termos_pendentes`, `dispositivo_invalido`, `erro_interno`.
 
 ## Endpoints
 
@@ -40,21 +42,21 @@
 ### Autenticação e conta
 | Método | Caminho | Descrição | Usado por | Status |
 | --- | --- | --- | --- | --- |
-| POST | /auth/code/send | Enviar código (telefone/e-mail; canal sms/whatsapp/email) | ENT04, ENT05, ENT07 | proposto |
-| POST | /auth/code/verify | Verificar código → tokens ou token de cadastro | ENT04 | proposto |
-| POST | /auth/email/signup | Cadastro por e-mail e senha | ENT05 | proposto |
-| POST | /auth/email/login | Login por e-mail e senha | ENT05 | proposto |
-| POST | /auth/google | Login/cadastro com Google | ENT06 | proposto |
-| POST | /auth/password/reset | Definir nova senha com código | ENT07 | proposto |
-| POST | /auth/refresh | Renovar tokens | ENT19 | proposto |
-| POST | /auth/logout | Sair (sessão atual ou todas) | CFG02 | proposto |
-| GET | /me | Meu perfil completo e situação da conta | ENT01, PER01 | proposto |
+| POST | /auth/code/send | Enviar código (telefone/e-mail; canal sms/whatsapp/email) | ENT04, ENT05, ENT07 | no mock |
+| POST | /auth/code/verify | Verificar código → tokens ou token de cadastro | ENT04 | no mock |
+| POST | /auth/email/signup | Cadastro por e-mail e senha | ENT05 | no mock |
+| POST | /auth/email/login | Login por e-mail e senha | ENT05 | no mock |
+| POST | /auth/google | Login/cadastro com Google | ENT06 | no mock |
+| POST | /auth/password/reset | Definir nova senha com código | ENT07 | no mock |
+| POST | /auth/refresh | Renovar tokens | ENT19 | no mock |
+| POST | /auth/logout | Sair (sessão atual ou todas) | CFG02 | no mock |
+| GET | /me | Meu perfil completo e situação da conta | ENT01, PER01 | no mock |
 | PATCH | /me | Editar perfil, preferências e privacidade | ENT08, PER02, CFG03, CFG04 | proposto |
 | POST | /me/username | Definir/trocar @ | ENT11, PER02 | proposto |
 | GET | /usernames/{u}/availability | Disponibilidade de @ | ENT11 | proposto |
 | GET | /me/login-methods · POST · DELETE /me/login-methods/{id} | Métodos vinculados | ENT15 | proposto |
 | GET | /me/sessions · DELETE /me/sessions/{id} | Sessões ativas | ENT19, CFG02 | proposto |
-| POST | /me/terms/accept | Aceitar versão de termo/política/regras | ENT16, TRA01 | proposto |
+| POST | /me/terms/accept | Aceitar versão de termo/política/regras | ENT16, TRA01 | no mock |
 | POST | /me/age-verification | Iniciar verificação de idade | ENT09 | proposto |
 | GET | /me/age-verification | Situação da verificação | ENT09 | proposto |
 | POST | /me/interests | Salvar interesses | ENT12 | proposto |
@@ -316,4 +318,29 @@
 - O servidor gera o `deviceId`. `deviceId` conhecido → atualiza (`200`); ausente, desconhecido ou forjado → cria um novo (`201`), nunca adota o id enviado.
 - Resposta: `{ "deviceId": "..." }`. Erros: `400 validacao`; `429` no backend real (limite por IP).
 - Entidades: Dispositivo. Base da sessão única (RN-06) no plano 1b.
+
+### POST /v1/devices — atualização (Fase 1b)
+- Criação (`201`) devolve `{ deviceId, deviceSecret }`; o servidor guarda só o hash do segredo. Atualizar exige `deviceId` + `deviceSecret` certos (`200 { deviceId }`); sem segredo certo cria outro aparelho (`201`). Rate limit e anti-bot.
+
+### Autenticação (Fase 1b) — no mock
+Todas as rotas de login recebem `deviceId` + `deviceSecret` (segredo errado → `401 dispositivo_invalido`) e respondem, quando entram, com:
+```json
+{ "accessToken": "...", "refreshToken": "...", "expiresIn": 900, "user": { "id": "u_...", "needsProfile": true } }
+```
+- **POST /auth/code/send** `{ channel: "sms"|"whatsapp"|"email", destination, purpose: "login"|"signup"|"reset" }` → `200 { expiresInSeconds, resendInSeconds }`. Mesma resposta exista ou não a conta. Limites RN-02 (configuráveis no servidor): 5 envios por destino por hora → `429 limite_excedido` + `Retry-After`; reenvio só após `resendInSeconds`. Canal desligado → `403 funcionalidade_desligada`. Código novo invalida o anterior.
+- **POST /auth/code/verify** `{ destination, code, purpose: "login"|"signup", deviceId, deviceSecret }` → tokens. Telefone sem conta cria a conta (`needsProfile: true`). Erros: `codigo_invalido` (conta tentativa; na 5ª o código morre), `codigo_expirado`, `limite_excedido`.
+- **POST /auth/email/signup** `{ email, password }` → `202` (código enviado com `purpose: "signup"`; confirmar com `code/verify`). Senha fraca → `400 validacao` com `details.rules`. E-mail com conta confirmada: mesma resposta `202`, e o dono recebe aviso "você já tem conta" em vez de código. Cadastro não confirmado não trava o e-mail (novo cadastro confirmado substitui).
+- **POST /auth/email/login** `{ email, password, deviceId, deviceSecret }` → tokens. Erro único `401 credenciais_invalidas` (e-mail inexistente leva o mesmo tempo). Senha certa com e-mail não confirmado → `403 email_nao_confirmado`.
+- **POST /auth/google** `{ idToken, deviceId, deviceSecret }` → tokens. Liga a conta de e-mail existente só com `email_verified`. **Só no mock:** `idToken = "mock-google:<email>"` (verificado) e `"mock-google:erro"` → `401 credenciais_invalidas`.
+- **POST /auth/password/reset** `{ email, code, newPassword }` → `204`; revoga todas as sessões da conta (RN-04). Código pedido antes com `code/send` `purpose: "reset"`.
+- **POST /auth/refresh** `{ refreshToken, deviceId, deviceSecret }` → tokens novos (rotativo). Reuso fora da tolerância de 10 s → `401 sessao_revogada` (sessão revogada). Expirado → `401 sessao_expirada`.
+- **POST /auth/logout** `{ refreshToken? }` (aceita access vencido) → `204`; revoga a sessão e fecha o tempo real.
+- **Limites de força bruta:** login, verify e reset limitados por conta, IP e aparelho com bloqueio progressivo; `429` igual exista ou não a conta.
+- **GET /me** → `{ id, needsProfile, accountStatus, pendingTerms: [{ document, version, url }] }`.
+- **POST /me/terms/accept** `{ document: "terms"|"privacy"|"guidelines", version }` → `204`. Versão diferente da atual → `409 conflito`.
+- **Logs:** o servidor nunca registra `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination` nem `authorization`.
+
+### Mock-only (Fase 1b)
+- `GET /__mock/outbox?destination=...` → `{ code }` do último código enviado (para E2E). Nunca usado pelo app.
+- Cenários: `exigir-desafio` (anti-bot exigido em todas as rotas da lista), `token-expira-rapido` (access de 5 s).
 

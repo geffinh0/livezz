@@ -29,7 +29,7 @@
 
 ## Conta
 
-### Usuario — status: proposta
+### Usuario — status: em uso no mock (parcial: id, situacao_conta, criado_em; perfil na 1c)
 Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | Campo | Tipo | Regras |
 | --- | --- | --- |
@@ -59,8 +59,8 @@ Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | tutoriais_vistos | lista de texto | NAV04 |
 | criado_em / atualizado_em / excluido_em | data | |
 
-### MetodoLogin — proposta
-Usada por: ENT03–ENT07, ENT15
+### MetodoLogin — em uso no mock
+Usada por: ENT03–ENT07, ENT15 · no mock: tipo, identificador, senha_hash (scrypt), verificado_em
 | Campo | Tipo | Regras |
 | --- | --- | --- |
 | id, usuario_id | id | |
@@ -70,20 +70,20 @@ Usada por: ENT03–ENT07, ENT15
 | verificado_em | data? | |
 | criado_em | data | |
 
-### CodigoVerificacao — proposta (efêmero, pode ficar em cache com expiração)
-Usada por: ENT04, ENT05, ENT07 · campos: id, destino 🔒, finalidade (`login`, `cadastro`, `recuperar_senha`, `vincular`), codigo_hash, tentativas, expira_em, usado_em.
+### CodigoVerificacao — em uso no mock (efêmero, pode ficar em cache com expiração)
+Usada por: ENT04, ENT05, ENT07 · campos: id, destino 🔒, finalidade (`login`, `cadastro`, `recuperar_senha`, `vincular`), codigo_hash, tentativas, expira_em, usado_em, envios_na_hora (RN-02). Código novo invalida o anterior; morre na 5ª tentativa errada.
 
-### Sessao — proposta
-Usada por: ENT19, CFG02 · campos: id, usuario_id, dispositivo_id, refresh_token_hash 🔒, criada_em, ultimo_uso_em, revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `senha_trocada`, `admin`), ip_aproximado 🔒, user_agent. **Regra:** no máximo uma sessão não revogada por usuário (RN-06).
+### Sessao — em uso no mock (ADR 0012)
+Usada por: ENT19, CFG02 · campos: id (`sid` no access token), usuario_id, dispositivo_id, refresh_token_hash 🔒, refresh_anterior_hash 🔒 + trocado_em (tolerância de 10 s), criada_em, ultimo_uso_em, expira_absoluta_em (180 dias, Q-54), revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `senha_trocada`, `reuso_refresh`, `expirada`, `conta_bloqueada`, `admin`), ip_aproximado 🔒, user_agent. **Regra:** no máximo uma sessão não revogada por usuário (RN-06).
 
 ### Dispositivo — em uso no mock
-Usada por: ENT01 (`POST /devices`), TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, plataforma, modelo, versao_app, idioma, registrado_em, visto_em.
+Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, plataforma, modelo, versao_app, idioma, registrado_em, visto_em.
 
 ### VerificacaoIdade — proposta
 Usada por: ENT09, TRA01, POR02, SEG07 · campos: id, usuario_id, metodo (`estimativa_facial`, `documento`), provedor (conector configurado em IntegracaoProvedor), referencia_provedor, resultado (`pendente`, `aprovado`, `reprovado`, `expirado`), idade_estimada?, motivo?, criado_em, concluido_em. Não guardar imagens do rosto/documento além do exigido pelo provedor e pelo jurídico.
 
-### AceiteTermos — proposta
-Usada por: ENT16, TRA01 · campos: id, usuario_id, documento (`termos`, `privacidade`, `regras_transmissao`, `regras_saque`), versao, aceito_em, ip_aproximado 🔒.
+### AceiteTermos — em uso no mock
+Usada por: ENT16, TRA01 · campos: id, usuario_id, documento (`termos`, `privacidade`, `diretrizes`, `regras_transmissao`, `regras_saque`), versao, aceito_em, dispositivo_id, ip_aproximado 🔒. JSON ↔ banco: `terms`↔`termos`, `privacy`↔`privacidade`, `guidelines`↔`diretrizes`.
 
 ### Midia — proposta
 Usada por: PER02, MSG02, MSG04, FEED02, TRA02 · campos: id, dono_id, tipo (`imagem`, `video`, `audio`), url_armazenamento, largura, altura, duracao_s, tamanho_bytes, situacao_moderacao (`pendente`, `aprovada`, `sensivel`, `reprovada`), criado_em.
@@ -381,6 +381,9 @@ erDiagram
 ### PreferenciasLocais — em uso no app (aparelho, não vai para o banco)
 Usada por: ENT01, ENT02 · `device.id` (id devolvido por `POST /devices`) e `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"). Sem dado pessoal.
 
+### TokensLocais — em uso no app (aparelho, armazenamento seguro/Keystore, fora do backup)
+Usada por: ENT01, ENT19 · access token, refresh token e `deviceSecret`. Nunca em SharedPreferences nem em log.
+
 ### ConfigCacheLocal — em uso no app (aparelho, não vai para o banco)
 Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = JSON da última `GET /config` válida, mesclado por `config.updated`. Sem dado pessoal. Serve de reserva sem rede. Flags e limites continuam sendo aplicados no servidor (alterar o cache no aparelho não libera nada).
 
@@ -417,3 +420,4 @@ Valor inicial das flags no mock vem de `tenants/<id>/tenant.json` → `features`
 | 2026-11-21 | ConfigApp: campo `versao`, `manutencao` com `retry_after_segundos`, status `em uso no mock`; tabela de correspondência das flags; IntegracaoProvedor em uso no mock (fake, sem credenciais) | Fase 0 (TRV04, TRV13; ADR 0011) |
 | 2026-11-21 | Tabela de correspondência completa de ConfigApp; ConfigCacheLocal (aparelho); dados só de teste do mock (usuários, outbox do fake de SMS, sessões do fake de idade) | Fase 0 (conferência código × docs pelo guardião de dados) |
 | 2026-11-21 | Dispositivo em uso no mock (id gerado pelo servidor); PreferenciasLocais no app; `region` calculado por requisição | Fase 1a (ENT01, ENT02, ENT18) |
+| 2026-11-21 | Fase 1b: MetodoLogin, CodigoVerificacao, Sessao (ADR 0012), AceiteTermos e Usuario (parcial) em uso no mock; Dispositivo.segredo_hash; TokensLocais no app; documento `diretrizes` no AceiteTermos | ENT04–ENT07, ENT16, ENT19, SEG06 |

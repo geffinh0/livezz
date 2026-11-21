@@ -36,6 +36,7 @@ Respostas: `ack` `{ refId, ok, error? }` (`refId` = `id` do envelope enviado pel
 | ack | `{ refId, ok, error }` | TRV01 | no mock |
 | session.invalid | `{ reason }` | ENT19 | no mock |
 | session.replaced | `{ at }` (a conta entrou em outro aparelho) | ENT19 | no mock |
+
 | config.updated | `{ partial config }` | TRV04 | no mock |
 | account.sanctioned | `{ type, until, reason }` | SEG03 | proposto |
 | age.verification.updated | `{ status }` | ENT09 | proposto |
@@ -130,14 +131,14 @@ Respostas: `ack` `{ refId, ok, error? }` (`refId` = `id` do envelope enviado pel
 
 ## Detalhes (Fase 0, no mock)
 - **Envelope do cliente:** mesmo formato `{ v, id, type, ts, data }`. JSON inválido ou sem `type` → ignorado, sem resposta. O `ack` só é enviado quando a mensagem tem `id`. Tipo desconhecido depois do `auth` → `ack { ok:false, error:"validacao" }`. Frame acima de 16 KB é recusado.
-- **auth:** `data.token`. Válido → `ack { ok:true }`. Inválido → `session.invalid { reason:"token_invalido" }` e fechamento com código `4001`. Sem `auth` em 5 s → fechamento `4000`. Outra mensagem antes do `auth` → `ack { ok:false, error:"nao_autenticado" }`.
-  - **Só no mock (Fase 0):** tokens de teste `dev-token-<userId>` para os usuários das fixtures. O login real (Fase 1) troca por access token; o app obtém o token por uma interface (`TokenSource`), sem token fixo.
-- **Uma conexão por conta:** nova conexão autenticada da mesma conta fecha a anterior com `session.replaced` + código `4002` (RN-06).
+- **auth:** `data.token`. Válido → `ack { ok:true }`. Vencido → `session.invalid { reason:"token_expirado" }` e fechamento `4003` (não terminal: o cliente renova e reconecta). Inválido → `session.invalid { reason:"token_invalido" }` e fechamento com código `4001`. Sem `auth` em 5 s → fechamento `4000`. Outra mensagem antes do `auth` → `ack { ok:false, error:"nao_autenticado" }`.
+  - **Só no mock:** além do access token real (Fase 1b), aceita os tokens de teste `dev-token-<userId>` das fixtures. O app obtém o token por `TokenSource`, sem token fixo.
+- **Uma conexão por sessão (ADR 0012):** reconexão da mesma sessão fecha a conexão antiga com `4004` (não terminal, sem aviso). Login em outro aparelho revoga a sessão: a conexão dela recebe `session.replaced` e fecha com `4002`. Outras revogações (logout, troca de senha, reuso de refresh, expiração, conta bloqueada) enviam `session.invalid { reason: "revogada"|"senha_trocada"|"expirada"|"conta_bloqueada" }` e fecham com `4001`.
 - **auth repetido** numa conexão já autenticada → `ack { ok:false, error:"conflito" }` (não troca de conta).
 - **ping → pong** com `data` vazio, sem `ack`.
 - **Limites (mock):** até 20 mensagens por segundo por conexão (acima disso fecha com `4008`) e até 20 salas por conexão (`ack limite_excedido`). Valores em `mock-server/src/business.ts`.
 - **room.join / room.leave:** `data.room` no formato `live:{id}`, `pk:{id}`, `call:{id}`, `conversation:{id}`; formato inválido → `ack { ok:false, error:"validacao" }`. Na Fase 0 só salas `live:` são abertas; `pk:`, `call:` e `conversation:` respondem `ack { ok:false, error:"sem_permissao" }` até a feature dona checar participação (Fases 3, 5, 6).
 - **config.updated:** `data = { configVersion, ...campos alterados }` (mesmo formato de `GET /config`). O cliente ignora se `configVersion` ≤ à versão que já tem.
-- **Códigos de fechamento:** `4000` sem auth a tempo · `4001` token inválido · `4002` sessão substituída · `4008` limite de mensagens · `1001` servidor encerrando (mock reset). `4001` e `4002` são terminais: o cliente não reconecta.
+- **Códigos de fechamento:** `4000` sem auth a tempo · `4001` token inválido ou sessão revogada · `4002` sessão substituída · `4003` token vencido (não terminal) · `4004` substituída pela mesma sessão (não terminal) · `4008` limite de mensagens · `1001` servidor encerrando (mock reset). `4001` e `4002` são terminais: o cliente não reconecta.
 - **Cliente (app):** espera o `ack` do `auth` por até 10 s; reconecta com espera de 1 s dobrando até 30 s (±20%); ao reconectar reenvia `auth` e `room.join` das salas ativas e rebusca o estado por REST.
 
