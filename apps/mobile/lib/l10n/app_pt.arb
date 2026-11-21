@@ -1,0 +1,176 @@
+{
+  "@@locale": "pt",
+  "appTitle": "{appName}",
+  "@appTitle": {
+    "placeholders": {
+      "appName": {
+        "type": "String"
+      }
+    }
+  },
+  "actionRetry": "Tentar de novo",
+  "actionClose": "Fechar",
+  "actionCancel": "Cancelar",
+  "actionConfirm": "Confirmar",
+  "stateLoading": "Carregando…",
+  "stateEmptyTitle": "Nada por aqui ainda",
+  "stateErrorTitle": "Não deu certo",
+  "stateOfflineTitle": "Sem conexão",
+  "stateOfflineBody": "Confira sua internet e tente de novo.",
+  "stateNoPermissionTitle": "Permissão necessária",
+  "stateNoPermissionBody": "Libere o acesso nas configurações do aparelho.",
+  "actionOpenSettings": "Abrir configurações",
+  "errorNetwork": "Sem conexão com o servidor.",
+  "errorTimeout": "O servidor demorou para responder.",
+  "errorUnknown": "Algo deu errado. Tente de novo.",
+  "realtimeConnected": "Tempo real: conectado",
+  "realtimeConnecting": "Tempo real: conectando…",
+  "realtimeDisconnected": "Tempo real: desconectado",
+  "showcaseTitle": "Vitrine da fundação",
+  "showcaseConfigVersion": "Versão da config: {version}",
+  "@showcaseConfigVersion": {
+    "placeholders": {
+      "version": {
+        "type": "int"
+      }
+    }
+  },
+  "showcaseThemeLabel": "Tema",
+  "themeLight": "Claro",
+  "themeDark": "Escuro",
+  "themeSystem": "Sistema",
+  "showcasePrimaryButton": "Entrar ao vivo",
+  "showcaseSecondaryButton": "Ver mais",
+  "showcaseDangerButton": "Encerrar",
+  "showcaseTextFieldLabel": "Título da live",
+  "showcaseTextFieldHelp": "Até 40 caracteres",
+  "showcaseOpenSheet": "Abrir bottom sheet",
+  "showcaseOpenDialog": "Abrir diálogo",
+  "showcaseSheetBody": "Fluxos da live abrem aqui, sem sair do vídeo.",
+  "showcaseDialogBody": "Confirmações usam este diálogo.",
+  "showcaseToast": "Mostrar aviso",
+  "showcaseToastMessage": "Tudo certo!",
+  "showcaseVideoLabel": "Vídeo simulado",
+  "updateRequiredTitle": "Atualização necessária",
+  "maintenanceTitle": "Em manutenção",
+  "errorNaoAutenticado": "Entre na sua conta para continuar.",
+  "@errorNaoAutenticado": {
+    "description": "Erro da API: nao_autenticado"
+  },
+  "errorTokenExpirado": "Sua sessão expirou. Entre de novo.",
+  "@errorTokenExpirado": {
+    "description": "Erro da API: token_expirado"
+  },
+  "errorSessaoSubstituida": "Sua conta foi acessada em outro aparelho. Entre de novo para continuar aqui.",
+  "@errorSessaoSubstituida": {
+    "description": "Erro da API: sessao_substituida"
+  },
+  "errorVerificacaoIdadeNecessaria": "Confirme sua idade para continuar.",
+  "@errorVerificacaoIdadeNecessaria": {
+    "description": "Erro da API: verificacao_idade_necessaria"
+  },
+  "errorSemPermissao": "Você não tem permissão para fazer isso.",
+  "@errorSemPermissao": {
+    "description": "Erro da API: sem_permissao"
+  },
+  "errorNaoEncontrado": "Não encontramos o que você procurou.",
+  "@errorNaoEncontrado": {
+    "description": "Erro da API: nao_encontrado"
+  },
+  "errorValidacao": "Confira os dados e tente de novo.",
+  "@errorValidacao": {
+    "description": "Erro da API: validacao"
+  },
+  "errorConflito": "Isso mudou enquanto você fazia a ação. Tente de novo.",
+  "@errorConflito": {
+    "description": "Erro da API: conflito"
+  },
+  "errorLimiteExcedido": "Você atingiu o limite. Tente mais tarde.",
+  "@errorLimiteExcedido": {
+    "description": "Erro da API: limite_excedido"
+  },
+  "errorSaldoInsuficiente": "Saldo insuficiente.",
+  "@errorSaldoInsuficiente": {
+    "description": "Erro da API: saldo_insuficiente"
+  },
+  "errorIdadeNaoVerificada": "Sua idade ainda não foi verificada.",
+  "@errorIdadeNaoVerificada": {
+    "description": "Erro da API: idade_nao_verificada"
+  },
+  "errorMenorDeIdade": "Este app é só para maiores de 18 anos.",
+  "@errorMenorDeIdade": {
+    "description": "Erro da API: menor_de_idade"
+  },
+  "errorContaSuspensa": "Sua conta está suspensa.",
+  "@errorContaSuspensa": {
+    "description": "Erro da API: conta_suspensa"
+  },
+  "errorContaBanida": "Sua conta foi banida.",
+  "@errorContaBanida": {
+    "description": "Erro da API: conta_banida"
+  },
+  "errorRegiaoBloqueada": "O app não está disponível na sua região.",
+  "@errorRegiaoBloqueada": {
+    "description": "Erro da API: regiao_bloqueada"
+  },
+  "errorAtualizacaoObrigatoria": "Atualize o app para continuar.",
+  "@errorAtualizacaoObrigatoria": {
+    "description": "Erro da API: atualizacao_obrigatoria"
+  },
+  "errorManutencao": "Estamos em manutenção. Volte em instantes.",
+  "@errorManutencao": {
+    "description": "Erro da API: manutencao"
+  },
+  "errorCodigoInvalido": "Código incorreto.",
+  "@errorCodigoInvalido": {
+    "description": "Erro da API: codigo_invalido"
+  },
+  "errorCodigoExpirado": "O código expirou. Peça um novo.",
+  "@errorCodigoExpirado": {
+    "description": "Erro da API: codigo_expirado"
+  },
+  "errorUsernameIndisponivel": "Esse @ já está em uso.",
+  "@errorUsernameIndisponivel": {
+    "description": "Erro da API: username_indisponivel"
+  },
+  "errorLiveEncerrada": "Esta live terminou.",
+  "@errorLiveEncerrada": {
+    "description": "Erro da API: live_encerrada"
+  },
+  "errorExpulsoDaLive": "Você foi removido desta live.",
+  "@errorExpulsoDaLive": {
+    "description": "Erro da API: expulso_da_live"
+  },
+  "errorSilenciado": "Você está silenciado nesta live.",
+  "@errorSilenciado": {
+    "description": "Erro da API: silenciado"
+  },
+  "errorConviteExpirado": "O convite expirou.",
+  "@errorConviteExpirado": {
+    "description": "Erro da API: convite_expirado"
+  },
+  "errorFuncionalidadeDesligada": "Este recurso não está disponível.",
+  "@errorFuncionalidadeDesligada": {
+    "description": "Erro da API: funcionalidade_desligada"
+  },
+  "errorPagamentoPendente": "Seu pagamento está sendo processado.",
+  "@errorPagamentoPendente": {
+    "description": "Erro da API: pagamento_pendente"
+  },
+  "errorPagamentoFalhou": "O pagamento não foi concluído.",
+  "@errorPagamentoFalhou": {
+    "description": "Erro da API: pagamento_falhou"
+  },
+  "errorSaqueAbaixoMinimo": "O valor está abaixo do mínimo para saque.",
+  "@errorSaqueAbaixoMinimo": {
+    "description": "Erro da API: saque_abaixo_minimo"
+  },
+  "errorDadosRecebimentoIncompletos": "Complete seus dados de recebimento.",
+  "@errorDadosRecebimentoIncompletos": {
+    "description": "Erro da API: dados_recebimento_incompletos"
+  },
+  "errorErroInterno": "Tivemos um problema no servidor. Tente de novo em instantes.",
+  "@errorErroInterno": {
+    "description": "Erro da API: erro_interno"
+  }
+}
