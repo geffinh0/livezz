@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
+import '../../../core/ui/app_text_field.dart';
 import '../../../core/ui/test_id.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../application/auth_flow.dart';
@@ -118,18 +119,17 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
         const SizedBox(height: AppSpace.lg),
         TestId(
           'auth.code.input',
-          child: TextField(
+          child: AppTextField(
+            label: l.codeLabel,
             controller: _ctrl,
             keyboardType: TextInputType.number,
             autofillHints: const [AutofillHints.oneTimeCode],
             maxLength: 6,
+            showCounter: false,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             style: Theme.of(context).textTheme.headlineSmall
                 ?.copyWith(letterSpacing: 8),
-            decoration: InputDecoration(
-              labelText: l.codeLabel,
-              counterText: '',
-            ),
+            semanticsHint: l.codeSemantics,
             onChanged: (v) {
               if (v.length == 6) _verify();
             },

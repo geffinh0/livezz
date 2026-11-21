@@ -297,7 +297,7 @@
   "termsAgree": "Li e aceito os documentos acima",
   "termsAccept": "Aceitar e continuar",
   "completeProfileTitle": "Complete seu cadastro",
-  "completeProfileBody": "Falta pouco: nome e data de nascimento chegam na próxima etapa do app.",
+  "completeProfileBody": "Estamos finalizando esta etapa do app. Em breve você completa seu nome e data de nascimento aqui.",
   "countryOption": "{iso} +{dialCode}",
   "@countryOption": {
     "placeholders": {
@@ -308,5 +308,9 @@
         "type": "String"
       }
     }
-  }
+  },
+  "ruleMet": "Regra atendida",
+  "ruleNotMet": "Regra não atendida",
+  "codeSemantics": "Código de 6 dígitos",
+  "googleUnavailable": "O login com Google ainda não está disponível nesta versão. Use telefone ou e-mail."
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -54,18 +55,21 @@ class _GoogleTestScreenState extends ConsumerState<GoogleTestScreen> {
       id: 'auth.google',
       title: l.methodGoogle,
       children: [
-        Text(l.googleTestNotice),
+        // Contas simuladas só em build de desenvolvimento: em release, nada de
+        // atalho de login falso (o Google real chega na Fase 12).
+        Text(kDebugMode ? l.googleTestNotice : l.googleUnavailable),
         const SizedBox(height: AppSpace.lg),
-        for (final a in accounts)
-          TestId(
-            'auth.google.${a.$1}',
-            child: ListTile(
-              leading: const Icon(Symbols.account_circle),
-              title: Text(label(a.$1)),
-              enabled: !_busy,
-              onTap: () => _pick(a.$2),
+        if (kDebugMode)
+          for (final a in accounts)
+            TestId(
+              'auth.google.${a.$1}',
+              child: ListTile(
+                leading: const Icon(Symbols.account_circle),
+                title: Text(label(a.$1)),
+                enabled: !_busy,
+                onTap: () => _pick(a.$2),
+              ),
             ),
-          ),
         TestId(
           'auth.google.cancel',
           child: ListTile(

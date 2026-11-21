@@ -8,11 +8,13 @@ import '../../../app/routes.dart';
 import '../../../core/errors/app_failure.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
+import '../../../core/ui/app_text_field.dart';
 import '../../../core/ui/test_id.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../application/auth_flow.dart';
 import '../domain/password_rules.dart';
 import 'auth_widgets.dart';
+import 'password_checklist.dart';
 
 /// ENT05: entrar ou criar conta com e-mail e senha (RN-03).
 class EmailScreen extends ConsumerStatefulWidget {
@@ -27,8 +29,8 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
   final _password = TextEditingController();
   late bool _signup = widget.signup;
   bool _busy = false;
-  bool _obscure = true;
   String? _error;
+  String? _emailError;
   Set<PasswordRule> _serverRules = {};
 
   @override
@@ -42,9 +44,10 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
     final l = AppLocalizations.of(context);
     final email = _email.text.trim();
     if (!looksLikeEmail(email)) {
-      setState(() => _error = l.emailInvalid);
+      setState(() => _emailError = l.emailInvalid);
       return;
     }
+    if (_emailError != null) setState(() => _emailError = null);
     if (_signup && passwordProblems(_password.text).isNotEmpty) {
       setState(() => _error = l.passwordWeak);
       return;
@@ -87,13 +90,6 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final problems = {...passwordProblems(_password.text), ..._serverRules};
-    String ruleText(PasswordRule r) => switch (r) {
-      PasswordRule.minLength => l.passwordRuleLength,
-      PasswordRule.letters => l.passwordRuleLetters,
-      PasswordRule.numbers => l.passwordRuleNumbers,
-      PasswordRule.common => l.passwordRuleCommon,
-    };
     return AuthScaffold(
       id: 'auth.email',
       title: _signup ? l.actionCreateAccount : l.actionSignIn,
@@ -112,43 +108,41 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
         const SizedBox(height: AppSpace.xl),
         TestId(
           'auth.email.input',
-          child: TextField(
+          child: AppTextField(
+            label: l.emailLabel,
             controller: _email,
             keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.email],
-            decoration: InputDecoration(labelText: l.emailLabel),
+            showCounter: false,
+            maxLength: 254,
+            error: _emailError,
+            validator: (v) => v.trim().isEmpty || looksLikeEmail(v.trim())
+                ? null
+                : l.emailInvalid,
           ),
         ),
         const SizedBox(height: AppSpace.md),
         TestId(
           'auth.password.input',
-          child: TextField(
+          child: AppTextField(
+            label: l.passwordLabel,
             controller: _password,
-            obscureText: _obscure,
+            password: true,
+            showCounter: false,
+            maxLength: 128,
             autofillHints: [
               _signup ? AutofillHints.newPassword : AutofillHints.password,
             ],
             onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              labelText: l.passwordLabel,
-              suffixIcon: IconButton(
-                tooltip: _obscure ? l.passwordShow : l.passwordHide,
-                icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-                onPressed: () => setState(() => _obscure = !_obscure),
-              ),
-            ),
+            onSubmitted: (_) => _submit(),
           ),
         ),
         if (_signup)
-          for (final r in PasswordRule.values)
-            if (r != PasswordRule.common || problems.contains(r))
-              Padding(
-                padding: const EdgeInsetsDirectional.only(top: AppSpace.xs),
-                child: Text(
-                  '${problems.contains(r) ? '✗' : '✓'} ${ruleText(r)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ),
+          PasswordChecklist(
+            password: _password.text,
+            serverRules: _serverRules,
+          ),
         AuthError(_error),
         const SizedBox(height: AppSpace.xl),
         TestId(

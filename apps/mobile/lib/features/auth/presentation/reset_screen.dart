@@ -6,12 +6,14 @@ import 'package:material_ui/material_ui.dart';
 import '../../../app/routes.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
+import '../../../core/ui/app_text_field.dart';
 import '../../../core/ui/app_toast.dart';
 import '../../../core/ui/test_id.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../application/auth_flow.dart';
 import '../domain/password_rules.dart';
 import 'auth_widgets.dart';
+import 'password_checklist.dart';
 
 /// ENT07: código por e-mail → nova senha → derruba as sessões (RN-04).
 class ResetScreen extends ConsumerStatefulWidget {
@@ -63,40 +65,48 @@ class _ResetScreenState extends ConsumerState<ResetScreen> {
         const SizedBox(height: AppSpace.lg),
         TestId(
           'auth.reset.email',
-          child: TextField(
+          child: AppTextField(
+            label: l.emailLabel,
             controller: _email,
             enabled: !_codeSent,
             keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(labelText: l.emailLabel),
+            autofillHints: const [AutofillHints.email],
+            showCounter: false,
+            maxLength: 254,
+            validator: (v) => v.trim().isEmpty || looksLikeEmail(v.trim())
+                ? null
+                : l.emailInvalid,
           ),
         ),
         if (_codeSent) ...[
           const SizedBox(height: AppSpace.md),
           TestId(
             'auth.reset.code',
-            child: TextField(
+            child: AppTextField(
+              label: l.codeLabel,
               controller: _code,
               keyboardType: TextInputType.number,
               maxLength: 6,
+              showCounter: false,
+              autofillHints: const [AutofillHints.oneTimeCode],
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: l.codeLabel,
-                counterText: '',
-              ),
+              semanticsHint: l.codeSemantics,
             ),
           ),
+          const SizedBox(height: AppSpace.md),
           TestId(
             'auth.reset.password',
-            child: TextField(
+            child: AppTextField(
+              label: l.newPasswordLabel,
               controller: _password,
-              obscureText: true,
+              password: true,
+              showCounter: false,
+              maxLength: 128,
               autofillHints: const [AutofillHints.newPassword],
-              decoration: InputDecoration(
-                labelText: l.newPasswordLabel,
-                helperText: l.passwordRuleLength,
-              ),
+              onChanged: (_) => setState(() {}),
             ),
           ),
+          PasswordChecklist(password: _password.text),
         ],
         AuthError(_error),
         const SizedBox(height: AppSpace.xl),
@@ -109,6 +119,10 @@ class _ResetScreenState extends ConsumerState<ResetScreen> {
               final email = _email.text.trim();
               if (!looksLikeEmail(email)) {
                 setState(() => _error = l.emailInvalid);
+                return;
+              }
+              if (_codeSent && passwordProblems(_password.text).isNotEmpty) {
+                setState(() => _error = l.passwordWeak);
                 return;
               }
               if (!_codeSent) {

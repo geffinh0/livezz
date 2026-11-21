@@ -144,6 +144,10 @@
   "termsAgree": "I have read and accept the documents above",
   "termsAccept": "Accept and continue",
   "completeProfileTitle": "Complete your profile",
-  "completeProfileBody": "Almost there: name and date of birth come in the next step of the app.",
-  "countryOption": "{iso} +{dialCode}"
+  "completeProfileBody": "We are finishing this step of the app. Soon you will complete your name and date of birth here.",
+  "countryOption": "{iso} +{dialCode}",
+  "ruleMet": "Rule met",
+  "ruleNotMet": "Rule not met",
+  "codeSemantics": "6-digit code",
+  "googleUnavailable": "Google sign-in is not available in this version yet. Use phone or email."
 }

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../core/auth/session.dart';
+import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
 import '../../../core/ui/state_views.dart';
 import '../../../core/ui/test_id.dart';
@@ -28,7 +29,7 @@ class CompleteProfileScreen extends ConsumerWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsetsDirectional.all(AppSpace.xl),
               child: TestId(
                 'auth.completeProfile.signout',
                 child: AppButton(

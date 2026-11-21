@@ -9,6 +9,7 @@ import '../../../app/routes.dart';
 import '../../../core/config/application/config_controller.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
+import '../../../core/ui/app_text_field.dart';
 import '../../../core/ui/test_id.dart';
 import '../../../l10n/generated/app_localizations.dart';
 import '../application/auth_flow.dart';
@@ -28,6 +29,7 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
   String _channel = 'sms';
   bool _busy = false;
   String? _error;
+  String? _fieldError;
 
   @override
   void dispose() {
@@ -39,10 +41,11 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
     final l = AppLocalizations.of(context);
     final e164 = toE164(c, _ctrl.text);
     if (e164 == null) {
-      setState(() => _error = l.phoneInvalid);
+      setState(() => _fieldError = l.phoneInvalid);
       return;
     }
     setState(() {
+      _fieldError = null;
       _busy = true;
       _error = null;
     });
@@ -105,18 +108,23 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
             Expanded(
               child: TestId(
                 'auth.phone.input',
-                child: TextField(
+                child: AppTextField(
+                  label: l.phoneLabel,
                   controller: _ctrl,
                   keyboardType: TextInputType.phone,
+                  textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.telephoneNumberNational],
+                  showCounter: false,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     _MaskFormatter(country.mask),
                   ],
-                  decoration: InputDecoration(
-                    labelText: l.phoneLabel,
-                    hintText: country.mask.replaceAll('#', '0'),
-                  ),
+                  hint: country.mask.replaceAll('#', '0'),
+                  error: _fieldError,
+                  onChanged: (_) {
+                    if (_fieldError != null) setState(() => _fieldError = null);
+                  },
+                  onSubmitted: (_) => _send(country),
                 ),
               ),
             ),
