@@ -13,3 +13,8 @@ coverage/
 key.properties
 CLAUDE.local.md
 .claude/settings.local.json
+# Gerados (não versionar; CI e o gerador recriam)
+*.g.dart
+*.freezed.dart
+apps/mobile/lib/l10n/generated/
+apps/*/src/tenant.generated.ts

@@ -1,0 +1,9 @@
+{
+  "name": "@livezz/tenant-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "lint": "node --check generate.mjs && node --check schema.mjs"
+  }
+}

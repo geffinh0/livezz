@@ -127,4 +127,4 @@ Ordem dos passos revisada: 1, 2, 3, 4, 5, 6, 7, 8, **17 (CI)**, 9, 10, 11, 12, 1
 ## 9. Fora do escopo
 - Login, sessão e refresh real (Fase 1); telas de produto; câmera real e permissões (Fase 3); push, analytics real, Crashlytics (Fases 8/12); painel e portal funcionais (Fase 9); Agora (Fase 12); script completo de novo cliente (Fase 13).
 
-Status: aguardando aprovação
+Status: aprovado pelo usuário em 2026-11-21

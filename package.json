@@ -1,0 +1,16 @@
+{
+  "name": "livezz",
+  "private": true,
+  "workspaces": [
+    "tools/tenant",
+    "mock-server",
+    "apps/admin",
+    "apps/portal"
+  ],
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "tenant:generate": "node tools/tenant/generate.mjs"
+  }
+}
