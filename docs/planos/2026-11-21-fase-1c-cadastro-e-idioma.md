@@ -39,7 +39,7 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 - `GET /me` ganha `displayName`, `username`, `gender` (só aqui), `ageStatus`, `language`, `pendingSteps` (`profile`, `username`, `interests`); `needsProfile` continua (= `pendingSteps` não vazio) para não quebrar a 1b.
 - `PATCH /me`, `GET /usernames/{u}/availability`, `POST /me/username`, `GET /interests`, `POST /me/interests`, `POST /devices` (+ `blocked`).
 - Erros: reusar `menor_de_idade`, `username_indisponivel`, `conflito`; novo `cadastro_pendente`.
-- Mock-only: `/__mock/minor/unfreeze`, cenário `sinal-loja-menor` (o fake da loja diz menor).
+- Mock-only: `/__mock/minor/unfreeze`. (O cenário `sinal-loja-menor` saiu: o sinal vem do app, não do servidor; o caminho do sinal fica coberto por teste de contrato e de widget com o fake.)
 
 ## Dados
 - Usuario: `username`, `nome_exibicao`, `genero` (privado), `data_nascimento`, `situacao_idade`, `situacao_conta = congelada`, `interesses` (null/lista), `idioma`, `faixa_etaria_loja` (`status`, `ageLower`, `ageUpper`).
@@ -63,7 +63,7 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 - Contrato: cada rota e erro; `PATCH /me` com menor → 403 + sessão revogada + aparelho marcado de uma vez; dois `PATCH` concorrentes com data; portão `cadastro_pendente`; login em aparelho marcado e de conta congelada → `menor_de_idade` (REST e tempo real); corrida no @ → 409; interesses pt/en e validação; log sem data, gênero e sinal; gênero ausente de outras respostas.
 - Unitários: regras de nome e @; idade com aniversário hoje e fuso; decisão de destino com `minorBlocked` e `pendingSteps`.
 - Widget de cada tela nova (pt/en, fonte 2x, erro, sem conexão).
-- E2E web (um fluxo por arquivo): `ENT08.cjs` (cadastro completo + nome inválido), `ENT10.cjs` (data de menor → bloqueio; reabrir continua bloqueado), `ENT10-aparelho.cjs` (outra conta no aparelho marcado → bloqueio), `ENT10-sinal.cjs` (sinal da loja de menor), `ENT11.cjs` (@ ocupado + sugestão), `ENT12.cjs` (pular e escolher), `ENT06.cjs` atualizado, `CFG14.cjs` (troca sem reiniciar).
+- E2E web (um fluxo por arquivo): `ENT08.cjs` (cadastro completo + nome inválido), `ENT10.cjs` (data de menor → bloqueio; reabrir continua bloqueado), `ENT10-aparelho.cjs` (outra conta no aparelho marcado → bloqueio), `ENT11.cjs` (@ ocupado + sugestão), `ENT12.cjs` (pular e escolher), `ENT06.cjs` atualizado, `CFG14.cjs` (troca sem reiniciar).
 
 ## Passos
 1. Contratos (API, EVENTOS), DATABASE (`proposta`), RN-01 (fuso), `supportEmail` no tenant. ✅

@@ -153,6 +153,9 @@ describe('bloqueio de menor (ENT10)', () => {
     });
     expect(r.statusCode).toBe(403);
     expect(r.json().error.code).toBe('menor_de_idade');
+    const protocol = r.json().error.details.protocol as string;
+    expect(protocol).toMatch(/^P-[0-9A-Z_-]{8}$/);
+    expect(protocol).not.toContain(t.user.id);
     expect(mock.state.auth.users.get(t.user.id)).toMatchObject({
       accountStatus: 'congelada',
       ageStatus: 'menor_bloqueado',
@@ -172,7 +175,7 @@ describe('bloqueio de menor (ENT10)', () => {
       url: '/v1/devices',
       payload: { ...devBody, ...t.dev },
     });
-    expect(again.json().blocked).toBe(true);
+    expect(again.json()).toMatchObject({ blocked: true, protocol });
     expect((await phoneLogin(mock, t.dev, '+5511977770099')).json().error.code).toBe('menor_de_idade');
     expect([...mock.state.auth.users.values()].filter((u) => u.id.startsWith('u_'))).toHaveLength(1); // sem conta órfã
     // Outro aparelho, mesmo telefone: a conta continua congelada.

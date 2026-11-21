@@ -1,5 +1,5 @@
 import { ApiError } from '../http/errors.js';
-import type { AuthService } from '../auth/service.js';
+import { minorError, type AuthService } from '../auth/service.js';
 import {
   pendingSteps,
   type AuthUser,
@@ -90,7 +90,7 @@ export class ProfileService {
       user.birthDate = birthDate;
       user.storeAgeSignal = signal;
       this.auth.freezeMinor(user, deviceId);
-      throw new ApiError(403, 'menor_de_idade');
+      throw minorError(user.id);
     }
 
     user.birthDate = birthDate;

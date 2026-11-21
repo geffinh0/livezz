@@ -41,6 +41,18 @@ const DAY = 86_400_000;
 export const normalizeEmail = (e: string) => e.trim().toLowerCase();
 
 /** Motivo de revogação → código de erro HTTP e motivo do evento de tempo real. */
+/**
+ * Protocolo para a pessoa informar ao suporte ao pedir revisão (Q-68): opaco
+ * (não expõe o id), mas a equipe acha a conta por ele.
+ */
+export function minorProtocol(userId: string | null): string | null {
+  return userId ? `P-${sha256(`protocolo:${userId}`).slice(0, 8).toUpperCase()}` : null;
+}
+
+export function minorError(userId: string | null) {
+  return new ApiError(403, 'menor_de_idade', { protocol: minorProtocol(userId) });
+}
+
 const revokeErrors: Record<
   RevokeReason,
   { code: 'sessao_substituida' | 'sessao_revogada' | 'sessao_expirada'; event: string }
@@ -76,7 +88,7 @@ export class AuthService {
       throw new ApiError(401, 'dispositivo_invalido');
     }
     // ENT10 (Q-65): aparelho marcado não entra nem cria conta até a revisão da equipe.
-    if (d.blockedMinorAt) throw new ApiError(403, 'menor_de_idade');
+    if (d.blockedMinorAt) throw minorError(d.blockedMinorUserId);
     return d;
   }
 
@@ -86,9 +98,8 @@ export class AuthService {
   }
 
   private assertNotBlockedIdentifier(type: 'telefone' | 'email' | 'google', identifier: string) {
-    if (this.store.blockedIdentifiers.has(this.identifierKey(type, identifier))) {
-      throw new ApiError(403, 'menor_de_idade');
-    }
+    const blocked = this.store.blockedIdentifiers.get(this.identifierKey(type, identifier));
+    if (blocked) throw minorError(blocked.userId);
   }
 
   /**
@@ -479,7 +490,7 @@ export class AuthService {
     if (!user) throw new ApiError(401, 'nao_autenticado');
     if (user.accountStatus === 'banida') throw new ApiError(403, 'conta_banida');
     if (user.accountStatus === 'suspensa') throw new ApiError(403, 'conta_suspensa');
-    if (user.accountStatus === 'congelada') throw new ApiError(403, 'menor_de_idade');
+    if (user.accountStatus === 'congelada') throw minorError(user.id);
   }
 
   private issueSession(userId: string, deviceId: string): TokenResponse {

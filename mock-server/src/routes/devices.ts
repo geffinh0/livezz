@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { hashSecret, randomToken, verifySecret } from '../auth/crypto.js';
 import type { AntiBot } from '../auth/antibot.js';
+import { minorProtocol } from '../auth/service.js';
 import { Type, type Static } from '@sinclair/typebox';
 import type { FastifyInstance } from 'fastify';
 import type { State } from '../state.js';
@@ -40,7 +41,11 @@ export function registerDeviceRoutes(
     if (known) {
       Object.assign(known, { platform, appVersion, locale, model: model ?? known.model, seenAt: now });
       // ENT10: aparelho marcado avisa o app para mostrar a tela de bloqueio.
-      return reply.status(200).send({ deviceId: known.id, blocked: known.blockedMinorAt !== null });
+      return reply.status(200).send({
+        deviceId: known.id,
+        blocked: known.blockedMinorAt !== null,
+        ...(known.blockedMinorAt ? { protocol: minorProtocol(known.blockedMinorUserId) } : {}),
+      });
     }
     const id = randomUUID();
     const secret = randomToken();
