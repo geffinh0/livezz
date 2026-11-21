@@ -31,3 +31,6 @@
 | M-020 | 2026-11-21 | qualidade | média | appId do Maestro gerado a partir do tenant (hoje fixo no fluxo) | E2E | aberta |
 | M-021 | 2026-11-21 | produto | média | Ícone e splash do app por tenant (`tenants/<id>/assets`) gerados no flavor | TRV08 | aberta |
 | M-022 | 2026-11-21 | qualidade | média | Fontes por tenant: hoje só Plus Jakarta Sans empacotada; trocar de fonte exige mudar o pubspec | TRV08 | aberta |
+| M-023 | 2026-11-21 | qualidade | média | Teste de widget de contraste não pegou o texto branco no botão de perigo do tema escuro (só o print web pegou): investigar por que a cor lida no RenderParagraph difere da desenhada | DESIGN-SYSTEM | aberta |
+| M-024 | 2026-11-21 | produto | baixa | `web/index.html` e `manifest.json` com nome e cor do tenant (hoje padrão do Flutter); só afeta o build web de teste | TRV08 | aberta |
+| M-025 | 2026-11-21 | qualidade | média | E2E Android no CI com emulador (KVM do GitHub) para cobrir o que a web não cobre: flavor, permissões, vídeo nativo | E2E | aberta |

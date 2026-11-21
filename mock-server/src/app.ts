@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ConnectorRegistry } from './connectors/registry.js';
 import { ApiError, errorBody, sendError } from './http/errors.js';
+import { registerCors } from './http/cors.js';
 import { registerGuards } from './http/guards.js';
 import { setDocumentedTypes } from './realtime/catalog.js';
 import { readDocumentedServerTypes } from './realtime/docs-catalog.js';
@@ -44,6 +45,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   app.setNotFoundHandler((req, reply) => reply.status(404).send(errorBody(req, 'nao_encontrado')));
 
   const getState = () => holder.state;
+  registerCors(app);
   registerGuards(app, getState);
   registerConfigRoutes(app, getState);
   attachRealtime(app, holder.hub, getState);

@@ -1,4 +1,9 @@
-# Testes E2E (Maestro)
+# Testes E2E
+
+## No navegador (mais rápido; não precisa de Android)
+O app também compila para web. `bash tools/dev/e2e-web.sh` compila, sobe o mock-server e roda os fluxos de `e2e/web/` com Playwright (Chromium), com prints em `build/e2e-web/`. Roda no CI a cada push. Cobre telas, tema, idiomas, config, tempo real e erros; **não** cobre o que é só do Android (flavor, permissões, câmera, vídeo nativo): isso fica com o Maestro abaixo.
+
+# Testes E2E no Android (Maestro)
 
 Rodam na **sua máquina**, com um celular Android (depuração USB) ou emulador.
 Cada item de tela da especificação ganha um arquivo `e2e/<ID>.yaml`.

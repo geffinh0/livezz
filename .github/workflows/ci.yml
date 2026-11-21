@@ -80,3 +80,28 @@ jobs:
           name: liveapp-debug-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-liveapp-debug.apk
           retention-days: 14
+
+  web-e2e:
+    name: E2E no navegador (Flutter web + Playwright)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.50.1
+          channel: stable
+          cache: true
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: fluxos web
+        run: bash tools/dev/e2e-web.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-web-prints
+          path: build/e2e-web/
+          retention-days: 14

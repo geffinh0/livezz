@@ -54,6 +54,9 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           minimumSize: const Size(kMinTouchTarget * 2, kMinTouchTarget),
           shape: const StadiumBorder(),
+          // No escuro, primaryAction sobre o fundo fica abaixo de AA: usa a marca.
+          foregroundColor: isDark ? c.primary : c.primaryAction,
+          side: BorderSide(color: isDark ? c.primary : c.primaryAction),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -90,22 +93,22 @@ class AppTheme {
 
   TextTheme _textTheme(TextTheme base, Color color) {
     // Escala do DESIGN-SYSTEM: 12 / 14 / 16 / 20 / 24 / 32.
-    TextStyle s(double size, FontWeight w) => TextStyle(
-      fontFamily: tenant.fontFamily,
-      fontSize: size,
-      fontWeight: w,
-      color: color,
-    );
+    TextStyle s(TextStyle? b, double size, FontWeight w) =>
+        (b ?? const TextStyle()).copyWith(
+          fontFamily: tenant.fontFamily,
+          fontSize: size,
+          fontWeight: w,
+        );
     return base.copyWith(
-      displaySmall: s(32, FontWeight.w700),
-      headlineSmall: s(24, FontWeight.w700),
-      titleLarge: s(20, FontWeight.w600),
-      titleMedium: s(16, FontWeight.w600),
-      bodyLarge: s(16, FontWeight.w400),
-      bodyMedium: s(14, FontWeight.w400),
-      labelLarge: s(14, FontWeight.w600),
-      bodySmall: s(12, FontWeight.w400),
-      labelSmall: s(12, FontWeight.w500),
+      displaySmall: s(base.displaySmall, 32, FontWeight.w700),
+      headlineSmall: s(base.headlineSmall, 24, FontWeight.w700),
+      titleLarge: s(base.titleLarge, 20, FontWeight.w600),
+      titleMedium: s(base.titleMedium, 16, FontWeight.w600),
+      bodyLarge: s(base.bodyLarge, 16, FontWeight.w400),
+      bodyMedium: s(base.bodyMedium, 14, FontWeight.w400),
+      labelLarge: s(base.labelLarge, 14, FontWeight.w600),
+      bodySmall: s(base.bodySmall, 12, FontWeight.w400),
+      labelSmall: s(base.labelSmall, 12, FontWeight.w500),
     );
   }
 }
