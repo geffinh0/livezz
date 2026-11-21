@@ -6,6 +6,7 @@
 #       bash tools/dev/e2e-emulador.sh e2e/TRV-fundacao.yaml
 #       HEADLESS=1 bash tools/dev/e2e-emulador.sh     (emulador sem janela)
 #       KEEP=1 bash tools/dev/e2e-emulador.sh         (não desliga nada no fim)
+#       EMU_GPU=swiftshader_indirect|guest|host      (modo gráfico do emulador; padrão auto)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -44,7 +45,7 @@ cd "$ROOT"
 
 passo "Emulador ($AVD_NAME)"
 if ! adb devices | grep -q "emulator-"; then
-  args=(-avd "$AVD_NAME" -no-snapshot-save -no-audio -no-boot-anim -memory "${EMU_RAM_MB:-2048}")
+  args=(-avd "$AVD_NAME" -no-snapshot-save -no-audio -no-boot-anim -memory "${EMU_RAM_MB:-2048}" -gpu "${EMU_GPU:-auto}")
   [ "${HEADLESS:-0}" = "1" ] && args+=(-no-window)
   emulator "${args[@]}" > "$OUT/emulator.log" 2>&1 &
   PIDS+=($!)
