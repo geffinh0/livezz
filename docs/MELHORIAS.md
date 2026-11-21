@@ -17,7 +17,7 @@
 | M-006 | 2026-11-21 | segurança | média | Headers de segurança no painel e no portal (CSP, frame-ancestors, HSTS, Referrer-Policy) antes de ter login | POR, ADM | aberta |
 | M-007 | 2026-11-21 | segurança | baixa | CI: fixar actions de terceiros por SHA (`subosito/flutter-action`) | CI | aberta |
 | M-008 | 2026-11-21 | segurança | média | Validador do tenant: recusar `androidPackage` placeholder (`com.seudominio.*`) e URLs `http` ao gerar build de release | TRV08 | aberta |
-| M-009 | 2026-11-21 | produto | alta | Ligar `RealtimeClient.ended` (token inválido / sessão substituída) ao logout e ao aviso de outro aparelho | ENT19, Fase 1 | aberta |
+| M-009 | 2026-11-21 | produto | alta | Ligar `RealtimeClient.ended` (token inválido / sessão substituída) ao logout e ao aviso de outro aparelho | ENT19, Fase 1 | feita (plano 1b: `ended` encerra a sessão e mostra o aviso) |
 | M-010 | 2026-11-21 | produto | média | Tela de atualização obrigatória com botão para a loja (link vindo da config) | ENT01, Fase 1 | aberta |
 | M-011 | 2026-11-21 | ux | média | Skeleton de carregamento por tela (DESIGN-SYSTEM §4); hoje é indicador simples que respeita reduzir animações | DESIGN-SYSTEM | aberta |
 | M-012 | 2026-11-21 | ux | média | AppTextField: obscureText, autofill, validação ao sair do campo, contador traduzido | ENT, Fase 1 | aberta |
@@ -34,8 +34,8 @@
 | M-023 | 2026-11-21 | qualidade | média | Teste de widget de contraste não pegou o texto branco no botão de perigo do tema escuro (só o print web pegou): investigar por que a cor lida no RenderParagraph difere da desenhada | DESIGN-SYSTEM | aberta |
 | M-024 | 2026-11-21 | produto | baixa | `web/index.html` e `manifest.json` com nome e cor do tenant (hoje padrão do Flutter); só afeta o build web de teste | TRV08 | aberta |
 | M-025 | 2026-11-21 | qualidade | média | E2E Android no CI com emulador (KVM do GitHub) para cobrir o que a web não cobre: flavor, permissões, vídeo nativo | E2E | aberta |
-| M-026 | 2026-11-21 | segurança | média | Segredo do aparelho (aleatório, só hash no servidor, guardado no Keystore) exigido para reconhecer o `deviceId`; base para a sessão única | ENT19/RN-06, plano 1b | aberta |
-| M-027 | 2026-11-21 | segurança | média | Rate limit por IP e teto de registros em `POST /devices` (backend real e mock) | ENT01 | aberta |
+| M-026 | 2026-11-21 | segurança | média | Segredo do aparelho (aleatório, só hash no servidor, guardado no Keystore) exigido para reconhecer o `deviceId`; base para a sessão única | ENT19/RN-06, plano 1b | feita (plano 1b, ADR 0012: `deviceSecret`) |
+| M-027 | 2026-11-21 | segurança | média | Rate limit por IP e teto de registros em `POST /devices` (backend real e mock) | ENT01 | feita no mock (plano 1b); repetir no backend real |
 | M-028 | 2026-11-21 | segurança | baixa | Checar região e `Origin` na autenticação do WebSocket | ENT18, TRV01 | aberta |
 | M-029 | 2026-11-21 | segurança | baixa | Guarda de CI: nenhuma menção a `X-Mock-*` fora de `mock-server/` | ENT18 | aberta |
 | M-030 | 2026-11-21 | ux | alta | Botão "Atualizar" na atualização obrigatória com link da loja vindo da config/tenant | ENT01 | aberta |
@@ -45,3 +45,12 @@
 | M-034 | 2026-11-21 | ux | baixa | Texto do "Entre para continuar" específico por origem (aba, seguir, presente) | ENT17 | aberta |
 | M-035 | 2026-11-21 | ux | baixa | Prints do E2E em escuro, inglês e fonte 200% para as telas de entrada | E2E | aberta |
 | M-036 | 2026-11-21 | ux | média | "Tentar de novo" nos portões mantém o portão até a resposta (hoje libera antes e pode piscar a Home) | ENT01, ENT18 | aberta |
+| M-037 | 2026-11-21 | segurança | alta | Backend real: códigos de verificação guardados como HMAC com chave do servidor (não hash simples), envio por fila com reenvio controlado e alerta de abuso por destino | ENT04, ENT05, RN-02 | aberta |
+| M-038 | 2026-11-21 | segurança | alta | Backend real: limite por IP pensando em CGNAT (operadoras móveis no Brasil põem muita gente no mesmo IP): combinar IP + aparelho + reputação, nunca só IP | SEG06, RN-02 | aberta |
+| M-039 | 2026-11-21 | segurança | média | Conta suspensa/banida durante a sessão: derrubar o WebSocket na hora (hoje cai na próxima renovação do token) | ENT19, MOD | aberta |
+| M-040 | 2026-11-21 | segurança | média | WebSocket: autenticar sem aceitar o token de desenvolvimento quando o servidor roda em modo produção (guarda de configuração no backend real) | TRV01 | aberta |
+| M-041 | 2026-11-21 | segurança | média | Avisar por e-mail/SMS quando a conta entrar em outro aparelho ou a senha for trocada (hoje só aviso dentro do app) | ENT19, ENT07 | aberta |
+| M-042 | 2026-11-21 | ux | média | Seletor de país do telefone como bottom sheet com busca e bandeira (hoje dropdown simples) | ENT04 | aberta |
+| M-043 | 2026-11-21 | ux | média | Campo de código em 6 caixas com colar do código inteiro e foco automático; contagem de reenvio lida pelo leitor de tela a cada minuto, não a cada segundo | ENT04, ENT05 | aberta |
+| M-044 | 2026-11-21 | ux | baixa | Termos: indicar quanto falta ler e destacar o que mudou desde a última versão aceita | ENT16 | aberta |
+| M-045 | 2026-11-21 | qualidade | média | Regra/guarda: edição por script (python/sed) precisa conferir que aplicou (o formatador muda o texto e a troca falha calada; aconteceu 4+ vezes) e pipelines de teste com `set -o pipefail` | kit (`/retro`) | aberta |
