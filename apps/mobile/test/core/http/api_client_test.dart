@@ -50,6 +50,8 @@ class FixedToken implements TokenSource {
   Future<String?> refreshAccess() async => null;
   @override
   void sessionEnded(String code, {String? usedToken}) {}
+  @override
+  void termsPending() {}
 }
 
 void main() {

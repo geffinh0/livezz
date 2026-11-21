@@ -162,6 +162,17 @@ describe('e-mail e senha (ENT05, RN-03)', () => {
     expect(login.statusCode).toBe(200);
   });
 
+  it('código de login por e-mail não existe (e-mail entra com senha) → 400 validacao', async () => {
+    const { mock } = await setup();
+    const r = await post(mock, '/v1/auth/code/send', {
+      channel: 'email',
+      destination: 'ana@teste.local',
+      purpose: 'login',
+    });
+    expect(r.statusCode).toBe(400);
+    expect(r.json().error).toMatchObject({ code: 'validacao', details: { field: 'purpose' } });
+  });
+
   it('senha fraca lista as regras', async () => {
     const { mock } = await setup();
     const r = await post(mock, '/v1/auth/email/signup', { email: 'x@teste.local', password: 'senha1234' });
@@ -360,7 +371,7 @@ describe('termos (ENT16)', () => {
     expect(me.pendingTerms.map((p: { document: string }) => p.document)).toEqual(['terms', 'privacy']);
     const blocked = await mock.app.inject({
       method: 'GET',
-      url: '/v1/me/ping',
+      url: '/__mock/ping-autenticado',
       headers: authed(t.accessToken),
     });
     expect(blocked.json().error.code).toBe('termos_pendentes');
@@ -375,7 +386,11 @@ describe('termos (ENT16)', () => {
       const ok = await post(mock, '/v1/me/terms/accept', { document, version: 1 }, authed(t.accessToken));
       expect(ok.statusCode).toBe(204);
     }
-    const free = await mock.app.inject({ method: 'GET', url: '/v1/me/ping', headers: authed(t.accessToken) });
+    const free = await mock.app.inject({
+      method: 'GET',
+      url: '/__mock/ping-autenticado',
+      headers: authed(t.accessToken),
+    });
     expect(free.statusCode).toBe(200);
   });
 
@@ -406,6 +421,22 @@ describe('anti-bot (SEG06, RN-85)', () => {
     expect((await post(mock, '/v1/auth/code/send', body, h)).statusCode).toBe(200);
     const reused = await post(mock, '/v1/auth/code/send', { ...body, destination: '+5511912345679' }, h);
     expect(reused.statusCode).toBe(428);
+  });
+
+  it('cada provedor é ligado por flag: com todos desligados o servidor não exige desafio', async () => {
+    const { mock } = await setup();
+    await post(mock, '/__mock/scenario/exigir-desafio', {});
+    mock.state.config.flags.antibotAppCheck = false;
+    const body = { channel: 'sms', destination: '+5511912345670', purpose: 'login' };
+    expect((await post(mock, '/v1/auth/code/send', body)).statusCode).toBe(200);
+    // Turnstile ligado: só ele é aceito.
+    mock.state.config.flags.antibotTurnstile = true;
+    const r = await post(mock, '/v1/auth/code/send', { ...body, destination: '+5511912345671' });
+    expect(r.json().error.details.providers).toEqual(['turnstile']);
+    const wrong = { 'x-antibot-provider': 'appcheck', 'x-antibot-token': 'fake-ok-abcdef124' };
+    expect(
+      (await post(mock, '/v1/auth/code/send', { ...body, destination: '+5511912345671' }, wrong)).statusCode,
+    ).toBe(428);
   });
 });
 

@@ -124,10 +124,16 @@ class SessionController extends Notifier<Session?> {
       if (gen == _gen) state = _fromMe(me);
     } on ApiFailure catch (e) {
       if (gen != _gen) return;
-      if (endedCodes.contains(e.code)) {
-        ref.read(sessionEndNoticeProvider.notifier).set(e.code);
+      if (endedCodes.contains(e.code) || e.code == 'nao_autenticado') {
+        if (endedCodes.contains(e.code)) {
+          ref.read(sessionEndNoticeProvider.notifier).set(e.code);
+        }
+        await _clear();
+        return;
       }
-      await _clear();
+      // Erro passageiro (500, 503, 429…): mantém a sessão; o servidor
+      // continua barrando o que for preciso (ex.: termos pendentes).
+      state = Session(userId: userId);
     } on AppFailure {
       // Sem rede: entra com o que estava guardado; o servidor revalida depois.
       if (gen == _gen) state = Session(userId: userId);
@@ -139,6 +145,16 @@ class SessionController extends Notifier<Session?> {
     needsProfile: me.needsProfile,
     pendingTerms: me.pendingTerms,
   );
+
+  /// O servidor respondeu `403 termos_pendentes` com o app aberto (ENT16):
+  /// recarrega o `/me` para o roteador levar à tela de termos.
+  void termsPending() {
+    unawaited(
+      reloadMe().catchError((Object e) {
+        developer.log('reloadMe falhou: $e', name: 'auth');
+      }),
+    );
+  }
 
   Future<void> reloadMe() async {
     final deps = _deps;

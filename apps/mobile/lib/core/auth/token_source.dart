@@ -11,6 +11,9 @@ abstract interface class TokenSource {
   /// `sessao_expirada`, `dispositivo_invalido`, `conta_banida`…).
   /// [usedToken]: access da requisição que falhou (ignora respostas atrasadas).
   void sessionEnded(String code, {String? usedToken});
+
+  /// O servidor respondeu `403 termos_pendentes` (ENT16).
+  void termsPending();
 }
 
 class NoTokenSource implements TokenSource {
@@ -21,4 +24,6 @@ class NoTokenSource implements TokenSource {
   Future<String?> refreshAccess() async => null;
   @override
   void sessionEnded(String code, {String? usedToken}) {}
+  @override
+  void termsPending() {}
 }

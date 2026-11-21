@@ -106,6 +106,8 @@ class _SessionTokenSource implements TokenSource {
   @override
   void sessionEnded(String code, {String? usedToken}) =>
       _session.sessionEnded(code, usedToken: usedToken);
+  @override
+  void termsPending() => _session.termsPending();
 }
 
 final secureStoreProvider = Provider<SecureStore>(

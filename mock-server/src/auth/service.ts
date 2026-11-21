@@ -138,6 +138,8 @@ export class AuthService {
       if (!flags.loginEmail) throw new ApiError(403, 'funcionalidade_desligada');
       destination = normalizeEmail(destination);
       if (!EMAIL.test(destination)) throw new ApiError(400, 'validacao', { field: 'destination' });
+      // E-mail entra com senha: código por e-mail só confirma cadastro ou recupera senha.
+      if (purpose === 'login') throw new ApiError(400, 'validacao', { field: 'purpose' });
     } else {
       const channelOn = channel === 'sms' ? flags.loginSms : flags.loginWhatsapp;
       if (!flags.loginPhone || !channelOn) throw new ApiError(403, 'funcionalidade_desligada');

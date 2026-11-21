@@ -104,7 +104,18 @@ class ApiClient {
           }
           if (failure is ApiFailure &&
               _sessionEndCodes.contains(failure.code)) {
-            tokens.sessionEnded(failure.code);
+            final auth = req.headers['Authorization'];
+            tokens.sessionEnded(
+              failure.code,
+              usedToken: auth is String && auth.startsWith('Bearer ')
+                  ? auth.substring(7)
+                  : null,
+            );
+          }
+          if (failure is ApiFailure &&
+              failure.status == 403 &&
+              failure.code == 'termos_pendentes') {
+            tokens.termsPending();
           }
           if (failure is ApiFailure) {
             if (failure.status == 426) {

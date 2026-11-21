@@ -3,7 +3,8 @@ import { ApiError } from '../http/errors.js';
 import type { State } from '../state.js';
 
 // Anti-bot (RN-85, SEG06). O servidor decide quando exigir o desafio.
-// SÓ NO MOCK: exige quando o cenário `exigir-desafio` está ativo; token válido =
+// SÓ NO MOCK: exige quando o cenário `exigir-desafio` está ativo (ele liga o App Check)
+// e há provedor ligado por flag; token válido =
 // `fake-ok-<nonce>` de uso único, preso à rota. Os conectores reais entram na Fase 12.
 export type AntiBotRoute = 'devices' | 'code_send' | 'signup' | 'login' | 'reset';
 const PROVIDERS = ['appcheck', 'recaptcha', 'turnstile'] as const;
@@ -18,11 +19,12 @@ export class AntiBot {
       f.antibotRecaptcha ? 'recaptcha' : null,
       f.antibotTurnstile ? 'turnstile' : null,
     ].filter((p): p is string => p !== null);
-    return on.length ? on : ['appcheck'];
+    return on;
   }
 
+  // RN-85: só exige com algum provedor ligado por flag E quando o servidor decide (risco).
   private required(): boolean {
-    return this.getState().scenarios.has('exigir-desafio');
+    return this.getState().scenarios.has('exigir-desafio') && this.providers().length > 0;
   }
 
   check(req: FastifyRequest, route: AntiBotRoute) {

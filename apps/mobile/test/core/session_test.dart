@@ -18,6 +18,8 @@ class FakeServer implements HttpClientAdapter {
   int refreshCalls = 0;
   String? refreshError;
   bool offline = false;
+  int? meStatus;
+  bool termsPendingOnPing = false;
   final paths = <String>[];
   Completer<void>? refreshGate;
 
@@ -64,6 +66,16 @@ class FakeServer implements HttpClientAdapter {
         'error': {'code': 'token_expirado'},
       });
     }
+    if (o.path == '/me' && meStatus != null) {
+      return json(meStatus!, {
+        'error': {'code': meStatus == 401 ? 'nao_autenticado' : 'erro_interno'},
+      });
+    }
+    if (o.path == '/ping' && termsPendingOnPing) {
+      return json(403, {
+        'error': {'code': 'termos_pendentes'},
+      });
+    }
     if (o.path == '/me') {
       return json(200, {
         'id': 'u1',
@@ -92,6 +104,8 @@ class _Tokens implements TokenSource {
   @override
   void sessionEnded(String code, {String? usedToken}) =>
       s.sessionEnded(code, usedToken: usedToken);
+  @override
+  void termsPending() => s.termsPending();
 }
 
 void main() {
@@ -282,6 +296,45 @@ void main() {
         throwsA(isA<NetworkFailure>()),
       );
       expect(c.read(sessionProvider), isNotNull);
+    },
+  );
+  test('erro passageiro do servidor ao abrir não desloga (ENT01)', () async {
+    store.data.addAll({
+      'auth.access': 'at-1',
+      'auth.refresh': 'rt-1',
+      'auth.user': 'u1',
+    });
+    server.meStatus = 500;
+    await c.read(sessionProvider.notifier).restore();
+    expect(c.read(sessionProvider)?.userId, 'u1');
+    expect(store.data['auth.refresh'], 'rt-1');
+  });
+
+  test('sessão desconhecida no servidor ao abrir limpa tudo', () async {
+    store.data.addAll({
+      'auth.access': 'at-1',
+      'auth.refresh': 'rt-1',
+      'auth.user': 'u1',
+    });
+    server.meStatus = 401;
+    await c.read(sessionProvider.notifier).restore();
+    expect(c.read(sessionProvider), isNull);
+    expect(store.data.containsKey('auth.refresh'), isFalse);
+  });
+
+  test(
+    '403 termos_pendentes com o app aberto recarrega os termos (ENT16)',
+    () async {
+      await login();
+      c.read(sessionProvider.notifier).set(const Session(userId: 'u1'));
+      expect(c.read(sessionProvider)?.pendingTerms, isEmpty);
+      server.termsPendingOnPing = true;
+      await expectLater(
+        api.call((d) => d.get<Object?>('/ping')),
+        throwsA(anything),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(c.read(sessionProvider)?.pendingTerms, hasLength(1));
     },
   );
 }

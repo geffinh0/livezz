@@ -138,8 +138,8 @@ export function registerAuthRoutes(
     },
   );
 
-  // Só para os testes de contrato provarem o bloqueio por termos pendentes (rota autenticada qualquer).
-  app.get('/v1/me/ping', { preHandler: requireAuth(service) }, async () => ({
+  // Só do mock (/__mock/*): rota autenticada qualquer para os testes provarem o bloqueio por termos pendentes.
+  app.get('/__mock/ping-autenticado', { preHandler: requireAuth(service) }, async () => ({
     ok: true,
     at: getState().config.configVersion,
   }));

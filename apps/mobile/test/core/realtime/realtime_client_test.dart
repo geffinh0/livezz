@@ -77,6 +77,8 @@ class Token implements TokenSource {
 
   @override
   void sessionEnded(String code, {String? usedToken}) {}
+  @override
+  void termsPending() {}
 }
 
 void main() {

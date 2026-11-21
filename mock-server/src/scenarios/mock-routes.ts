@@ -53,6 +53,13 @@ function applyScenario(ctx: MockContext, name: ScenarioName, active: boolean) {
     Object.assign(cfg.flags, changed);
     bumpConfig(ctx, { flags: changed });
   }
+  if (name === 'exigir-desafio') {
+    // Liga o App Check (RN-85: cada provedor por flag) e simula o servidor achando risco.
+    const original = pristine(ctx.tenantId).flags;
+    const changed = { antibotAppCheck: active ? true : (original.antibotAppCheck ?? false) };
+    Object.assign(cfg.flags, changed);
+    bumpConfig(ctx, { flags: changed });
+  }
   if (name === 'termos-novos') {
     const terms = cfg.legalTexts.terms;
     if (terms) {
