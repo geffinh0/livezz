@@ -86,7 +86,7 @@
 4. **Revogação imediata:** access token carrega `sid`; toda rota autenticada e o WebSocket checam se a sessão está ativa. Logout, troca de senha, reuso de refresh e login em outro aparelho fecham o tempo real.
 5. **Android:** `allowBackup=false` (ou regras de backup excluindo tokens/segredo) e armazenamento seguro com Keystore.
 6. **Google:** liga a uma conta de e-mail existente só com `email_verified`; `mock-google:` só existe no mock (teste garante que o código real recusa).
-7. **Reuso de refresh** responde `401 sessao_revogada` (novo código) e avisa o dono; tolerância de 30 s para a resposta perdida na rede (o refresh anterior ainda vale uma vez nesse intervalo).
+7. **Reuso de refresh** responde `401 sessao_revogada` (novo código) e avisa o dono; tolerância de **10 s** para a resposta perdida na rede (o refresh anterior ainda vale uma vez nesse intervalo).
 8. **Logs:** redação no logger do mock/backend de `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination` e `authorization`, com teste.
 9. **Tempos:** `accessTokenMinutes` com piso 5 e teto 60 no servidor; validade máxima absoluta da sessão → pergunta ao usuário (Q-54).
 10. **Termos obrigatórios no servidor:** rotas autenticadas (exceto `/me`, `/me/terms/accept`, `/auth/logout`) respondem `403 termos_pendentes` enquanto houver aceite pendente. `AceiteTermos` guarda aparelho e IP 🔒.
@@ -98,5 +98,20 @@
 16. Logout limpa o armazenamento local mesmo sem rede.
 17. `/__mock/outbox` fica no módulo de rotas mock; teste garante que o app nunca chama `/__mock/*`.
 - Novos códigos no catálogo: `sessao_revogada`, `termos_pendentes`.
+
+## Ajustes da revisão do arquiteto (2026-11-21)
+1. **Tempo real com token vencido:** `auth` do WebSocket distingue `token_expirado` (fecha com **`4003`, não terminal**) de `token_invalido` (`4001`, terminal). O `RealtimeClient` renova pelo `TokenSource` antes do `auth` e ao receber `4003`. Teste unitário + passo no `ENT19.cjs`.
+2. **Conexão ligada à sessão (`sid`), não só à conta:** reconexão da mesma sessão fecha a antiga com código não terminal (`4004`); só sessão revogada por login em outro aparelho gera `session.replaced` (`4002`).
+3. **Todo motivo de revogação tem evento e código:** `session.invalid { reason: senha_trocada | expirada | revogada | conta_bloqueada }` no tempo real; no HTTP: `sessao_substituida` (outro aparelho), `sessao_revogada` (reuso/logout em outro lugar), `sessao_expirada` (30 dias sem uso / máximo absoluto), `conta_suspensa`, `conta_banida`. Cada um com texto próprio no app.
+4. **Anti-bot no contrato:** headers `X-Antibot-Provider` e `X-Antibot-Token` (no CORS do mock); lista de rotas do item 13 da segurança.
+5. **`deviceSecret`:** segredo errado → `401 dispositivo_invalido`; instalação sem segredo (da 1a) recebe aparelho novo no próximo registro; `POST /devices` com `deviceId` exige o segredo para atualizar (200), senão cria outro (201).
+6. **Termos:** tabela de correspondência `terms/privacy/guidelines` ↔ `termos/privacidade/diretrizes`; aceitar versão diferente da atual → `409 conflito`.
+7. `sessionIdleDays`, `accessTokenMinutes` e os limites da RN-02 ficam na config **do servidor** (editável pelo comprador), não no `GET /config` público.
+8. `loginPhone` liga a entrada por telefone; `loginSms`/`loginWhatsapp` escolhem os canais (telefone ligado com os dois canais desligados = sem telefone).
+9. Logout aceita refresh token mesmo com access vencido e fecha o tempo real.
+10. Chave que assina os tokens do mock: variável de ambiente ou aleatória no boot (nunca no repositório).
+11. Cenário `token-expira-rapido` (access de 5 s) para o E2E da renovação.
+12. `features/auth/` com `domain/` (regras de senha, máscara, estados) puro e `data/` (DTOs, repositório).
+13. **ADR 0012 — Modelo de sessão** (access curto + refresh rotativo com detecção de reuso, ligação ao aparelho por `deviceSecret`, `sid` no token, códigos de fechamento do tempo real) escrita no passo 1.
 
 Status: aguardando aprovação
