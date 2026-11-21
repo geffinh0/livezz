@@ -6,7 +6,8 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Regra TRV07: nenhum texto de interface fixo no código de telas.
-/// Vale para `lib/core/ui/`, `lib/app/` e `lib/features/**/presentation/`.
+/// Vale para arquivos de tela: `lib/core/ui/`, `lib/app/*_screen.dart` e
+/// `lib/features/**/presentation/`. Rotas ficam em `lib/app/routes.dart`.
 /// Permitido: strings dentro de `Key(...)`/`ValueKey(...)` (ids do Maestro),
 /// diretivas (import/part) e anotações.
 class _Finder extends RecursiveAstVisitor<void> {
@@ -52,6 +53,7 @@ Iterable<File> _screenFiles() sync* {
     for (final f in d.listSync(recursive: true).whereType<File>()) {
       if (!f.path.endsWith('.dart') || f.path.endsWith('.g.dart')) continue;
       if (dir == 'lib/features' && !f.path.contains('/presentation/')) continue;
+      if (dir == 'lib/app' && !f.path.endsWith('_screen.dart')) continue;
       yield f;
     }
   }

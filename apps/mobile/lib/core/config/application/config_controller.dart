@@ -32,6 +32,7 @@ class ConfigController extends AsyncNotifier<AppConfig> {
   /// tempo real reconectou). Mantém a config atual se falhar.
   Future<void> refresh() async {
     final previous = state.value;
+    if (previous == null) state = const AsyncLoading();
     try {
       final fresh = await _repo.fetch();
       state = AsyncData(fresh);
