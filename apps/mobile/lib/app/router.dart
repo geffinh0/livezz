@@ -114,12 +114,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: 'code',
-            builder: (c, s) => CodeScreen(
-              destination: s.uri.queryParameters['dest'] ?? '',
-              channel: s.uri.queryParameters['channel'] ?? 'sms',
-              purpose: s.uri.queryParameters['purpose'] ?? 'login',
-              password: s.extra is String ? s.extra! as String : null,
-            ),
+            // Sem os dados em memória (ex.: recarregou a página): volta à escolha.
+            redirect: (c, s) => s.extra is CodeArgs ? null : Routes.entry,
+            builder: (c, s) => CodeScreen(args: s.extra! as CodeArgs),
           ),
           GoRoute(path: 'reset', builder: (c, s) => const ResetScreen()),
         ],

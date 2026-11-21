@@ -20,6 +20,12 @@ flow('ENT16', async (t) => {
   await t.shot('termos-novos');
   t.check('aceitar fica desligado sem marcar', !(await t.visible('tab.discover', 1500)));
   await t.tap('auth.terms.agree');
+  // Erro: servidor fora do ar no aceite mostra o erro e continua nos termos.
+  await t.mock('/__mock/scenario/erro-500');
+  await t.tap('auth.terms.accept');
+  t.check('falha no aceite mostra erro', await t.visible('auth.error', 10000));
+  t.check('continua nos termos', await t.visible('auth.terms'));
+  await t.mock('/__mock/scenario/erro-500', { active: false });
   await t.tap('auth.terms.accept');
   t.check('aceitou: segue para a Home', await t.visible('tab.discover', 20000));
 });

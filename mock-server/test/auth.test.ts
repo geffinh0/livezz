@@ -144,6 +144,7 @@ describe('e-mail e senha (ENT05, RN-03)', () => {
       password: 'Livezz2026x',
     });
     expect(s.statusCode).toBe(202);
+    expect(s.json()).toEqual({ expiresInSeconds: 60, resendInSeconds: 60 });
     const code = await outbox(mock, 'nova@teste.local');
     const v = await post(mock, '/v1/auth/code/verify', {
       destination: 'nova@teste.local',

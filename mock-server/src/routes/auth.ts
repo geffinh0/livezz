@@ -67,8 +67,8 @@ export function registerAuthRoutes(
     { schema: { body: SignupBody } },
     async (req, reply) => {
       antibot.check(req, 'signup');
-      await service.signupEmail(req.body.email, req.body.password, req.ip);
-      return reply.status(202).send();
+      const timing = await service.signupEmail(req.body.email, req.body.password, req.ip);
+      return reply.status(202).send(timing);
     },
   );
 

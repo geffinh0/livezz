@@ -86,6 +86,14 @@ function flow(name, body) {
         await page.keyboard.type(text, { delay: 20 });
         await page.waitForTimeout(200);
       },
+      // Apaga o conteúdo de um campo (seleciona tudo e apaga).
+      clear: async (id) => {
+        await clickId(page, id);
+        await page.waitForTimeout(300);
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.press('Backspace');
+        await page.waitForTimeout(200);
+      },
       tap: (id) => clickId(page, id),
       outbox: async (destination) =>
         (await (await fetch(`${MOCK}/__mock/outbox?destination=${encodeURIComponent(destination)}`)).json()).code,

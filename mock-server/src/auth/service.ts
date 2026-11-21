@@ -308,7 +308,7 @@ export class AuthService {
     if (!this.findMethod('email', email)?.verifiedAt) {
       this.store.pendingSignups.set(email, { email, passwordHash });
     }
-    await this.sendCode({ channel: 'email', destination: email, purpose: 'signup' }, ip);
+    return this.sendCode({ channel: 'email', destination: email, purpose: 'signup' }, ip);
   }
 
   async loginEmail(

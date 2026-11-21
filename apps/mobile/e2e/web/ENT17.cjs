@@ -20,6 +20,11 @@ flow('ENT17', async (t) => {
   // Entra de verdade e volta para a ação que tentou (Perfil).
   await t.tap('entry.method.email');
   await t.type('auth.email.input', 'ana@teste.local');
+  // Erro: senha errada mostra o erro e não perde a ação guardada.
+  await t.type('auth.password.input', 'senhaErrada1');
+  await t.tap('auth.email.submit');
+  t.check('senha errada mostra erro', await t.visible('auth.error', 10000));
+  await t.clear('auth.password.input');
   await t.type('auth.password.input', 'TEST_ONLY_Ana2026');
   await t.tap('auth.email.submit');
   t.check('depois de entrar, continua no Perfil (ação retomada)', await t.visible('tab.profile', 20000));

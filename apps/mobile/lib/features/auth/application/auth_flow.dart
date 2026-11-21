@@ -68,8 +68,10 @@ class AuthFlow {
     await _ref.read(sessionProvider.notifier).signedIn(t);
   }
 
-  Future<void> signupEmail(String email, String password) =>
-      _withAntiBot((h) => _api.signupEmail(email, password, antibot: h));
+  Future<({int expiresIn, int resendIn})> signupEmail(
+    String email,
+    String password,
+  ) => _withAntiBot((h) => _api.signupEmail(email, password, antibot: h));
 
   Future<void> loginEmail(String email, String password) async {
     final device = await _device();

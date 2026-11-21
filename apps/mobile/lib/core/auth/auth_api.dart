@@ -126,17 +126,23 @@ class AuthApi {
     ),
   );
 
-  Future<void> signupEmail(
+  Future<({int expiresIn, int resendIn})> signupEmail(
     String email,
     String password, {
     AntiBotHeaders? antibot,
-  }) => _api.call(
-    (d) => d.post<Object?>(
-      '/auth/email/signup',
-      data: {'email': email, 'password': password},
-      options: _opts(antibot),
-    ),
-  );
+  }) async {
+    final j = await _api.call(
+      (d) => d.post<Map<String, dynamic>>(
+        '/auth/email/signup',
+        data: {'email': email, 'password': password},
+        options: _opts(antibot),
+      ),
+    );
+    return (
+      expiresIn: j['expiresInSeconds'] as int,
+      resendIn: j['resendInSeconds'] as int,
+    );
+  }
 
   Future<TokenResponse> loginEmail(
     String email,

@@ -114,7 +114,7 @@
   "channelSms": "SMS",
   "channelWhatsapp": "WhatsApp",
   "codeTitle": "Enter the code",
-  "codeSentTo": "We sent a 6-digit code to {destination}. It is valid for 60 seconds.",
+  "codeSentTo": "We sent a 6-digit code to {destination}. It is valid for {seconds} seconds.",
   "codeLabel": "Code",
   "codeResend": "Resend code",
   "codeResendIn": "Resend in {seconds} s",
@@ -149,5 +149,15 @@
   "ruleMet": "Rule met",
   "ruleNotMet": "Rule not met",
   "codeSemantics": "6-digit code",
-  "googleUnavailable": "Google sign-in is not available in this version yet. Use phone or email."
+  "googleUnavailable": "Google sign-in is not available in this version yet. Use phone or email.",
+  "@codeSentTo": {
+    "placeholders": {
+      "destination": {
+        "type": "String"
+      },
+      "seconds": {
+        "type": "int"
+      }
+    }
+  }
 }

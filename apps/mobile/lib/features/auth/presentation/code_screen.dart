@@ -15,20 +15,32 @@ import 'auth_widgets.dart';
 
 /// Código de 6 dígitos (ENT04, ENT05): validade e reenvio com contagem
 /// regressiva (RN-02). O autopreenchimento do Android entra na Fase 12 (Q-51).
-class CodeScreen extends ConsumerStatefulWidget {
-  const CodeScreen({
+/// O que a tela de código precisa. Vai em `extra` da rota (fica só em
+/// memória): destino 🔒 e senha nunca na URL nem no histórico.
+class CodeArgs {
+  const CodeArgs({
     required this.destination,
     required this.channel,
     required this.purpose,
-    super.key,
+    required this.expiresIn,
+    required this.resendIn,
     this.password,
   });
   final String destination;
   final String channel;
   final String purpose;
 
-  /// Cadastro por e-mail: a senha digitada antes (só em memória, nunca na URL).
+  /// Validade e espera para reenviar, como o servidor mandou (RN-02).
+  final int expiresIn;
+  final int resendIn;
+
+  /// Cadastro por e-mail: a senha digitada antes.
   final String? password;
+}
+
+class CodeScreen extends ConsumerStatefulWidget {
+  const CodeScreen({required this.args, super.key});
+  final CodeArgs args;
 
   @override
   ConsumerState<CodeScreen> createState() => _CodeScreenState();
@@ -37,14 +49,15 @@ class CodeScreen extends ConsumerStatefulWidget {
 class _CodeScreenState extends ConsumerState<CodeScreen> {
   final _ctrl = TextEditingController();
   Timer? _timer;
-  int _resendIn = 60;
+  late int _expiresIn = widget.args.expiresIn;
+  int _resendIn = 0;
   bool _busy = false;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _startCountdown(60);
+    _startCountdown(widget.args.resendIn);
   }
 
   void _startCountdown(int seconds) {
@@ -75,10 +88,10 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
       await ref
           .read(authFlowProvider)
           .verifyCode(
-            destination: widget.destination,
+            destination: widget.args.destination,
             code: _ctrl.text,
-            purpose: widget.purpose,
-            password: widget.password,
+            purpose: widget.args.purpose,
+            password: widget.args.password,
           );
       // O roteador leva ao próximo passo (termos, cadastro ou Home).
     } on Object catch (e) {
@@ -94,12 +107,15 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
       final r = await ref
           .read(authFlowProvider)
           .sendCode(
-            channel: widget.channel,
-            destination: widget.destination,
-            purpose: widget.purpose,
+            channel: widget.args.channel,
+            destination: widget.args.destination,
+            purpose: widget.args.purpose,
           );
       _startCountdown(r.resendIn);
-      setState(() => _error = null);
+      setState(() {
+        _error = null;
+        _expiresIn = r.expiresIn;
+      });
     } on Object catch (e) {
       setState(() => _error = authErrorText(l, e));
     }
@@ -108,14 +124,13 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final shown = widget.destination.contains('@')
-        ? widget.destination
-        : maskForDisplay(widget.destination);
+    final dest = widget.args.destination;
+    final shown = dest.contains('@') ? dest : maskForDisplay(dest);
     return AuthScaffold(
       id: 'auth.code',
       title: l.codeTitle,
       children: [
-        Text(l.codeSentTo(shown)),
+        Text(l.codeSentTo(shown, _expiresIn)),
         const SizedBox(height: AppSpace.lg),
         TestId(
           'auth.code.input',

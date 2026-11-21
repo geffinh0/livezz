@@ -3,6 +3,13 @@ const { flow } = require('./_lib.cjs');
 
 flow('SEG06', async (t) => {
   await t.mock('/__mock/scenario/exigir-desafio');
+  // Erro: sem o desafio resolvido o servidor recusa (428).
+  const denied = await fetch(`${process.env.MOCK_URL || 'http://127.0.0.1:3000'}/v1/auth/code/send`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ channel: 'sms', destination: '+5511966665554', purpose: 'login' }),
+  });
+  t.check('sem token anti-bot: 428 desafio_necessario', denied.status === 428);
   await t.open('/');
   await t.toMethods();
   await t.tap('entry.method.phone');

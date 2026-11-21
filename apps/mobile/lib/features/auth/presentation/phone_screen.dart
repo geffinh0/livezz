@@ -15,6 +15,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../application/auth_flow.dart';
 import '../domain/phone.dart';
 import 'auth_widgets.dart';
+import 'code_screen.dart';
 
 /// ENT04: telefone (país pela config, máscara) e canal SMS/WhatsApp.
 class PhoneScreen extends ConsumerStatefulWidget {
@@ -50,16 +51,19 @@ class _PhoneScreenState extends ConsumerState<PhoneScreen> {
       _error = null;
     });
     try {
-      await ref
+      final r = await ref
           .read(authFlowProvider)
           .sendCode(channel: _channel, destination: e164, purpose: 'login');
       if (!mounted) return;
       unawaited(
         context.push(
-          Routes.entryCode(
+          Routes.entryCode,
+          extra: CodeArgs(
             destination: e164,
             channel: _channel,
             purpose: 'login',
+            expiresIn: r.expiresIn,
+            resendIn: r.resendIn,
           ),
         ),
       );

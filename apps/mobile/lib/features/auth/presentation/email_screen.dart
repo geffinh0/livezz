@@ -14,6 +14,7 @@ import '../../../l10n/generated/app_localizations.dart';
 import '../application/auth_flow.dart';
 import '../domain/password_rules.dart';
 import 'auth_widgets.dart';
+import 'code_screen.dart';
 import 'password_checklist.dart';
 
 /// ENT05: entrar ou criar conta com e-mail e senha (RN-03).
@@ -60,16 +61,19 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
     final flow = ref.read(authFlowProvider);
     try {
       if (_signup) {
-        await flow.signupEmail(email, _password.text);
+        final r = await flow.signupEmail(email, _password.text);
         if (!mounted) return;
         unawaited(
           context.push(
-            Routes.entryCode(
+            Routes.entryCode,
+            extra: CodeArgs(
               destination: email,
               channel: 'email',
               purpose: 'signup',
+              expiresIn: r.expiresIn,
+              resendIn: r.resendIn,
+              password: _password.text,
             ),
-            extra: _password.text,
           ),
         );
       } else {

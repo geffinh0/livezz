@@ -8,18 +8,9 @@ abstract final class Routes {
   static String entryMethod(String method) => '/entry/method/$method';
   static String legal(String doc) => '/legal/$doc';
   static const entryReset = '/entry/reset';
-  static String entryCode({
-    required String destination,
-    required String channel,
-    required String purpose,
-  }) => Uri(
-    path: '/entry/code',
-    queryParameters: {
-      'dest': destination,
-      'channel': channel,
-      'purpose': purpose,
-    },
-  ).toString();
+
+  /// Dados vão em `extra` (CodeArgs): telefone e e-mail nunca na URL.
+  static const entryCode = '/entry/code';
   static const terms = '/terms';
   static const completeProfile = '/complete-profile';
   static const discover = '/discover';

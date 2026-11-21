@@ -25,6 +25,10 @@ flow('ENT19', async (t) => {
   t.check('token vencido renovado sozinho (continua logado)', await t.visible('tab.discover', 20000));
   await t.mock('/__mock/scenario/token-expira-rapido', { active: false });
 
+  // Estava no Perfil quando a sessão caiu.
+  await clickId(t.page, 'nav.profile');
+  t.check('no Perfil antes de cair', await t.visible('tab.profile'));
+
   // Outro aparelho: segundo navegador entra na mesma conta.
   const other = await t.newPage();
   await other.goto(process.env.APP_URL || 'http://localhost:8080/', { waitUntil: 'load' });
@@ -35,4 +39,9 @@ flow('ENT19', async (t) => {
   t.check('primeiro aparelho volta às boas-vindas com aviso', await t.visible('entry.sessionNotice', 20000));
   t.check('aviso diz "outro aparelho"', await t.text('outro aparelho'));
   await t.shot('outro-aparelho');
+
+  // Entra de novo no primeiro aparelho: volta para onde estava (Perfil).
+  await t.page.bringToFront();
+  await loginAna(t, t.page);
+  t.check('depois de entrar de novo, volta ao Perfil', await t.visible('tab.profile', 20000));
 });

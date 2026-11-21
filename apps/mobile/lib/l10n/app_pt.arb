@@ -246,11 +246,14 @@
   "channelSms": "SMS",
   "channelWhatsapp": "WhatsApp",
   "codeTitle": "Digite o código",
-  "codeSentTo": "Enviamos um código de 6 dígitos para {destination}. Ele vale por 60 segundos.",
+  "codeSentTo": "Enviamos um código de 6 dígitos para {destination}. Ele vale por {seconds} segundos.",
   "@codeSentTo": {
     "placeholders": {
       "destination": {
         "type": "String"
+      },
+      "seconds": {
+        "type": "int"
       }
     }
   },
