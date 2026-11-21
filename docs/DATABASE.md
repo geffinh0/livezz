@@ -379,7 +379,7 @@ erDiagram
 `alterada_por` e `alterada_em` ainda não existem no mock (entram com o painel, ADM14).
 
 ### PreferenciasLocais — em uso no app (aparelho, não vai para o banco)
-Usada por: ENT01, ENT02 · `device.id` (id devolvido por `POST /devices`) e `entry.visitorMode` (o visitante escolheu "Explorar sem conta"). Sem dado pessoal.
+Usada por: ENT01, ENT02 · `device.id` (id devolvido por `POST /devices`) e `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"). Sem dado pessoal.
 
 ### ConfigCacheLocal — em uso no app (aparelho, não vai para o banco)
 Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = JSON da última `GET /config` válida, mesclado por `config.updated`. Sem dado pessoal. Serve de reserva sem rede. Flags e limites continuam sendo aplicados no servidor (alterar o cache no aparelho não libera nada).

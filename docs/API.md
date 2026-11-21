@@ -24,7 +24,7 @@
 - **Rate limit:** `429` com `Retry-After`.
 - **Admin:** rotas `/v1/admin/*` exigem token de admin com papel; toda escrita gera `LogAuditoria`.
 - **Mock-only:** rotas `/__mock/*` existem apenas no mock-server.
-- **CORS (mock):** liberado só para origens `http://localhost:*` e `http://127.0.0.1:*` (app web de teste, painel e portal em dev).
+- **CORS (mock):** liberado só para origens `http://localhost:*` e `http://127.0.0.1:*` (app web de teste, painel e portal em dev). Headers aceitos: Content-Type, Authorization, Accept-Language, X-App-Version, Idempotency-Key, X-Mock-Country (só mock); exposto: Retry-After.
 
 ## Catálogo de erros (inicial)
 `nao_autenticado`, `token_expirado`, `sessao_substituida`, `verificacao_idade_necessaria`, `sem_permissao`, `nao_encontrado`, `validacao`, `conflito`, `limite_excedido`, `saldo_insuficiente`, `idade_nao_verificada`, `menor_de_idade`, `conta_suspensa`, `conta_banida`, `regiao_bloqueada`, `atualizacao_obrigatoria`, `manutencao`, `codigo_invalido`, `codigo_expirado`, `username_indisponivel`, `live_encerrada`, `expulso_da_live`, `silenciado`, `convite_expirado`, `funcionalidade_desligada`, `pagamento_pendente`, `pagamento_falhou`, `saque_abaixo_minimo`, `dados_recebimento_incompletos`, `erro_interno`.
