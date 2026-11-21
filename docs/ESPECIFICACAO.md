@@ -12,7 +12,7 @@
 3. Textos em pt-BR via arquivo de tradução; marca, cores e nome vindos do tenant.
 4. Acessibilidade básica: rótulos para leitor de tela, alvo de toque ≥ 48dp, contraste AA, funciona com fonte grande.
 5. Testes: unitários de regra/estado, widget da tela, contrato no mock-server para os endpoints usados.
-6. Fluxo E2E (Maestro) em `apps/mobile/e2e/<ID>.yaml` cobrindo o caminho principal e ao menos um erro (itens de tela).
+6. Fluxo E2E cobrindo o caminho principal e ao menos um erro (itens de tela): no navegador (`apps/mobile/e2e/web/<ID>.cjs`, Playwright) para itens sem recurso nativo; no Android (`apps/mobile/e2e/<ID>.yaml`, Maestro) quando o item usa câmera, permissões, vídeo nativo, push ou compra na loja (Q-44).
 7. Dados e contratos usados registrados em `docs/DATABASE.md`, `docs/API.md` e `docs/EVENTOS-TEMPO-REAL.md`.
 8. Revisado pelo subagente `revisor`; e pelo `revisor-seguranca` se toca em dinheiro, auth, dados pessoais, moderação ou menores.
 9. Eventos de analytics do item disparados (quando houver).

@@ -64,6 +64,10 @@ Prefira esperar a resposta a fazer algo errado. Registre toda resposta em `docs/
 5. Antes de usar a API de uma biblioteca, SDK ou política de loja, confira a documentação oficial atual (subagente `pesquisador` se precisar). Se divergir dos documentos, avise.
 6. Explique o "porquê" das decisões técnicas importantes em poucas linhas, em linguagem simples.
 
+## Quando algo não está dando certo
+- Se a mesma abordagem falhar **duas vezes por motivos diferentes**, pare. Liste as alternativas (inclusive as que mudam o caminho, não só o próximo ajuste), com prós e contras, recomende uma e só então siga. Não peça ao usuário uma terceira rodada do mesmo caminho sem fazer isso.
+- Prefira caminhos que você consegue executar e verificar sozinho (ex.: app no navegador com Playwright, CI) a idas e vindas com a máquina do usuário.
+
 ## O kit evolui com o projeto
 - Corrigiu o mesmo tipo de erro duas vezes, ou o usuário te corrigiu? Proponha uma regra nova em `CLAUDE.md` ou `.claude/rules/`.
 - Ao fim de cada fase, rode `/retro`: o que deu errado, o que repetiu, o que falta nas regras, skills e agentes. **Proponha** as mudanças e só aplique com aprovação do usuário.
