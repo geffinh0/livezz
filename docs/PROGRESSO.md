@@ -11,7 +11,7 @@ Fase 0 (fundação) implementada na branch `claude/funny-darwin-w671g8`: monorep
 2. Depois: `/planejar` da Fase 1 (ENT01–ENT19, NAV01, NAV04, CFG14, SEG06).
 
 ## Problemas conhecidos / dívidas técnicas
-- Sessão da nuvem sem Android SDK nem aparelho: APK só no CI, Maestro só na máquina do usuário.
+- Sessão da nuvem sem Android SDK nem aparelho: APK só no CI (confirmado: run 12 verde, artefato `liveapp-debug-apk`), Maestro só na máquina do usuário (`tools/dev/setup-linux.sh` e `tools/dev/e2e-emulador.sh`).
 - Em release, a tela inicial fica vazia depois de carregar a config (as telas de produto chegam na ENT01).
 - Ver `docs/MELHORIAS.md` M-004 a M-022 (sugestões das revisões).
 
