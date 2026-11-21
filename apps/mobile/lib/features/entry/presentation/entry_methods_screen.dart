@@ -7,6 +7,7 @@ import '../../../app/routes.dart';
 import '../../../core/config/application/config_controller.dart';
 import '../../../core/theme/tokens.dart';
 import '../../../core/ui/app_button.dart';
+import '../../../core/ui/state_views.dart';
 import '../../../core/ui/test_id.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -50,6 +51,14 @@ class EntryMethodsScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpace.xl),
+              if (active.isEmpty)
+                SizedBox(
+                  height: 200,
+                  child: StateView.empty(
+                    title: l.methodsNoneTitle,
+                    message: l.methodsNoneBody,
+                  ),
+                ),
               for (final m in active) ...[
                 TestId(
                   'entry.method.${m.$1}',

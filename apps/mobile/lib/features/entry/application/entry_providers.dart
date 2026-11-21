@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -53,7 +55,9 @@ final deviceRegistrationProvider = FutureProvider<String?>((ref) async {
           appVersion: ref.read(envProvider).appVersion,
           locale: acceptLanguageFor(ref.read(localeProvider)),
         );
-  } on Object {
+  } on Object catch (e) {
+    // Não bloqueia a abertura; tenta de novo na próxima (ENT01).
+    developer.log('registro do aparelho falhou: $e', name: 'device');
     return null;
   }
 }, retry: (retryCount, error) => null);
@@ -78,7 +82,12 @@ final entryDestinationProvider = Provider<EntryDestination>((ref) {
     gate: _gateKind(ref.watch(appGateProvider)),
     regionAllowed: c?.regionAllowed ?? true,
     maintenance: c?.maintenance.active ?? false,
-    visitorMode: ref.watch(visitorModeProvider).value,
+    // Falha ao ler o aparelho conta como "não escolheu" (não prende no splash).
+    visitorMode: switch (ref.watch(visitorModeProvider)) {
+      AsyncData(:final value) => value,
+      AsyncError() => false,
+      _ => null,
+    },
     hasSession: ref.watch(sessionProvider) != null,
   );
 });

@@ -34,3 +34,14 @@
 | M-023 | 2026-11-21 | qualidade | média | Teste de widget de contraste não pegou o texto branco no botão de perigo do tema escuro (só o print web pegou): investigar por que a cor lida no RenderParagraph difere da desenhada | DESIGN-SYSTEM | aberta |
 | M-024 | 2026-11-21 | produto | baixa | `web/index.html` e `manifest.json` com nome e cor do tenant (hoje padrão do Flutter); só afeta o build web de teste | TRV08 | aberta |
 | M-025 | 2026-11-21 | qualidade | média | E2E Android no CI com emulador (KVM do GitHub) para cobrir o que a web não cobre: flavor, permissões, vídeo nativo | E2E | aberta |
+| M-026 | 2026-11-21 | segurança | média | Segredo do aparelho (aleatório, só hash no servidor, guardado no Keystore) exigido para reconhecer o `deviceId`; base para a sessão única | ENT19/RN-06, plano 1b | aberta |
+| M-027 | 2026-11-21 | segurança | média | Rate limit por IP e teto de registros em `POST /devices` (backend real e mock) | ENT01 | aberta |
+| M-028 | 2026-11-21 | segurança | baixa | Checar região e `Origin` na autenticação do WebSocket | ENT18, TRV01 | aberta |
+| M-029 | 2026-11-21 | segurança | baixa | Guarda de CI: nenhuma menção a `X-Mock-*` fora de `mock-server/` | ENT18 | aberta |
+| M-030 | 2026-11-21 | ux | alta | Botão "Atualizar" na atualização obrigatória com link da loja vindo da config/tenant | ENT01 | aberta |
+| M-031 | 2026-11-21 | ux | média | Voltar com páginas empilhadas dentro de uma aba: hoje as abas não têm subpáginas; quando tiverem, voltar deve desempilhar antes de ir a Descobrir (Q-48) | NAV01 | aberta |
+| M-032 | 2026-11-21 | ux | média | Componente `TenantBrand` (logo + nome) em `core/ui` usado no splash e nas boas-vindas | ENT01, ENT02 | aberta |
+| M-033 | 2026-11-21 | ux | média | Rótulo de acessibilidade no contador de mensagens e tokens para o destaque da aba Ao vivo (tamanho/cor, contraste AA com a aba selecionada) | NAV01 | aberta |
+| M-034 | 2026-11-21 | ux | baixa | Texto do "Entre para continuar" específico por origem (aba, seguir, presente) | ENT17 | aberta |
+| M-035 | 2026-11-21 | ux | baixa | Prints do E2E em escuro, inglês e fonte 200% para as telas de entrada | E2E | aberta |
+| M-036 | 2026-11-21 | ux | média | "Tentar de novo" nos portões mantém o portão até a resposta (hoje libera antes e pode piscar a Home) | ENT01, ENT18 | aberta |

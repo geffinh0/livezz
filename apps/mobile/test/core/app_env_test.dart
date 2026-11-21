@@ -32,4 +32,10 @@ void main() {
       isFalse,
     );
   });
+
+  test('normaliza versão com sufixo', () {
+    expect(normalizeVersion('1.2.3+4'), '1.2.3');
+    expect(normalizeVersion('1.0.0-rc1'), '1.0.0');
+    expect(normalizeVersion('0.1.0'), '0.1.0');
+  });
 }

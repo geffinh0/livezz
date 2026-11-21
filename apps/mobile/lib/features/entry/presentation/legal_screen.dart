@@ -23,7 +23,8 @@ class LegalScreen extends ConsumerStatefulWidget {
 }
 
 /// Só URLs do mesmo esquema e host do portal do tenant.
-bool isAllowedLegalUrl(Uri url, Uri portal) =>
+bool isAllowedLegalUrl(Uri? url, Uri portal) =>
+    url != null &&
     url.scheme == portal.scheme &&
     url.host == portal.host &&
     url.port == portal.port;
@@ -31,26 +32,39 @@ bool isAllowedLegalUrl(Uri url, Uri portal) =>
 class _LegalScreenState extends ConsumerState<LegalScreen> {
   WebViewController? _controller;
   bool _failed = false;
+  bool _loading = true;
 
-  Uri? get _url =>
-      ref.read(configControllerProvider).value?.legalTexts[widget.doc]?.url;
+  late Uri? _url = ref
+      .read(configControllerProvider)
+      .value
+      ?.legalTexts[widget.doc]
+      ?.url;
 
   @override
   void initState() {
     super.initState();
     final url = _url;
-    // WebView não roda no build web de teste: lá mostramos o endereço.
-    if (url == null || kIsWeb) return;
     final portal = Uri.parse(ref.read(tenantProvider).portalBaseUrl);
+    // Até a primeira URL passa pela trava do domínio do portal.
+    if (url == null || !isAllowedLegalUrl(url, portal)) {
+      _url = null;
+      return;
+    }
+    // WebView não roda no build web de teste: lá mostramos o endereço.
+    if (kIsWeb) return;
     _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      // Páginas legais do portal são renderizadas no servidor: sem JavaScript.
+      ..setJavaScriptMode(JavaScriptMode.disabled)
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (r) =>
-              isAllowedLegalUrl(Uri.parse(r.url), portal)
+              isAllowedLegalUrl(Uri.tryParse(r.url), portal)
               ? NavigationDecision.navigate
               : NavigationDecision.prevent,
-          onWebResourceError: (_) => setState(() => _failed = true),
+          onPageFinished: (_) => setState(() => _loading = false),
+          onWebResourceError: (e) {
+            if (e.isForMainFrame ?? true) setState(() => _failed = true);
+          },
         ),
       )
       ..loadRequest(url);
@@ -71,7 +85,10 @@ class _LegalScreenState extends ConsumerState<LegalScreen> {
     } else if (_failed) {
       body = StateView.offline(
         onRetry: () {
-          setState(() => _failed = false);
+          setState(() {
+            _failed = false;
+            _loading = true;
+          });
           _controller?.loadRequest(url);
         },
       );
@@ -81,7 +98,12 @@ class _LegalScreenState extends ConsumerState<LegalScreen> {
         child: SelectableText(url.toString()),
       );
     } else {
-      body = WebViewWidget(controller: _controller!);
+      body = Stack(
+        children: [
+          WebViewWidget(controller: _controller!),
+          if (_loading) const StateView.loading(),
+        ],
+      );
     }
     return Scaffold(
       appBar: AppBar(title: Text(title)),

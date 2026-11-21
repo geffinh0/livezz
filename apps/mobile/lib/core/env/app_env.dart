@@ -15,7 +15,7 @@ class AppEnv {
     );
     final env = AppEnv(
       apiBaseUrl: override.isEmpty ? tenant.defaultApiBaseUrl : override,
-      appVersion: version,
+      appVersion: normalizeVersion(version),
     );
     if (!kDebugMode && !env.isSecure) {
       // Release só fala HTTPS/WSS (docs/SEGURANCA.md). Falha cedo e claro.
@@ -38,3 +38,6 @@ class AppEnv {
     );
   }
 }
+
+/// `1.2.3+4` ou `1.2.3-rc1` → `1.2.3` (formato que a API aceita).
+String normalizeVersion(String v) => v.split(RegExp('[+-]')).first.trim();

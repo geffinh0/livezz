@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'session.dart';
@@ -20,7 +23,13 @@ class PendingActionController extends Notifier<PendingAction?> {
       if (previous == null && next != null) {
         final action = state;
         state = null;
-        if (action != null && !action.isExpired(_now())) action.run();
+        if (action != null && !action.isExpired(_now())) {
+          unawaited(
+            action.run().catchError((Object e) {
+              developer.log('ação pendente falhou: $e', name: 'auth');
+            }),
+          );
+        }
       }
     });
     return null;

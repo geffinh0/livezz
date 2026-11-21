@@ -90,10 +90,12 @@
   "regionBlockedTitle": "Not available in your region",
   "tabDiscover": "Discover",
   "tabFollowing": "Following",
-  "tabLive": "Go live",
+  "tabLive": "Live",
   "tabMessages": "Messages",
   "tabProfile": "Profile",
   "followingVisitorTitle": "Sign in to see who you follow",
-  "followingVisitorBody": "Follow people and their lives show up here.",
-  "pressBackAgainToExit": "Press back again to exit"
+  "followingVisitorBody": "Follow people to see their lives here.",
+  "pressBackAgainToExit": "Press back again to exit",
+  "methodsNoneTitle": "Sign in unavailable right now",
+  "methodsNoneBody": "No sign-in method is active. Please try again later."
 }

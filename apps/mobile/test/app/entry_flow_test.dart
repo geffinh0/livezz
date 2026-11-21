@@ -6,6 +6,7 @@ import 'package:livezz_mobile/app/app.dart';
 import 'package:livezz_mobile/app/providers.dart';
 import 'package:livezz_mobile/app/router.dart';
 import 'package:livezz_mobile/app/routes.dart';
+import 'package:livezz_mobile/core/auth/pending_action.dart';
 import 'package:livezz_mobile/core/auth/session.dart';
 import 'package:livezz_mobile/core/config/data/key_value_store.dart';
 import 'package:livezz_mobile/features/entry/domain/entry_decision.dart';
@@ -129,11 +130,10 @@ void main() {
     final container = ProviderScope.containerOf(
       t.element(find.byType(LivezzApp)),
     );
-    await t.tapAt(const Offset(10, 10)); // fecha o sheet
+    await t.tap(find.text('Entrar').last); // vai para o login pelo sheet
     await settle(t);
     container.read(sessionProvider.notifier).set(const Session(userId: 'u'));
     await settle(t);
-    expect(find.text('Em breve'), findsWidgets);
     expect(
       container
           .read(routerProvider)
@@ -144,6 +144,33 @@ void main() {
       Routes.messages,
     );
   });
+
+  testWidgets(
+    'fechar o pedido de conta descarta a ação (não roda num login depois)',
+    (t) async {
+      store.data['entry.visitorMode'] = '1';
+      await pumpApp(t);
+      await t.tap(find.text('Mensagens'));
+      await settle(t);
+      final container = ProviderScope.containerOf(
+        t.element(find.byType(LivezzApp)),
+      );
+      await t.tapAt(const Offset(10, 10)); // fecha sem entrar
+      await settle(t);
+      expect(container.read(pendingActionProvider), isNull);
+      container.read(sessionProvider.notifier).set(const Session(userId: 'u'));
+      await settle(t);
+      expect(
+        container
+            .read(routerProvider)
+            .routerDelegate
+            .currentConfiguration
+            .uri
+            .path,
+        Routes.discover,
+      );
+    },
+  );
 
   testWidgets('Seguindo para visitante mostra convite (Q-49)', (t) async {
     store.data['entry.visitorMode'] = '1';

@@ -198,6 +198,8 @@
   "tabMessages": "Mensagens",
   "tabProfile": "Perfil",
   "followingVisitorTitle": "Entre para ver quem você segue",
-  "followingVisitorBody": "Siga pessoas e as lives delas aparecem aqui.",
-  "pressBackAgainToExit": "Toque de novo para sair"
+  "followingVisitorBody": "Siga pessoas para ver as lives delas aqui.",
+  "pressBackAgainToExit": "Toque de novo para sair",
+  "methodsNoneTitle": "Entrada indisponível no momento",
+  "methodsNoneBody": "Nenhuma forma de entrar está ativa. Tente de novo mais tarde."
 }

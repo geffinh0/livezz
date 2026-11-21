@@ -30,7 +30,8 @@ class StartScreen extends ConsumerWidget {
             children: [
               Text(
                 tenant.appName,
-                style: Theme.of(context).textTheme.displaySmall,
+                style: Theme.of(context).textTheme.displaySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.tertiary),
               ),
               const SizedBox(height: AppSpace.xl),
               const StateView.loading(),

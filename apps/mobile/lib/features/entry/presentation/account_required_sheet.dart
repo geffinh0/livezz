@@ -25,6 +25,7 @@ Future<void> requireAccount(
   }
   ref.read(pendingActionProvider.notifier).hold(PendingAction(action));
   final l = AppLocalizations.of(context);
+  var loginStarted = false;
   await AppBottomSheet.show<void>(
     context,
     title: l.accountRequiredTitle,
@@ -36,7 +37,7 @@ Future<void> requireAccount(
         children: [
           Row(
             children: [
-              const Icon(Symbols.lock_open),
+              const Icon(Symbols.lock),
               const SizedBox(width: AppSpace.sm),
               Expanded(child: Text(l.accountRequiredBody)),
             ],
@@ -47,6 +48,7 @@ Future<void> requireAccount(
             child: AppButton(
               label: l.actionCreateAccount,
               onPressed: () {
+                loginStarted = true;
                 Navigator.of(ctx).pop();
                 context.push(Routes.entrySignup);
               },
@@ -59,6 +61,7 @@ Future<void> requireAccount(
               label: l.actionSignIn,
               variant: AppButtonVariant.secondary,
               onPressed: () {
+                loginStarted = true;
                 Navigator.of(ctx).pop();
                 context.push(Routes.entry);
               },
@@ -68,4 +71,6 @@ Future<void> requireAccount(
       ),
     ),
   );
+  // Fechou sem ir para o login: a ação não deve rodar num login futuro.
+  if (!loginStarted) ref.read(pendingActionProvider.notifier).clear();
 }
