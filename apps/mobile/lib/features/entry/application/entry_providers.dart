@@ -1,0 +1,84 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../app/providers.dart';
+import '../../../core/auth/session.dart';
+import '../../../core/config/application/config_controller.dart';
+import '../../../core/device/device_registrar.dart';
+import '../../../core/http/app_gate.dart';
+import '../../../core/i18n/locales.dart';
+import '../data/entry_prefs.dart';
+import '../domain/entry_decision.dart';
+
+final entryPrefsProvider = Provider<EntryPrefs>(
+  (ref) => EntryPrefs(ref.watch(keyValueStoreProvider)),
+);
+
+/// "Explorar sem conta" (ENT02), guardado no aparelho.
+class VisitorModeController extends AsyncNotifier<bool> {
+  @override
+  Future<bool> build() => ref.read(entryPrefsProvider).visitorMode();
+
+  Future<void> set({required bool on}) async {
+    await ref.read(entryPrefsProvider).setVisitorMode(on: on);
+    state = AsyncData(on);
+  }
+}
+
+final visitorModeProvider = AsyncNotifierProvider<VisitorModeController, bool>(
+  VisitorModeController.new,
+  retry: (retryCount, error) => null,
+);
+
+final deviceRegistrarProvider = Provider<DeviceRegistrar>(
+  (ref) => DeviceRegistrar(
+    ref.watch(apiClientProvider),
+    ref.watch(keyValueStoreProvider),
+  ),
+);
+
+String _platform() {
+  if (kIsWeb) return 'web';
+  return defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android';
+}
+
+/// Registro do aparelho em segundo plano (ENT01): não bloqueia a abertura;
+/// se falhar, tenta de novo na próxima abertura.
+final deviceRegistrationProvider = FutureProvider<String?>((ref) async {
+  try {
+    return await ref
+        .read(deviceRegistrarProvider)
+        .register(
+          platform: _platform(),
+          appVersion: ref.read(envProvider).appVersion,
+          locale: acceptLanguageFor(ref.read(localeProvider)),
+        );
+  } on Object {
+    return null;
+  }
+}, retry: (retryCount, error) => null);
+
+GateKind _gateKind(AppGate g) => switch (g) {
+  GateUpdateRequired() => GateKind.updateRequired,
+  GateMaintenance() => GateKind.maintenance,
+  GateRegionBlocked() => GateKind.regionBlocked,
+  GateOpen() => GateKind.none,
+};
+
+/// Para onde o app deve estar agora (ENT01).
+final entryDestinationProvider = Provider<EntryDestination>((ref) {
+  final config = ref.watch(configControllerProvider);
+  final c = config.value;
+  return decideEntry(
+    config: switch (config) {
+      AsyncData() => ConfigStatus.ready,
+      AsyncError() => ConfigStatus.error,
+      _ => ConfigStatus.loading,
+    },
+    gate: _gateKind(ref.watch(appGateProvider)),
+    regionAllowed: c?.regionAllowed ?? true,
+    maintenance: c?.maintenance.active ?? false,
+    visitorMode: ref.watch(visitorModeProvider).value,
+    hasSession: ref.watch(sessionProvider) != null,
+  );
+});

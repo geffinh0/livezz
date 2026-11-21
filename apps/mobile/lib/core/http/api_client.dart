@@ -63,6 +63,9 @@ class ApiClient {
               );
             } else if (failure.status == 503 && failure.code == 'manutencao') {
               onGate(GateMaintenance(failure.retryAfter));
+            } else if (failure.status == 403 &&
+                failure.code == 'regiao_bloqueada') {
+              onGate(GateRegionBlocked(failure.details['country'] as String?));
             }
           }
           handler.reject(

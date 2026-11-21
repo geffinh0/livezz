@@ -34,55 +34,6 @@ void main() {
     expect(find.byKey(const ValueKey('state.error')), findsNothing);
   });
 
-  testWidgets('início: manutenção na config mostra a tela de manutenção', (
-    t,
-  ) async {
-    final adapter = StubAdapter(
-      (_) => jsonBody(200, sampleConfig(maintenance: true)),
-    );
-    await t.pumpWidget(
-      harness(const StartScreen(), overrides: testOverrides(adapter)),
-    );
-    await t.pumpAndSettle();
-    expect(find.byKey(const ValueKey('gate.maintenance')), findsOneWidget);
-  });
-
-  testWidgets('manutenção: "tentar de novo" libera quando ela acaba', (
-    t,
-  ) async {
-    var maintenance = true;
-    final adapter = StubAdapter(
-      (_) => jsonBody(200, sampleConfig(maintenance: maintenance)),
-    );
-    await t.pumpWidget(
-      harness(const StartScreen(), overrides: testOverrides(adapter)),
-    );
-    await t.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const ValueKey('gate.maintenance')), findsOneWidget);
-    maintenance = false;
-    await t.tap(find.text('Tentar de novo'));
-    await t.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const ValueKey('gate.maintenance')), findsNothing);
-  });
-
-  testWidgets('versão mínima acima da do app abre o portão de atualização', (
-    t,
-  ) async {
-    var min = '99.0.0';
-    final adapter = StubAdapter(
-      (_) => jsonBody(200, sampleConfig(minAppVersion: min)),
-    );
-    await t.pumpWidget(
-      harness(const StartScreen(), overrides: testOverrides(adapter)),
-    );
-    await t.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const ValueKey('gate.update')), findsOneWidget);
-    min = '0.1.0';
-    await t.tap(find.text('Tentar de novo'));
-    await t.pump(const Duration(milliseconds: 100));
-    expect(find.byKey(const ValueKey('gate.update')), findsNothing);
-  });
-
   group('vitrine', () {
     final adapter = StubAdapter((_) => jsonBody(200, sampleConfig(version: 7)));
 

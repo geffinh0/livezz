@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../errors/app_failure.dart';
 import '../data/config_repository.dart';
 import '../domain/app_config.dart';
 
@@ -14,10 +15,18 @@ final configRepositoryProvider = Provider<ConfigRepository>(
 class ConfigController extends AsyncNotifier<AppConfig> {
   ConfigRepository get _repo => ref.read(configRepositoryProvider);
 
+  /// Prazo total da abertura (ENT01). Valor técnico, não de negócio.
+  static const openingTimeout = Duration(seconds: 10);
+
+  Future<AppConfig> _fetch() => _repo.fetch().timeout(
+    openingTimeout,
+    onTimeout: () => throw const TimeoutFailure(),
+  );
+
   @override
   Future<AppConfig> build() async {
     try {
-      return await _repo.fetch();
+      return await _fetch();
     } on Object {
       // Rede, servidor ou resposta fora do contrato: tenta a última válida.
       final cached = await _repo.cached();
@@ -32,7 +41,7 @@ class ConfigController extends AsyncNotifier<AppConfig> {
     final previous = state.value;
     if (previous == null) state = const AsyncLoading();
     try {
-      final fresh = await _repo.fetch();
+      final fresh = await _fetch();
       state = AsyncData(fresh);
     } on Object catch (e, st) {
       state = previous != null ? AsyncData(previous) : AsyncError(e, st);

@@ -69,6 +69,9 @@ class AppGateController extends Notifier<AppGate> {
       if (!c.maintenance.active && state is GateMaintenance) {
         state = const GateOpen();
       }
+      if (c.regionAllowed && state is GateRegionBlocked) {
+        state = const GateOpen();
+      }
     });
     return const GateOpen();
   }

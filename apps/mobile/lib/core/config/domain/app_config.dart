@@ -17,7 +17,15 @@ abstract class AppConfig with _$AppConfig {
     required List<String> discoverTabs,
     required Map<String, LegalText> legalTexts,
     required List<String> allowedRegions,
+
+    /// Calculado pelo servidor a cada requisição (ENT18); fora do cache.
+    /// Nulo quando a config veio do cache local.
+    Region? region,
   }) = _AppConfig;
+
+  /// Sem informação de região (cache) conta como permitida: o servidor
+  /// bloqueia com 403 de qualquer forma.
+  bool get regionAllowed => region?.allowed ?? true;
 
   /// Flag ausente ou desconhecida = desligada (contrato).
   bool isEnabled(String flag) => flags[flag] ?? false;
@@ -33,4 +41,10 @@ abstract class Maintenance with _$Maintenance {
 abstract class LegalText with _$LegalText {
   const factory LegalText({required int version, required Uri url}) =
       _LegalText;
+}
+
+@freezed
+abstract class Region with _$Region {
+  const factory Region({required String country, required bool allowed}) =
+      _Region;
 }

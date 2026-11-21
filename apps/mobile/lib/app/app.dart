@@ -6,6 +6,7 @@ import 'package:material_ui/material_ui.dart';
 import '../core/config/application/config_controller.dart';
 import '../core/i18n/locales.dart';
 import '../core/theme/app_theme.dart';
+import '../features/entry/application/entry_providers.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -19,7 +20,6 @@ class LivezzApp extends ConsumerStatefulWidget {
 
 class _LivezzAppState extends ConsumerState<LivezzApp> {
   late final AppLifecycleListener _lifecycle;
-  final _router = buildRouter();
 
   @override
   void initState() {
@@ -29,12 +29,13 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
       onResume: () =>
           unawaited(ref.read(configControllerProvider.notifier).refresh()),
     );
+    // ENT01: registro do aparelho em segundo plano (não bloqueia a abertura).
+    unawaited(ref.read(deviceRegistrationProvider.future));
   }
 
   @override
   void dispose() {
     _lifecycle.dispose();
-    _router.dispose();
     super.dispose();
   }
 
@@ -56,7 +57,7 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
         AppLocalizations.delegate,
         ...GlobalMaterialLocalizations.delegates,
       ],
-      routerConfig: _router,
+      routerConfig: ref.watch(routerProvider),
     );
   }
 }

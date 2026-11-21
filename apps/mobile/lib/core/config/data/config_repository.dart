@@ -17,8 +17,10 @@ class ConfigRepository {
   Future<AppConfig> fetch() async {
     final json = await _api.call((d) => d.get<Map<String, dynamic>>('/config'));
     final config = AppConfigDto.fromJson(json).toEntity();
-    _lastJson = json;
-    await _store.write(_cacheKey, jsonEncode(json));
+    // `region` é por requisição: nunca vai para o cache nem para a mesclagem.
+    final cacheable = Map<String, dynamic>.of(json)..remove('region');
+    _lastJson = cacheable;
+    await _store.write(_cacheKey, jsonEncode(cacheable));
     return config;
   }
 
@@ -40,7 +42,7 @@ class ConfigRepository {
   Future<AppConfig?> applyPartial(Map<String, dynamic> partial) async {
     final base = _lastJson;
     if (base == null) return null;
-    final merged = mergeConfigJson(base, partial);
+    final merged = mergeConfigJson(base, partial)..remove('region');
     final config = AppConfigDto.fromJson(merged).toEntity();
     _lastJson = merged;
     await _store.write(_cacheKey, jsonEncode(merged));

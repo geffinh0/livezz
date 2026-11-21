@@ -17,3 +17,8 @@ final class GateMaintenance extends AppGate {
   const GateMaintenance(this.retryAfter);
   final Duration? retryAfter;
 }
+
+final class GateRegionBlocked extends AppGate {
+  const GateRegionBlocked(this.country);
+  final String? country;
+}

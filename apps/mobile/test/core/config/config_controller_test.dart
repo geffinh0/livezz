@@ -168,4 +168,20 @@ void main() {
     final c = await container.read(configControllerProvider.future);
     expect(c.configVersion, 1);
   });
+
+  test('região vem do servidor e não vai para o cache', () async {
+    adapter.next = () => {
+      ...cfg(),
+      'region': {'country': 'US', 'allowed': false},
+    };
+    final c = await container.read(configControllerProvider.future);
+    expect(c.regionAllowed, isFalse);
+    expect(store.data.values.single.contains('region'), isFalse);
+    container.dispose();
+    adapter.next = () => DioExceptionType.connectionError;
+    container = make();
+    final cached = await container.read(configControllerProvider.future);
+    expect(cached.region, isNull);
+    expect(cached.regionAllowed, isTrue);
+  });
 }

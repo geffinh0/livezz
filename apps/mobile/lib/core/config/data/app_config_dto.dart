@@ -16,6 +16,7 @@ class AppConfigDto {
     this.discoverTabs = const [],
     this.legalTexts = const {},
     this.allowedRegions = const [],
+    this.region,
   });
 
   factory AppConfigDto.fromJson(Map<String, dynamic> json) =>
@@ -29,6 +30,7 @@ class AppConfigDto {
   final List<String> discoverTabs;
   final Map<String, LegalTextDto> legalTexts;
   final List<String> allowedRegions;
+  final RegionDto? region;
 
   AppConfig toEntity() => AppConfig(
     configVersion: configVersion,
@@ -47,6 +49,9 @@ class AppConfigDto {
         e.key: LegalText(version: e.value.version, url: Uri.parse(e.value.url)),
     }),
     allowedRegions: List.unmodifiable(allowedRegions),
+    region: region == null
+        ? null
+        : Region(country: region!.country, allowed: region!.allowed),
   );
 }
 
@@ -57,6 +62,15 @@ class MaintenanceDto {
       _$MaintenanceDtoFromJson(json);
   final bool active;
   final int? retryAfterSeconds;
+}
+
+@JsonSerializable(createToJson: false)
+class RegionDto {
+  const RegionDto({required this.country, required this.allowed});
+  factory RegionDto.fromJson(Map<String, dynamic> json) =>
+      _$RegionDtoFromJson(json);
+  final String country;
+  final bool allowed;
 }
 
 @JsonSerializable(createToJson: false)

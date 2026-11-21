@@ -167,6 +167,20 @@ void main() {
     );
   });
 
+  test('403 regiao_bloqueada abre o portão de região', () async {
+    adapter.handler = (_) => json(403, {
+      'error': {
+        'code': 'regiao_bloqueada',
+        'details': {'country': 'PT'},
+      },
+    });
+    await expectLater(
+      client().call((d) => d.get<Object?>('/x')),
+      throwsA(isA<ApiFailure>()),
+    );
+    expect((gates.single as GateRegionBlocked).country, 'PT');
+  });
+
   test('falha de conexão vira NetworkFailure; timeout vira TimeoutFailure', () {
     final o = RequestOptions(path: '/x');
     expect(

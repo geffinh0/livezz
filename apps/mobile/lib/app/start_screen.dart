@@ -1,141 +1,44 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../core/config/application/config_controller.dart';
-import '../core/http/app_gate.dart';
 import '../core/theme/tokens.dart';
-import '../core/ui/app_button.dart';
 import '../core/ui/state_views.dart';
 import '../core/ui/test_id.dart';
-import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
-import 'routes.dart';
 
-/// Ponto de entrada da Fase 0: carrega a config e respeita os portões.
-/// A decisão completa (Home, Boas-vindas…) é da ENT01 (Fase 1).
+/// Splash (ENT01): marca do tenant enquanto carrega; erro com "tentar de novo"
+/// se a config não vier em até 10 s. O roteador leva ao destino certo.
 class StartScreen extends ConsumerWidget {
   const StartScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l = AppLocalizations.of(context);
     final config = ref.watch(configControllerProvider);
-    final gate = ref.watch(appGateProvider);
-    void retry() => ref.read(configControllerProvider.notifier).refresh();
-    void retryGate() {
-      ref.read(appGateProvider.notifier).set(const GateOpen());
-      retry();
-    }
-
-    final Widget body = switch ((config, gate)) {
-      (_, GateUpdateRequired()) => _Blocking(
-        id: 'gate.update',
-        icon: Symbols.system_update,
-        title: l.updateRequiredTitle,
-        message: l.errorAtualizacaoObrigatoria,
-        actionLabel: l.actionRetry,
-        onAction: retryGate,
-      ),
-      (AsyncData(:final value), _) when value.maintenance.active => _Blocking(
-        id: 'gate.maintenance',
-        icon: Symbols.construction,
-        title: l.maintenanceTitle,
-        message: l.errorManutencao,
-        actionLabel: l.actionRetry,
-        onAction: retryGate,
-      ),
-      (_, GateMaintenance()) => _Blocking(
-        id: 'gate.maintenance',
-        icon: Symbols.construction,
-        title: l.maintenanceTitle,
-        message: l.errorManutencao,
-        actionLabel: l.actionRetry,
-        onAction: retryGate,
-      ),
-      (AsyncError(:final error), _) => StateView.forFailure(
+    final tenant = ref.watch(tenantProvider);
+    final body = switch (config) {
+      AsyncError(:final error) => StateView.forFailure(
         context,
         error,
-        onRetry: retry,
+        onRetry: () => ref.read(configControllerProvider.notifier).refresh(),
       ),
-      (AsyncData(), _) when kDebugMode => const _GoToShowcase(),
-      (AsyncData(), _) => const SizedBox.shrink(),
-      _ => const StateView.loading(),
-    };
-    return Scaffold(body: SafeArea(child: body));
-  }
-}
-
-class _GoToShowcase extends StatelessWidget {
-  const _GoToShowcase();
-
-  @override
-  Widget build(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) GoRouter.maybeOf(context)?.go(Routes.devShowcase);
-    });
-    return const StateView.loading();
-  }
-}
-
-class _Blocking extends StatelessWidget {
-  const _Blocking({
-    required this.icon,
-    required this.title,
-    required this.message,
-    required this.id,
-    required this.actionLabel,
-    required this.onAction,
-  });
-
-  final String id;
-  final String actionLabel;
-  final VoidCallback onAction;
-
-  final IconData icon;
-  final String title;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return TestId(
-      id,
-      child: Center(
-        key: ValueKey(id),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpace.xl),
+      _ => TestId(
+        'entry.splash',
+        child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                size: 56,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              Text(
+                tenant.appName,
+                style: Theme.of(context).textTheme.displaySmall,
               ),
-              const SizedBox(height: AppSpace.lg),
-              Semantics(
-                header: true,
-                liveRegion: true,
-                child: Text(
-                  title,
-                  style: t.headlineSmall,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              const SizedBox(height: AppSpace.sm),
-              Text(message, style: t.bodyLarge, textAlign: TextAlign.center),
               const SizedBox(height: AppSpace.xl),
-              TestId(
-                '$id.action',
-                child: AppButton(label: actionLabel, onPressed: onAction),
-              ),
+              const StateView.loading(),
             ],
           ),
         ),
       ),
-    );
+    };
+    return Scaffold(body: SafeArea(child: body));
   }
 }

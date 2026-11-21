@@ -5,48 +5,68 @@ import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Regra TRV07: nenhum texto de interface fixo no código de telas.
-/// Vale para arquivos de tela: `lib/core/ui/`, `lib/app/*_screen.dart` e
-/// `lib/features/**/presentation/`. Rotas ficam em `lib/app/routes.dart`.
-/// Permitido: strings dentro de `Key`/`ValueKey`/`TestId` e argumentos `id:`
-/// (ids técnicos),
-/// diretivas (import/part) e anotações.
-const _idTypes = {'Key', 'ValueKey', 'TestId'};
+/// Regra TRV07: nenhum texto de interface fixo nas telas. Procura literais nas
+/// posições onde texto aparece para o usuário: primeiro argumento de
+/// `Text`/`SelectableText`/`Tooltip` e argumentos nomeados de texto
+/// (`label`, `title`, `message`, `tooltip`, `hintText`, …).
+/// Identificadores técnicos (ids, flags, rotas) ficam de fora.
+const _textWidgets = {'Text', 'SelectableText', 'Tooltip', 'SnackBar'};
+const _textArgs = {
+  'label',
+  'title',
+  'message',
+  'tooltip',
+  'semanticsLabel',
+  'hintText',
+  'labelText',
+  'helperText',
+  'errorText',
+  'actionLabel',
+  'confirmLabel',
+};
 
 class _Finder extends RecursiveAstVisitor<void> {
   _Finder(this.file);
   final String file;
   final hits = <String>[];
 
-  bool _allowed(AstNode node) {
-    for (AstNode? p = node.parent; p != null; p = p.parent) {
-      if (p is Directive || p is Annotation) return true;
-      if (p is NamedArgument && p.name.lexeme == 'id') return true;
-      if (p is InstanceCreationExpression) {
-        final name = p.constructorName.type.name.lexeme;
-        if (_idTypes.contains(name)) return true;
-      }
-      if (p is MethodInvocation) {
-        final name = p.methodName.name;
-        if (_idTypes.contains(name)) return true;
-      }
+  bool _hasText(Expression e) {
+    if (e is SimpleStringLiteral) return e.value.trim().isNotEmpty;
+    if (e is StringInterpolation) {
+      return e.elements.whereType<InterpolationString>().any(
+        (s) => s.value.trim().isNotEmpty,
+      );
     }
+    if (e is AdjacentStrings) return e.strings.any(_hasText);
     return false;
   }
 
-  void _check(StringLiteral node) {
-    final value = node.stringValue;
-    if (value != null && value.trim().isEmpty) return;
-    if (_allowed(node)) return;
-    hits.add('$file: ${node.toSource()}');
+  void _check(Expression e) {
+    if (_hasText(e)) hits.add('$file: ${e.toSource()}');
+  }
+
+  void _checkArgs(String name, ArgumentList args) {
+    for (final a in args.arguments) {
+      if (a is NamedArgument) {
+        if (_textArgs.contains(a.name.lexeme)) _check(a.argumentExpression);
+      }
+    }
+    if (_textWidgets.contains(name)) {
+      final first = args.arguments.where((a) => a is! NamedArgument);
+      if (first.isNotEmpty) _check(first.first as Expression);
+    }
   }
 
   @override
-  void visitSimpleStringLiteral(SimpleStringLiteral node) => _check(node);
+  void visitInstanceCreationExpression(InstanceCreationExpression node) {
+    _checkArgs(node.constructorName.type.name.lexeme, node.argumentList);
+    super.visitInstanceCreationExpression(node);
+  }
 
   @override
-  void visitStringInterpolation(StringInterpolation node) {
-    _check(node);
+  void visitMethodInvocation(MethodInvocation node) {
+    _checkArgs(node.methodName.name, node.argumentList);
+    super.visitMethodInvocation(node);
   }
 }
 
@@ -63,30 +83,34 @@ Iterable<File> _screenFiles() sync* {
   }
 }
 
+List<String> _scan(String src, String path) {
+  final unit = parseString(content: src, path: path).unit;
+  final finder = _Finder(path);
+  unit.accept(finder);
+  return finder.hits;
+}
+
 void main() {
   test('telas não têm texto fixo (use os arquivos ARB)', () {
-    final hits = <String>[];
-    for (final f in _screenFiles()) {
-      final unit = parseString(
-        content: f.readAsStringSync(),
-        path: f.path,
-      ).unit;
-      final finder = _Finder(f.path);
-      unit.accept(finder);
-      hits.addAll(finder.hits);
-    }
+    final hits = [
+      for (final f in _screenFiles()) ..._scan(f.readAsStringSync(), f.path),
+    ];
     expect(hits, isEmpty, reason: hits.join('\n'));
   });
 
   test('o detector encontra texto fixo (autoteste)', () {
     const src = '''
-import 'x.dart';
 final a = Text('Olá');
-final b = Text(key: ValueKey('ok-id'), x);
+final b = AppButton(label: 'Comprar', onPressed: f);
+final c = Text('\${x}');
+final d = TestId('id.tecnico', child: Text(l.ok));
+final e = StateView.empty(title: 'Vazio \$n');
+final g = m(label: l.x, key: ValueKey('k'));
 ''';
-    final unit = parseString(content: src, path: 'x.dart').unit;
-    final finder = _Finder('x.dart');
-    unit.accept(finder);
-    expect(finder.hits, ["x.dart: 'Olá'"]);
+    expect(_scan(src, 'x.dart'), [
+      "x.dart: 'Olá'",
+      "x.dart: 'Comprar'",
+      "x.dart: 'Vazio \$n'",
+    ]);
   });
 }
