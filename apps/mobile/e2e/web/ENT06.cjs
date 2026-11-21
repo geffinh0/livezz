@@ -16,6 +16,6 @@ flow('ENT06', async (t) => {
   t.check('conta nova: termos antes do cadastro', await t.visible('auth.terms', 20000));
   await t.tap('auth.terms.agree');
   await t.tap('auth.terms.accept');
-  t.check('depois dos termos: complete seu cadastro (1c)', await t.visible('auth.completeProfile', 20000));
+  t.check('depois dos termos: cadastro inicial (ENT08)', await t.visible('onboarding.profile', 20000));
   await t.shot('complete-cadastro');
 });

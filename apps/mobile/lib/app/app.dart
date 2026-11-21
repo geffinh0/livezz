@@ -30,9 +30,10 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
       onResume: () =>
           unawaited(ref.read(configControllerProvider.notifier).refresh()),
     );
-    // ENT01: registro do aparelho em segundo plano (não bloqueia a abertura)
-    // e restauração da sessão guardada.
-    unawaited(ref.read(deviceCredentialsProvider.future));
+    // ENT01: registra/atualiza o aparelho a cada abertura, em segundo plano
+    // (não bloqueia a abertura). A resposta também diz se o aparelho foi
+    // marcado por bloqueio de menor (ENT10). Depois restaura a sessão.
+    unawaited(ref.read(deviceRegistrationProvider.future));
     unawaited(ref.read(sessionProvider.notifier).restore());
     ref.read(realtimeClientProvider); // tempo real acompanha a sessão
   }

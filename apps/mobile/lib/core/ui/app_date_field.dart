@@ -49,11 +49,11 @@ class AppDateField extends StatelessWidget {
     final text = value == null
         ? ''
         : MaterialLocalizations.of(context).formatMediumDate(value!);
+    // Sem esconder a semântica de dentro: o leitor de tela lê rótulo, valor,
+    // ajuda e o erro do próprio campo.
     return Semantics(
       button: true,
-      label: label,
-      value: text.isEmpty ? l.birthDateChoose : text,
-      excludeSemantics: true,
+      hint: text.isEmpty ? l.birthDateChoose : null,
       child: InkWell(
         onTap: enabled ? () => _pick(context) : null,
         borderRadius: BorderRadius.circular(4),

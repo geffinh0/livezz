@@ -195,6 +195,11 @@ void main() {
   testWidgets('aparelho marcado por menor abre direto o bloqueio (ENT10)', (
     t,
   ) async {
+    // Já registrado antes: mesmo assim atualiza ao abrir e descobre a marca.
+    secure.data.addAll({
+      'device.id': 'srv-device',
+      'device.secret': 'srv-secret',
+    });
     server.deviceBlocked = true;
     await pumpApp(t);
     await settle(t);

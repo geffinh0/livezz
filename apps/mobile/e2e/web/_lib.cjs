@@ -95,6 +95,32 @@ function flow(name, body) {
         await page.waitForTimeout(200);
       },
       tap: (id) => clickId(page, id),
+      // Conta nova por telefone até passar dos termos (cai no cadastro, plano 1c).
+      newAccount: async (digits) => {
+        await t.toMethods();
+        await clickId(page, 'entry.method.phone');
+        await t.type('auth.phone.input', digits);
+        await clickId(page, 'auth.phone.send');
+        await page.locator('[flt-semantics-identifier="auth.code"]').first().waitFor({ state: 'attached', timeout: 20000 });
+        await t.type('auth.code.input', await t.outbox(`+55${digits}`));
+        await page.locator('[flt-semantics-identifier="auth.terms"]').first().waitFor({ state: 'attached', timeout: 20000 });
+        await clickId(page, 'auth.terms.agree');
+        await clickId(page, 'auth.terms.accept');
+      },
+      // Escolhe uma data no seletor do sistema (modo de digitar), formato do idioma (pt: dd/mm/aaaa).
+      pickDate: async (id, typed) => {
+        await clickId(page, id);
+        await page.waitForTimeout(800);
+        await page.getByRole('button', { name: /entrada|input/i }).first().click();
+        await page.waitForTimeout(500);
+        await page.getByRole('textbox').last().click();
+        await page.keyboard.press('ControlOrMeta+A');
+        await page.keyboard.press('Backspace');
+        await page.keyboard.type(typed, { delay: 20 });
+        await page.waitForTimeout(200);
+        await page.getByRole('button', { name: /^OK$/ }).first().click();
+        await page.waitForTimeout(500);
+      },
       outbox: async (destination) =>
         (await (await fetch(`${MOCK}/__mock/outbox?destination=${encodeURIComponent(destination)}`)).json()).code,
       // Atalho: entra como visitante → Entrar → método.

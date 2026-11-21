@@ -63,7 +63,7 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 - Contrato: cada rota e erro; `PATCH /me` com menor → 403 + sessão revogada + aparelho marcado de uma vez; dois `PATCH` concorrentes com data; portão `cadastro_pendente`; login em aparelho marcado e de conta congelada → `menor_de_idade` (REST e tempo real); corrida no @ → 409; interesses pt/en e validação; log sem data, gênero e sinal; gênero ausente de outras respostas.
 - Unitários: regras de nome e @; idade com aniversário hoje e fuso; decisão de destino com `minorBlocked` e `pendingSteps`.
 - Widget de cada tela nova (pt/en, fonte 2x, erro, sem conexão).
-- E2E web (um fluxo por arquivo): `ENT08.cjs` (cadastro completo + nome inválido), `ENT10.cjs` (data de menor → bloqueio; reabrir continua bloqueado), `ENT10-aparelho.cjs` (outra conta no aparelho marcado → bloqueio), `ENT11.cjs` (@ ocupado + sugestão), `ENT12.cjs` (pular e escolher), `ENT06.cjs` atualizado, `CFG14.cjs` (troca sem reiniciar).
+- E2E web (um fluxo por arquivo): `ENT08.cjs` (cadastro completo + nome inválido), `ENT10.cjs` (data de menor → bloqueio; reabrir continua bloqueado), `ENT11.cjs` (@ ocupado + sugestão), `ENT12.cjs` (pular e escolher), `ENT06.cjs` atualizado, `CFG14.cjs` (troca sem reiniciar).
 
 ## Passos
 1. Contratos (API, EVENTOS), DATABASE (`proposta`), RN-01 (fuso), `supportEmail` no tenant. ✅
@@ -75,7 +75,7 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 7. app: telas ENT08 e ENT10 + widget. ✅
 8. app: telas ENT11 e ENT12 + widget. ✅
 9. app: Configurações mínimas + CFG14 + widget. ✅
-10. E2E web dos itens; prints claro/escuro, pt/en.
+10. E2E web dos itens; prints claro/escuro, pt/en. ✅ (prints em pt; inglês coberto por CFG14 e pelos testes de widget em en com fonte 2x)
 11. Conferir a lista de testes; verificador; revisões (código, UX, segurança, dados); correções; verificador final; documentos.
 
 ## Fora do escopo

@@ -133,6 +133,14 @@ void main() {
       await t.pump();
       expect(find.text(_pt.displayNameLength), findsOneWidget);
       expect(find.text(_pt.birthDateRequired), findsOneWidget);
+      // O erro do campo de data chega ao leitor de tela (não só à tela).
+      final sem = t.ensureSemantics();
+      await t.pump();
+      expect(
+        find.bySemanticsLabel(RegExp(_pt.birthDateRequired)),
+        findsOneWidget,
+      );
+      sem.dispose();
       expect(flow.calls, isEmpty);
     },
   );

@@ -4,6 +4,7 @@
 # Prints e resultado em build/e2e-web/. Não precisa de Android nem emulador.
 #
 # Uso:  bash tools/dev/e2e-web.sh
+#       E2E_ONLY='ENT08 ENT10' bash tools/dev/e2e-web.sh   (só esses fluxos)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -46,6 +47,12 @@ echo "==> Fluxos"
 cd "$ROOT"
 status=0
 for f in apps/mobile/e2e/web/[!_]*.cjs; do
+  if [ -n "${E2E_ONLY:-}" ]; then
+    name="$(basename "$f" .cjs)"
+    keep=0
+    for want in $E2E_ONLY; do [ "${name%%-*}" = "$want" ] || [ "$name" = "$want" ] && keep=1; done
+    [ $keep -eq 1 ] || continue
+  fi
   echo "--- $f"
   node "$f" "$OUT" || status=1
 done
