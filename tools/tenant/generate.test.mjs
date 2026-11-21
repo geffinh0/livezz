@@ -9,6 +9,15 @@ test('tenant liveapp é válido', () => {
   assert.deepEqual(validateTenant(valid(), 'liveapp'), []);
 });
 
+test('rejeita supportEmail e fuso inválidos', () => {
+  const t = valid();
+  t.supportEmail = 'sem-arroba';
+  t.timezone = 'Lua/Base';
+  const errs = validateTenant(t).join();
+  assert.match(errs, /supportEmail/);
+  assert.match(errs, /timezone/);
+});
+
 test('rejeita cor fora do formato', () => {
   const t = valid();
   t.theme.primary = 'DEFINIR';

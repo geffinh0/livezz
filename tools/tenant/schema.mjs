@@ -29,6 +29,16 @@ function isUrl(v) {
   }
 }
 
+function isTimeZone(v) {
+  if (typeof v !== 'string' || !v) return false;
+  try {
+    new Intl.DateTimeFormat('en', { timeZone: v });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** @returns {string[]} lista de erros (vazia = válido) */
 export function validateTenant(t, expectedId) {
   const e = [];
@@ -38,6 +48,8 @@ export function validateTenant(t, expectedId) {
   if (typeof t.appName !== 'string' || !t.appName.trim()) e.push('appName obrigatório');
   if (!PACKAGE.test(t.androidPackage ?? '')) e.push('androidPackage inválido');
   for (const k of ['apiBaseUrl', 'portalBaseUrl']) if (!isUrl(t[k])) e.push(`${k} deve ser URL http(s)`);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t.supportEmail ?? '')) e.push('supportEmail deve ser um e-mail');
+  if (!isTimeZone(t.timezone)) e.push('timezone deve ser um fuso IANA (ex.: America/Sao_Paulo)');
   const th = t.theme ?? {};
   for (const c of THEME_COLORS) if (!HEX.test(th[c] ?? '')) e.push(`theme.${c} deve ser cor #RRGGBB`);
   if (typeof th.fontFamily !== 'string' || !th.fontFamily.trim()) e.push('theme.fontFamily obrigatório');

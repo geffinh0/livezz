@@ -33,6 +33,8 @@
     "games": false
   },
   "portalBaseUrl": "http://localhost:3002",
+  "supportEmail": "suporte@liveapp.example",
+  "timezone": "America/Sao_Paulo",
   "defaultLocale": "pt-BR",
   "supportedLocales": [
     "pt-BR",

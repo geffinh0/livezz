@@ -66,7 +66,7 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 - E2E web (um fluxo por arquivo): `ENT08.cjs` (cadastro completo + nome inválido), `ENT10.cjs` (data de menor → bloqueio; reabrir continua bloqueado), `ENT10-aparelho.cjs` (outra conta no aparelho marcado → bloqueio), `ENT10-sinal.cjs` (sinal da loja de menor), `ENT11.cjs` (@ ocupado + sugestão), `ENT12.cjs` (pular e escolher), `ENT06.cjs` atualizado, `CFG14.cjs` (troca sem reiniciar).
 
 ## Passos
-1. Contratos (API, EVENTOS), DATABASE (`proposta`), RN-01 (fuso), `supportEmail` no tenant.
+1. Contratos (API, EVENTOS), DATABASE (`proposta`), RN-01 (fuso), `supportEmail` no tenant. ✅
 2. mock: `PATCH /me`, portão de cadastro, perfil em `GET /me` + testes.
 3. mock: decisão de idade e congelamento (conta, sessões, aparelho, identificadores; REST e tempo real) + testes.
 4. mock: @ (disponibilidade, sugestões, reservados, gravação atômica) + testes.

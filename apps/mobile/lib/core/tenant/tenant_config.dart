@@ -8,6 +8,7 @@ class TenantConfig {
     required this.appName,
     required this.defaultApiBaseUrl,
     required this.portalBaseUrl,
+    required this.supportEmail,
     required this.defaultLocale,
     required this.supportedLocales,
     required this.themeModes,
@@ -19,6 +20,9 @@ class TenantConfig {
   final String appName;
   final String defaultApiBaseUrl;
   final String portalBaseUrl;
+
+  /// E-mail de suporte do comprador (ENT10: pedir revisão do bloqueio).
+  final String supportEmail;
   final String defaultLocale;
   final List<String> supportedLocales;
   final List<String> themeModes;
