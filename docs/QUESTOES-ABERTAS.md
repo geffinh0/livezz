@@ -75,3 +75,4 @@
 | Q-51 | Preenchimento automático do código SMS no Android (ENT04) | Fica para quando o SMS real entrar (Fase 12); até lá o mock mostra o código para teste e ENT04 fica `[~]` | 2026-11-21 |
 | Q-52 | Cadastro inicial (ENT08) no plano 1b? | Não: plano 1c logo depois; na 1b conta nova vai para "complete seu cadastro (em breve)" | 2026-11-21 |
 | Q-53 | Login com Google antes da Fase 12 | Contas de teste do mock (nova/existente/erro/cancelar) seguindo o mesmo contrato do Google real | 2026-11-21 |
+| Q-54 | Validade máxima absoluta da sessão | 180 dias desde o login, mesmo com uso diário; configurável pelo comprador (além dos 30 dias sem uso da Q-50) | 2026-11-21 |

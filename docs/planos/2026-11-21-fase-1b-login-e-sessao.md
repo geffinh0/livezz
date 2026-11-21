@@ -88,7 +88,7 @@
 6. **Google:** liga a uma conta de e-mail existente só com `email_verified`; `mock-google:` só existe no mock (teste garante que o código real recusa).
 7. **Reuso de refresh** responde `401 sessao_revogada` (novo código) e avisa o dono; tolerância de **10 s** para a resposta perdida na rede (o refresh anterior ainda vale uma vez nesse intervalo).
 8. **Logs:** redação no logger do mock/backend de `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination` e `authorization`, com teste.
-9. **Tempos:** `accessTokenMinutes` com piso 5 e teto 60 no servidor; validade máxima absoluta da sessão → pergunta ao usuário (Q-54).
+9. **Tempos:** `accessTokenMinutes` com piso 5 e teto 60 no servidor; validade máxima absoluta da sessão: **180 dias** desde o login, configurável (Q-54).
 10. **Termos obrigatórios no servidor:** rotas autenticadas (exceto `/me`, `/me/terms/accept`, `/auth/logout`) respondem `403 termos_pendentes` enquanto houver aceite pendente. `AceiteTermos` guarda aparelho e IP 🔒.
 11. **Conta suspensa/banida** não entra nem renova (`conta_suspensa`, `conta_banida`).
 12. **`POST /devices`:** rate limit e anti-bot.
