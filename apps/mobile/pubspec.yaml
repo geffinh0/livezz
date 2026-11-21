@@ -12,6 +12,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   intl: ^0.20.3
+  material_symbols_icons: ^4.2960.0
   material_ui: ^1.1.0
 
 dev_dependencies:
@@ -23,3 +24,15 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+  # Fonte do tenant (Q-42). Licença OFL em assets/fonts/plus_jakarta_sans/OFL.txt.
+  fonts:
+    - family: Plus Jakarta Sans
+      fonts:
+        - asset: assets/fonts/plus_jakarta_sans/PlusJakartaSans-400.ttf
+          weight: 400
+        - asset: assets/fonts/plus_jakarta_sans/PlusJakartaSans-500.ttf
+          weight: 500
+        - asset: assets/fonts/plus_jakarta_sans/PlusJakartaSans-600.ttf
+          weight: 600
+        - asset: assets/fonts/plus_jakarta_sans/PlusJakartaSans-700.ttf
+          weight: 700
