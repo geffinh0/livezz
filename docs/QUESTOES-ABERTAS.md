@@ -22,6 +22,7 @@
 | Q-39 | Provedor de moderação de mídia "mais acessível do mercado" | RN-81 (Fase 12) | Pesquisa de preço por imagem/minuto |
 | Q-40 | Provedor de tradução gratuito (no servidor ou no aparelho) | ASS03 (Fase 12) | Avaliar tradução no aparelho (sem custo) vs. API gratuita com limites |
 | Q-41 | Validar com advogado o modelo de idade da Q-08 (autodeclaração + sinal da loja no cadastro; verificação forte só para transmitir e sacar) diante do ECA Digital | publicação | Jurídico antes da Fase 13 |
+| Q-47 | Detecção de país no backend real (ENT18): base de geolocalização por IP (ex.: MaxMind GeoLite2 grátis, ou serviço pago) | ENT18 (Fase 11/12) | Base local GeoLite2 no servidor (sem custo por consulta); revisar com o jurídico se precisa de algo mais forte |
 
 ## Respondidas
 
