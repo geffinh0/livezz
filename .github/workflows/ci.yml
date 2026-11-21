@@ -27,6 +27,10 @@ jobs:
         run: npm run typecheck --workspace mock-server
       - name: mock-server testes de contrato
         run: npm test --workspace mock-server
+      - name: painel (lint, tipos, testes)
+        run: npm run lint --workspace apps/admin && npm test --workspace apps/admin
+      - name: portal (lint, tipos, testes)
+        run: npm run lint --workspace apps/portal && npm test --workspace apps/portal
 
   mobile:
     name: app Flutter (analyze, test, APK debug)
@@ -58,6 +62,11 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+      - name: integração com o mock-server real
+        run: |
+          (cd ../.. && npm ci && cd mock-server && PORT=3000 npx tsx src/main.ts > /tmp/mock.log 2>&1 &)
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:3000/v1/config > /dev/null && break; sleep 1; done
+          MOCK_SERVER_URL=http://127.0.0.1:3000 flutter test test/integration
       - name: APK debug (liveapp)
         run: flutter build apk --debug --flavor liveapp -t lib/main.dart
       - uses: actions/upload-artifact@v4
