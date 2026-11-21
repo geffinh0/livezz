@@ -1,0 +1,38 @@
+{
+  "_comment": "Listas do comprador (configuráveis no painel, ADM). Valores iniciais do mock.",
+  "interests": [
+    { "id": "musica", "pt": "Música", "en": "Music" },
+    { "id": "danca", "pt": "Dança", "en": "Dance" },
+    { "id": "conversa", "pt": "Bate-papo", "en": "Just chatting" },
+    { "id": "humor", "pt": "Humor", "en": "Comedy" },
+    { "id": "beleza", "pt": "Beleza", "en": "Beauty" },
+    { "id": "moda", "pt": "Moda", "en": "Fashion" },
+    { "id": "fitness", "pt": "Fitness", "en": "Fitness" },
+    { "id": "culinaria", "pt": "Culinária", "en": "Cooking" },
+    { "id": "viagem", "pt": "Viagem", "en": "Travel" },
+    { "id": "arte", "pt": "Arte", "en": "Art" },
+    { "id": "esportes", "pt": "Esportes", "en": "Sports" },
+    { "id": "estudos", "pt": "Estudos", "en": "Studying" }
+  ],
+  "reservedUsernames": [
+    "admin",
+    "administrador",
+    "suporte",
+    "support",
+    "moderador",
+    "moderacao",
+    "moderator",
+    "oficial",
+    "official",
+    "staff",
+    "equipe",
+    "root",
+    "sistema",
+    "system",
+    "ajuda",
+    "help",
+    "seguranca",
+    "security"
+  ],
+  "blockedNameWords": ["otario", "idiota", "imbecil"]
+}

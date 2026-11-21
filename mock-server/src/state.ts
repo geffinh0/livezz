@@ -65,6 +65,16 @@ export interface Device {
   seenAt: string;
   secretHash: string | null; // ADR 0012
   userId: string | null;
+  /** ENT10 (Q-65): aparelho marcado por conta congelada de menor. */
+  blockedMinorAt: string | null;
+  blockedMinorUserId: string | null;
+}
+
+/** Listas do comprador para o cadastro (fixtures/profile.json; editáveis no painel). */
+export interface ProfileLists {
+  interests: Array<{ id: string; pt: string; en: string }>;
+  reservedUsernames: string[];
+  blockedNameWords: string[];
 }
 
 export interface State {
@@ -74,6 +84,8 @@ export interface State {
   integrations: IntegracaoProvedor[];
   devices: Map<string, Device>;
   auth: AuthStore;
+  tenant: { id: string; appName: string; timezone: string };
+  profileLists: ProfileLists;
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -83,6 +95,9 @@ const fixturesDir = resolve(here, '..', 'fixtures');
 const readJson = <T>(file: string): T => JSON.parse(readFileSync(file, 'utf8')) as T;
 
 interface TenantFile {
+  id: string;
+  appName: string;
+  timezone: string;
   portalBaseUrl: string;
   features: Record<string, boolean>;
   allowedRegions: string[];
@@ -126,6 +141,8 @@ export function createState(tenantId = 'liveapp'): State {
     integrations: defaultIntegrations(),
     devices: new Map(),
     auth: seedAuth(createAuthStore()),
+    tenant: { id: tenant.id, appName: tenant.appName, timezone: tenant.timezone },
+    profileLists: readJson<ProfileLists>(join(fixturesDir, 'profile.json')),
   };
 }
 
@@ -136,6 +153,10 @@ interface AuthFixture {
     password?: string;
     phone?: string;
     status?: 'ativa' | 'suspensa' | 'banida';
+    displayName: string;
+    username: string;
+    birthDate: string;
+    language?: 'pt-BR' | 'en';
   }>;
 }
 
@@ -147,7 +168,15 @@ function seedAuth(store: AuthStore): AuthStore {
     store.users.set(a.userId, {
       id: a.userId,
       accountStatus: a.status ?? 'ativa',
-      needsProfile: false,
+      ageStatus: 'nao_verificada',
+      displayName: a.displayName,
+      username: a.username,
+      gender: null,
+      birthDate: a.birthDate,
+      interests: [],
+      language: a.language ?? 'pt-BR',
+      storeAgeSignal: null,
+      frozenAt: null,
       createdAt: at,
     });
     if (a.email) {

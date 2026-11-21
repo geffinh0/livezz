@@ -395,6 +395,19 @@ describe('termos (ENT16)', () => {
     await post(mock, '/v1/me/terms/accept', { document: 'terms', version: 1 }, authed(t.accessToken));
     const rows = mock.state.auth.acceptances.filter((a) => a.userId === t.user.id && a.document === 'terms');
     expect(rows).toHaveLength(1);
+    // Termos aceitos; a conta nova ainda precisa do cadastro (plano 1c) para o resto.
+    const gate = await mock.app.inject({
+      method: 'GET',
+      url: '/__mock/ping-autenticado',
+      headers: authed(t.accessToken),
+    });
+    expect(gate.json().error.code).toBe('cadastro_pendente');
+    await mock.app.inject({
+      method: 'PATCH',
+      url: '/v1/me',
+      headers: authed(t.accessToken),
+      payload: { displayName: 'Nova Pessoa', birthDate: '1990-01-01' },
+    });
     const free = await mock.app.inject({
       method: 'GET',
       url: '/__mock/ping-autenticado',

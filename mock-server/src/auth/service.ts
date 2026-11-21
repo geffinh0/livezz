@@ -14,7 +14,13 @@ import {
   verifyAccess,
   verifySecret,
 } from './crypto.js';
-import type { AuthSession, AuthUser, RevokeReason, VerificationCode } from './store.js';
+import {
+  pendingSteps,
+  type AuthSession,
+  type AuthUser,
+  type RevokeReason,
+  type VerificationCode,
+} from './store.js';
 
 export interface TokenResponse {
   accessToken: string;
@@ -69,7 +75,64 @@ export class AuthService {
     if (!d?.secretHash || !(await verifySecret(deviceSecret, d.secretHash))) {
       throw new ApiError(401, 'dispositivo_invalido');
     }
+    // ENT10 (Q-65): aparelho marcado não entra nem cria conta até a revisão da equipe.
+    if (d.blockedMinorAt) throw new ApiError(403, 'menor_de_idade');
     return d;
+  }
+
+  // ---------- bloqueio de menor (ENT10) ----------
+  private identifierKey(type: 'telefone' | 'email' | 'google', identifier: string) {
+    return sha256(`${type}:${identifier}`); // HMAC com a chave do servidor
+  }
+
+  private assertNotBlockedIdentifier(type: 'telefone' | 'email' | 'google', identifier: string) {
+    if (this.store.blockedIdentifiers.has(this.identifierKey(type, identifier))) {
+      throw new ApiError(403, 'menor_de_idade');
+    }
+  }
+
+  /**
+   * Congela a conta de quem é menor (Q-58, Q-65), num passo só (sem await):
+   * conta congelada, sessões revogadas, aparelho marcado e identificadores reservados.
+   */
+  freezeMinor(user: AuthUser, deviceId: string) {
+    const at = new Date(this.clock()).toISOString();
+    user.accountStatus = 'congelada';
+    user.ageStatus = 'menor_bloqueado';
+    user.frozenAt = at;
+    for (const s of this.store.sessions.values()) {
+      if (s.userId === user.id && !s.revokedAt) this.revoke(s, 'conta_bloqueada');
+    }
+    const device = this.state.devices.get(deviceId);
+    if (device) {
+      device.blockedMinorAt = at;
+      device.blockedMinorUserId = user.id;
+    }
+    for (const m of this.store.methods) {
+      if (m.userId !== user.id) continue;
+      this.store.blockedIdentifiers.set(this.identifierKey(m.type, m.identifier), {
+        type: m.type,
+        userId: user.id,
+        at,
+      });
+    }
+  }
+
+  /** SÓ MOCK por enquanto (a tela é do painel): a equipe libera depois da revisão. */
+  unfreezeMinor(userId: string) {
+    const user = this.store.users.get(userId);
+    if (!user || user.accountStatus !== 'congelada') throw new ApiError(404, 'nao_encontrado');
+    user.accountStatus = 'ativa';
+    user.ageStatus = 'verificada';
+    user.frozenAt = null;
+    for (const d of this.state.devices.values()) {
+      if (d.blockedMinorUserId === userId) {
+        d.blockedMinorAt = null;
+        d.blockedMinorUserId = null;
+      }
+    }
+    for (const [k, v] of this.store.blockedIdentifiers)
+      if (v.userId === userId) this.store.blockedIdentifiers.delete(k);
   }
 
   // ---------- força bruta ----------
@@ -106,9 +169,13 @@ export class AuthService {
   }
 
   /** Limite simples por IP e por hora (envio de código, registro de aparelho). */
-  hitIp(kind: 'send' | 'device', ip: string) {
+  hitIp(kind: 'send' | 'device' | 'username', ip: string) {
     const limit =
-      kind === 'send' ? this.store.config.codeSendsPerIpPerHour : this.store.config.devicesPerIpPerHour;
+      kind === 'send'
+        ? this.store.config.codeSendsPerIpPerHour
+        : kind === 'device'
+          ? this.store.config.devicesPerIpPerHour
+          : this.store.config.usernameChecksPerIpPerHour;
     const key = `${kind}|${ip}`;
     const now = this.clock();
     const hits = (this.store.ipHits.get(key) ?? []).filter((t) => now - t < 3_600_000);
@@ -267,6 +334,7 @@ export class AuthService {
       this.store.methods = this.store.methods.filter(
         (m) => !(m.type === 'email' && m.identifier === destination && !m.verifiedAt),
       );
+      this.assertNotBlockedIdentifier('email', destination);
       const user = this.createUser();
       this.store.methods.push({
         userId: user.id,
@@ -283,6 +351,7 @@ export class AuthService {
       if (method) {
         userId = method.userId;
       } else {
+        this.assertNotBlockedIdentifier('telefone', destination);
         const user = this.createUser();
         this.store.methods.push({
           userId: user.id,
@@ -365,6 +434,10 @@ export class AuthService {
     if (!method) {
       // email_verified (sempre verdadeiro no token de teste): liga à conta de e-mail confirmada
       const byEmail = this.findMethod('email', email);
+      if (!byEmail?.verifiedAt) {
+        this.assertNotBlockedIdentifier('google', sub);
+        this.assertNotBlockedIdentifier('email', email);
+      }
       const userId = byEmail?.verifiedAt ? byEmail.userId : this.createUser().id;
       method = {
         userId,
@@ -383,7 +456,15 @@ export class AuthService {
     const u: AuthUser = {
       id: `u_${randomUUID()}`,
       accountStatus: 'ativa',
-      needsProfile: true,
+      ageStatus: 'nao_verificada',
+      displayName: null,
+      username: null,
+      gender: null,
+      birthDate: null,
+      interests: null,
+      language: 'pt-BR',
+      storeAgeSignal: null,
+      frozenAt: null,
       createdAt: new Date(this.clock()).toISOString(),
     };
     this.store.users.set(u.id, u);
@@ -398,6 +479,7 @@ export class AuthService {
     if (!user) throw new ApiError(401, 'nao_autenticado');
     if (user.accountStatus === 'banida') throw new ApiError(403, 'conta_banida');
     if (user.accountStatus === 'suspensa') throw new ApiError(403, 'conta_suspensa');
+    if (user.accountStatus === 'congelada') throw new ApiError(403, 'menor_de_idade');
   }
 
   private issueSession(userId: string, deviceId: string): TokenResponse {
@@ -448,7 +530,7 @@ export class AuthService {
       accessToken: signAccess({ sub: session.userId, sid: session.id, exp: this.clock() + ttl }),
       refreshToken: refresh,
       expiresIn: Math.round(ttl / 1000),
-      user: { id: user.id, needsProfile: user.needsProfile },
+      user: { id: user.id, needsProfile: pendingSteps(user).length > 0 },
     };
   }
 
@@ -477,7 +559,11 @@ export class AuthService {
       const previous = s.previousRefreshHash === hash;
       if (!current && !previous) continue;
       if (s.deviceId !== device.id) throw new ApiError(401, 'dispositivo_invalido');
-      if (s.revokedAt) throw new ApiError(401, revokeErrors[s.revokeReason ?? 'logout'].code);
+      if (s.revokedAt) {
+        // Conta bloqueada: responde o motivo real (ex.: menor_de_idade), não só "revogada".
+        if (s.revokeReason === 'conta_bloqueada') this.assertActiveAccount(this.store.users.get(s.userId));
+        throw new ApiError(401, revokeErrors[s.revokeReason ?? 'logout'].code);
+      }
       if (this.expiredReason(s)) {
         this.revoke(s, 'expirada');
         throw new ApiError(401, 'sessao_expirada');
@@ -546,7 +632,11 @@ export class AuthService {
     if (!claims) throw new ApiError(401, 'nao_autenticado');
     const session = this.store.sessions.get(claims.sid);
     if (!session) throw new ApiError(401, 'nao_autenticado');
-    if (session.revokedAt) throw new ApiError(401, revokeErrors[session.revokeReason ?? 'logout'].code);
+    if (session.revokedAt) {
+      if (session.revokeReason === 'conta_bloqueada')
+        this.assertActiveAccount(this.store.users.get(session.userId));
+      throw new ApiError(401, revokeErrors[session.revokeReason ?? 'logout'].code);
+    }
     if (claims.exp < this.clock()) throw new ApiError(401, 'token_expirado');
     const user = this.store.users.get(session.userId);
     this.assertActiveAccount(user);

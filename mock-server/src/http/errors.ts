@@ -25,6 +25,9 @@ export type ErrorCode =
   | 'conta_suspensa'
   | 'conta_banida'
   | 'conflito'
+  | 'cadastro_pendente'
+  | 'menor_de_idade'
+  | 'username_indisponivel'
   | 'erro_interno';
 
 const messages: Record<ErrorCode, { pt: string; en: string }> = {
@@ -64,6 +67,15 @@ const messages: Record<ErrorCode, { pt: string; en: string }> = {
   conta_suspensa: { pt: 'Sua conta está suspensa.', en: 'Your account is suspended.' },
   conta_banida: { pt: 'Sua conta foi banida.', en: 'Your account has been banned.' },
   conflito: { pt: 'Isso mudou. Tente de novo.', en: 'This changed. Try again.' },
+  cadastro_pendente: {
+    pt: 'Complete seu cadastro para continuar.',
+    en: 'Complete your sign-up to continue.',
+  },
+  menor_de_idade: {
+    pt: 'Este app é só para maiores de 18 anos.',
+    en: 'This app is for adults 18 and over only.',
+  },
+  username_indisponivel: { pt: 'Este @ não está disponível.', en: 'This @ is not available.' },
   regiao_bloqueada: {
     pt: 'O app não está disponível na sua região.',
     en: 'The app is not available in your region.',

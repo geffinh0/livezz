@@ -39,7 +39,8 @@ export function registerDeviceRoutes(
         : undefined;
     if (known) {
       Object.assign(known, { platform, appVersion, locale, model: model ?? known.model, seenAt: now });
-      return reply.status(200).send({ deviceId: known.id });
+      // ENT10: aparelho marcado avisa o app para mostrar a tela de bloqueio.
+      return reply.status(200).send({ deviceId: known.id, blocked: known.blockedMinorAt !== null });
     }
     const id = randomUUID();
     const secret = randomToken();
@@ -53,7 +54,9 @@ export function registerDeviceRoutes(
       model: model ?? null,
       registeredAt: now,
       seenAt: now,
+      blockedMinorAt: null,
+      blockedMinorUserId: null,
     });
-    return reply.status(201).send({ deviceId: id, deviceSecret: secret });
+    return reply.status(201).send({ deviceId: id, deviceSecret: secret, blocked: false });
   });
 }

@@ -18,7 +18,7 @@ describe('POST /v1/devices (ENT01)', () => {
       payload: { ...body, deviceId, deviceSecret, appVersion: '0.2.0' },
     });
     expect(r2.statusCode).toBe(200);
-    expect(r2.json()).toEqual({ deviceId });
+    expect(r2.json()).toEqual({ deviceId, blocked: false });
     expect(state.devices.get(deviceId)?.appVersion).toBe('0.2.0');
     expect(state.devices.size).toBe(1);
   });

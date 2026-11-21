@@ -13,6 +13,8 @@ export interface MockContext {
   resetState(): void;
   hub: Hub;
   tenantId: string;
+  /** ENT10: a equipe libera a conta depois da revisão (tela do painel vem depois). */
+  unfreezeMinor(userId: string): void;
 }
 
 const ScenarioBody = Type.Union([Type.Object({ active: Type.Optional(Type.Boolean()) }), Type.Null()]);
@@ -111,6 +113,14 @@ export function registerMockRoutes(app: FastifyInstance, ctx: MockContext) {
       ctx.getState().auth.lastCodes.get(req.query.destination ?? '');
     if (!code) throw new ApiError(404, 'nao_encontrado');
     return { code };
+  });
+
+  // ENT10: simula a equipe liberando a conta congelada (SÓ MOCK; o painel faz isso depois).
+  app.post<{ Body: { userId?: string } }>('/__mock/minor/unfreeze', async (req, reply) => {
+    const userId = req.body?.userId;
+    if (typeof userId !== 'string') throw new ApiError(400, 'validacao', { field: 'userId' });
+    ctx.unfreezeMinor(userId);
+    return reply.status(204).send();
   });
 
   app.post<{ Body: Static<typeof EmitBody> }>('/__mock/emit', { schema: { body: EmitBody } }, async (req) => {

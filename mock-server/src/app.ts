@@ -10,6 +10,8 @@ import { readDocumentedServerTypes } from './realtime/docs-catalog.js';
 import { Hub } from './realtime/hub.js';
 import { attachRealtime } from './realtime/server.js';
 import { registerAuthRoutes } from './routes/auth.js';
+import { registerProfileRoutes } from './routes/profile.js';
+import { ProfileService } from './profile/service.js';
 import { registerConfigRoutes } from './routes/config.js';
 import { registerDeviceRoutes } from './routes/devices.js';
 import { registerMockRoutes } from './scenarios/mock-routes.js';
@@ -44,6 +46,12 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
       '*.idToken',
       '*.destination',
       '*.email',
+      // Dados de idade e gênero (🔒, plano 1c)
+      '*.birthDate',
+      '*.gender',
+      '*.storeAgeSignal',
+      '*.ageLower',
+      '*.ageUpper',
     ],
     censor: '[oculto]',
   };
@@ -82,9 +90,11 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   registerConfigRoutes(app, getState);
   registerDeviceRoutes(app, getState, antibot, (ip) => holder.auth.hitIp('device', ip));
   registerAuthRoutes(app, holder.auth, antibot, getState);
+  registerProfileRoutes(app, holder.auth, new ProfileService(getState, holder.auth));
   attachRealtime(app, holder.hub, getState, holder.auth);
   registerMockRoutes(app, {
     getState,
+    unfreezeMinor: (userId) => holder.auth.unfreezeMinor(userId),
     resetState: () => {
       // A versão da config só cresce: clientes ignoram versões antigas.
       const nextVersion = holder.state.config.configVersion + 1;

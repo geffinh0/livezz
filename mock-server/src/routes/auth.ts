@@ -116,20 +116,12 @@ export function registerAuthRoutes(
     },
   );
 
-  app.get('/v1/me', { preHandler: requireAuth(service, { allowPendingTerms: true }) }, async (req) => {
-    const ctx = req.auth;
-    if (!ctx) throw new Error('auth ausente');
-    return {
-      id: ctx.user.id,
-      needsProfile: ctx.user.needsProfile,
-      accountStatus: ctx.user.accountStatus,
-      pendingTerms: service.pendingTerms(ctx.user.id),
-    };
-  });
-
   app.post<{ Body: Static<typeof TermsBody> }>(
     '/v1/me/terms/accept',
-    { schema: { body: TermsBody }, preHandler: requireAuth(service, { allowPendingTerms: true }) },
+    {
+      schema: { body: TermsBody },
+      preHandler: requireAuth(service, { allowPendingTerms: true, allowPendingProfile: true }),
+    },
     async (req, reply) => {
       const ctx = req.auth;
       if (!ctx) throw new Error('auth ausente');

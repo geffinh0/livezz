@@ -67,10 +67,10 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 
 ## Passos
 1. Contratos (API, EVENTOS), DATABASE (`proposta`), RN-01 (fuso), `supportEmail` no tenant. ✅
-2. mock: `PATCH /me`, portão de cadastro, perfil em `GET /me` + testes.
-3. mock: decisão de idade e congelamento (conta, sessões, aparelho, identificadores; REST e tempo real) + testes.
-4. mock: @ (disponibilidade, sugestões, reservados, gravação atômica) + testes.
-5. mock: interesses e idioma + testes; redação de log com teste.
+2. mock: `PATCH /me`, portão de cadastro, perfil em `GET /me` + testes. ✅
+3. mock: decisão de idade e congelamento (conta, sessões, aparelho, identificadores; REST e tempo real) + testes. ✅
+4. mock: @ (disponibilidade, sugestões, reservados, gravação atômica) + testes. ✅
+5. mock: interesses e idioma + testes; redação de log com teste. ✅
 6. app: `AgeSignalProvider` + fake; repositórios e modelos (perfil, @, interesses); destinos `onboarding` e `minorBlocked` + testes unitários.
 7. app: telas ENT08 e ENT10 + widget.
 8. app: telas ENT11 e ENT12 + widget.

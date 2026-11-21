@@ -16,6 +16,8 @@ export interface AuthConfig {
   loginLockBaseSeconds: number;
   codeSendsPerIpPerHour: number;
   devicesPerIpPerHour: number;
+  usernameChecksPerUserPerMinute: number; // consulta de @ (anti-enumeração)
+  usernameChecksPerIpPerHour: number;
 }
 
 export function defaultAuthConfig(): AuthConfig {
@@ -34,6 +36,8 @@ export function defaultAuthConfig(): AuthConfig {
     loginLockBaseSeconds: 60,
     codeSendsPerIpPerHour: 60,
     devicesPerIpPerHour: 60,
+    usernameChecksPerUserPerMinute: 30,
+    usernameChecksPerIpPerHour: 600,
   };
 }
 

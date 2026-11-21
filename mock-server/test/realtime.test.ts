@@ -214,6 +214,23 @@ describe('tempo real com sessões reais (ADR 0012)', () => {
     c.ws.close();
   });
 
+  it('conta congelada por menor (ENT10): conexão aberta cai com conta_bloqueada; nova conexão é recusada', async () => {
+    const { url, mock } = await start();
+    const t = (await login(mock, '+5511977771234')) as { accessToken: string };
+    const c = await authWith(url, t.accessToken);
+    await c.next('ack');
+    await mock.app.inject({
+      method: 'PATCH',
+      url: '/v1/me',
+      headers: { authorization: `Bearer ${t.accessToken}` },
+      payload: { displayName: 'Jovem', birthDate: '2014-01-01' },
+    });
+    expect((await c.next('session.invalid')).data).toEqual({ reason: 'conta_bloqueada' });
+    expect(await c.closed).toBe(4001);
+    const again = await authWith(url, t.accessToken);
+    expect(await again.closed).toBe(4001);
+  });
+
   it('token vencido fecha com 4003 (não terminal)', async () => {
     const { url, mock } = await start();
     mock.state.auth.config.accessTokenSecondsOverride = -1;

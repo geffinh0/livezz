@@ -51,16 +51,16 @@
 | POST | /auth/refresh | Renovar tokens | ENT19 | no mock |
 | POST | /auth/logout | Sair (sessão atual ou todas) | CFG02 | no mock |
 | GET | /me | Meu perfil completo e situação da conta | ENT01, PER01 | no mock |
-| PATCH | /me | Editar perfil, preferências e privacidade | ENT08, PER02, CFG03, CFG04 | proposto |
-| POST | /me/username | Definir/trocar @ | ENT11, PER02 | proposto |
-| GET | /usernames/{u}/availability | Disponibilidade de @ | ENT11 | proposto |
+| PATCH | /me | Editar perfil, preferências e privacidade | ENT08, PER02, CFG03, CFG04 | no mock (cadastro e idioma) |
+| POST | /me/username | Definir/trocar @ | ENT11, PER02 | no mock (primeira definição) |
+| GET | /usernames/{u}/availability | Disponibilidade de @ | ENT11 | no mock |
 | GET | /me/login-methods · POST · DELETE /me/login-methods/{id} | Métodos vinculados | ENT15 | proposto |
 | GET | /me/sessions · DELETE /me/sessions/{id} | Sessões ativas | ENT19, CFG02 | proposto |
 | POST | /me/terms/accept | Aceitar versão de termo/política/regras | ENT16, TRA01 | no mock |
 | POST | /me/age-verification | Iniciar verificação de idade | ENT09 | proposto |
 | GET | /me/age-verification | Situação da verificação | ENT09 | proposto |
-| POST | /me/interests | Salvar interesses | ENT12 | proposto |
-| GET | /interests | Categorias de interesse (no idioma) | ENT12 | proposto |
+| POST | /me/interests | Salvar interesses | ENT12 | no mock |
+| GET | /interests | Categorias de interesse (no idioma) | ENT12 | no mock |
 | POST | /me/tutorials/{key}/seen | Marcar tutorial visto | NAV04 | proposto |
 | POST | /me/export | Pedir exportação de dados (LGPD) | CFG12 | proposto |
 | POST | /me/delete | Agendar exclusão de conta | CFG12 | proposto |
@@ -324,7 +324,7 @@
 
 ### POST /v1/devices — no mock (ENT01, Fase 1b)
 - Sem autenticação. Corpo (sem campos extras): `{ "deviceId"?: string, "deviceSecret"?: string (≤128), "platform": "android"|"ios"|"web", "appVersion": "x.y.z", "locale": "pt-BR"|"en", "model"?: string (≤80) }` (`web` só no build de teste).
-- Criação `201 { deviceId, deviceSecret }` (o servidor gera os dois; guarda só o hash do segredo). Atualização `200 { deviceId }` só com `deviceId` + `deviceSecret` certos; id ausente, desconhecido, forjado ou segredo errado → cria outro aparelho (`201`), nunca adota o id enviado.
+- Criação `201 { deviceId, deviceSecret, blocked: false }` (o servidor gera os dois; guarda só o hash do segredo). Atualização `200 { deviceId, blocked }` só com `deviceId` + `deviceSecret` certos; id ausente, desconhecido, forjado ou segredo errado → cria outro aparelho (`201`), nunca adota o id enviado.
 - Erros: `400 validacao`; `428 desafio_necessario` (anti-bot); `429 limite_excedido` + `Retry-After` (60 por IP por hora no mock).
 - O login grava o usuário no aparelho (`Dispositivo.usuario_id`). Entidades: Dispositivo. Base da sessão única (RN-06).
 
@@ -346,13 +346,13 @@ Todas as rotas de login recebem `deviceId` + `deviceSecret` (segredo errado → 
 - **POST /me/terms/accept** `{ document: "terms"|"privacy"|"guidelines", version }` → `204`. Versão diferente da atual → `409 conflito` com `details.currentVersion`; aceitar de novo a mesma versão → `204`.
 - **Logs:** o servidor nunca registra `password`, `newPassword`, `code`, `refreshToken`, `deviceSecret`, `idToken`, `destination`, `email`, `authorization` nem `X-Antibot-Token`.
 
-### Cadastro inicial (plano 1c) — proposto
+### Cadastro inicial (plano 1c) — no mock
 - **Portão de cadastro:** com `pendingSteps` contendo `profile`, rotas autenticadas (exceto `GET /me`, `PATCH /me`, `POST /me/terms/accept`, `GET /usernames/{u}/availability`, `POST /auth/logout`) → `403 cadastro_pendente`.
 - **GET /me** ganha `displayName`, `username`, `gender` (só nesta rota), `ageStatus` (`nao_verificada`, `pendente`, `verificada`, `reprovada`, `menor_bloqueado`), `language`, `pendingSteps` (`profile`, `username`, `interests`). `needsProfile` = `pendingSteps` não vazio (compatível com a 1b).
-- **PATCH /me** `{ displayName?, birthDate? (AAAA-MM-DD), gender? ("mulher"|"homem"|"nao_binario"|"prefiro_nao_dizer"|null), language? ("pt-BR"|"en"), storeAgeSignal? { status: "shared"|"not_shared"|"verification_required"|"unavailable", ageLower?, ageUpper? } }` → `200` com o `/me`. Campos fora da lista → `400 validacao`. `birthDate` só uma vez (`409 conflito`, `details.reason = "data_imutavel"`), não futura, ≤ 120 anos. Idade < 18 (só datas, fuso do tenant) ou `storeAgeSignal.ageUpper < 18` → `403 menor_de_idade`: conta congelada, sessões revogadas, aparelho marcado. O sinal só restringe.
-- **Conta congelada / aparelho marcado:** login, refresh, rotas autenticadas e `auth` do tempo real → `403 menor_de_idade` (WS: `session.invalid { reason: "conta_bloqueada" }` + `4001`). `POST /devices` devolve `blocked: true` para aparelho marcado.
-- **GET /usernames/{u}/availability** (autenticada; limite por conta e IP) → `{ available, reason?: "formato"|"ocupado"|"reservado", suggestions: string[] }`.
-- **POST /me/username** `{ username }` → `200 { username }`; `409 username_indisponivel` (`details.reason`) se ocupado no meio.
+- **PATCH /me** `{ displayName?, birthDate? (AAAA-MM-DD), gender? ("mulher"|"homem"|"nao_binario"|"prefiro_nao_dizer"|null), language? ("pt-BR"|"en"), storeAgeSignal? { status: "shared"|"not_shared"|"verification_required"|"unavailable", ageLower?, ageUpper? } }` → `200` com o `/me`. Campos fora da lista são ignorados (nunca alteram nada; compatível com versões futuras do app). `birthDate` só uma vez (`409 conflito`, `details.reason = "data_imutavel"`), não futura, ≤ 120 anos. Idade < 18 (só datas, fuso do tenant) ou `storeAgeSignal.ageUpper < 18` → `403 menor_de_idade`: conta congelada, sessões revogadas, aparelho marcado. O sinal só restringe.
+- **Conta congelada / aparelho marcado:** login, refresh, rotas autenticadas e `auth` do tempo real → `403 menor_de_idade` (WS: a conexão aberta recebe `session.invalid { reason: "conta_bloqueada" }` + `4001`; uma conexão nova é recusada com `4001`). `POST /devices` devolve `blocked` (`true` para aparelho marcado) na criação e na atualização. Aparelho marcado em login/cadastro → `403 menor_de_idade` antes de criar conta. Telefone, e-mail e Google da conta congelada ficam reservados (`IdentificadorBloqueado`).
+- **GET /usernames/{u}/availability** (autenticada, liberada antes do cadastro; 30 por conta/minuto e 600 por IP/hora → `429 limite_excedido`) → `{ available, reason?: "formato"|"ocupado"|"reservado", suggestions: string[] }`.
+- **POST /me/username** `{ username }` (minúsculas aplicadas pelo servidor) → `200 { username }`; `400 validacao` (formato); `409 username_indisponivel` (`details.reason`: `ocupado`, `reservado`); `409 conflito` (`ja_definido`: a troca é do PER02). Reservados: lista do comprador + id e nome do tenant, também com variações (`adm1n`, `liveapp.oficial`).
 - **GET /interests** → `{ items: [{ id, name }] }` no idioma do `Accept-Language`. **POST /me/interests** `{ ids: string[] (0–10, existentes, sem repetição) }` → `204` (lista vazia = pulou).
 - **Logs:** nunca registram `birthDate`, `gender`, `storeAgeSignal`, `ageLower`, `ageUpper`.
 - Mock-only: `POST /__mock/minor/unfreeze { userId }`; cenário `sinal-loja-menor` (só para o fake do app; o servidor não muda).

@@ -29,7 +29,7 @@
 
 ## Conta
 
-### Usuario — status: em uso no mock (parcial: id, situacao_conta [ativa, suspensa, banida], criado_em; perfil na 1c)
+### Usuario — status: em uso no mock (id, situacao_conta [ativa, suspensa, banida, congelada], situacao_idade, nome_exibicao, username, genero, data_nascimento, interesses, idioma, faixa_etaria_loja, congelada_em, criado_em)
 Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | Campo | Tipo | Regras |
 | --- | --- | --- |
@@ -59,9 +59,9 @@ Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | tutoriais_vistos | lista de texto | NAV04 |
 | criado_em / atualizado_em / excluido_em | data | |
 
-**Plano 1c (proposta):** `genero` privado com valores `mulher`, `homem`, `nao_binario`, `prefiro_nao_dizer` (Q-59); `interesses` null = não respondeu, lista vazia = pulou; `faixa_etaria_loja` = { status, ageLower, ageUpper } (Q-64); `situacao_conta = congelada` com `situacao_idade = menor_bloqueado` (Q-58).
+**Plano 1c (em uso no mock):** `genero` privado com valores `mulher`, `homem`, `nao_binario`, `prefiro_nao_dizer` (Q-59); `interesses` null = não respondeu, lista vazia = pulou; `faixa_etaria_loja` = { status, ageLower, ageUpper } (Q-64); `situacao_conta = congelada` com `situacao_idade = menor_bloqueado` e `congelada_em` (Q-58). Código: `AuthUser` em `mock-server/src/auth/store.ts` (`displayName`, `username`, `gender`, `birthDate`, `interests`, `language`, `storeAgeSignal`, `ageStatus`, `frozenAt`).
 
-**Derivado (não é coluna):** `precisa_perfil` = `nome_exibicao`, `username` ou `data_nascimento` ainda vazios (JSON `needsProfile`). No mock é um booleano guardado (`true` ao criar, `false` nas contas semeadas) até a 1c. Ids no mock: `u_<uuid>` nas contas criadas por login e `u-ana` etc. nas semeadas.
+**Derivado (não é coluna):** `passos_pendentes` (JSON `pendingSteps`): `profile` (sem nome ou data), `username`, `interests` (null); `precisa_perfil` (JSON `needsProfile`) = lista não vazia. Ids no mock: `u_<uuid>` nas contas criadas por login e `u-ana` etc. nas semeadas.
 
 ### MetodoLogin — em uso no mock
 Usada por: ENT03–ENT07, ENT15 · no mock: usuario_id, tipo, identificador, senha_hash (scrypt), verificado_em; sem `id`/`criado_em` ainda. `google` no mock: identificador = hash do e-mail (no real é o `sub`). Método de e-mail só existe depois de confirmado; antes disso, ver CadastroPendente.
@@ -87,7 +87,7 @@ Usada por: ENT05, ENT19, SEGURANCA.md (alerta de novo aparelho) · usuario_id?, 
 Usada por: ENT19, CFG02 · campos: id (`sid` no access token), usuario_id, dispositivo_id, refresh_token_hash 🔒, refresh_anterior_hash 🔒 + trocado_em (tolerância de 10 s), criada_em, ultimo_uso_em, expira_absoluta_em (180 dias, Q-54), revogada_em, motivo_revogacao (`logout`, `outro_aparelho`, `mesmo_aparelho`, `senha_trocada`, `reuso_refresh`, `expirada`, `conta_bloqueada`, `admin`), carencia_usada (o refresh anterior vale **uma vez** dentro dos 10 s; não reabre a janela), ip_aproximado 🔒, user_agent. Ociosidade: expira com 30 dias sem uso (Q-50, derivado de `ultimo_uso_em`). **Regra:** no máximo uma sessão não revogada por usuário (RN-06). No mock não são guardados `ip_aproximado` nem `user_agent`. Motivo → erro HTTP: `outro_aparelho` → `sessao_substituida`; `expirada` → `sessao_expirada`; os demais → `sessao_revogada`. Motivo → evento de tempo real: ver EVENTOS-TEMPO-REAL.md (Detalhes).
 
 ### Dispositivo — em uso no mock
-Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, segredo_hash 🔒, usuario_id (último usuário que entrou no aparelho), plataforma, modelo, versao_app, idioma, registrado_em, visto_em. Atualizar exige id + segredo certos; senão cria outro aparelho. Limite: 60 criações por IP por hora (mock). Plano 1c (proposta): bloqueado_menor_em, bloqueado_menor_conta_id (Q-65).
+Usada por: ENT01 (`POST /devices`), ENT19, TRV05, SEG05, RN-06 · campos: id (gerado pelo servidor), segredo_hash 🔒 (ADR 0012), usuario_id?, plataforma (`android`, `ios`, `web` só teste), modelo?, versao_app, idioma, token_push 🔒 (TRV05), impressao_antifraude 🔒 (SEG05), registrado_em, visto_em. No mock: id, segredo_hash 🔒, usuario_id (último usuário que entrou no aparelho), plataforma, modelo, versao_app, idioma, registrado_em, visto_em. Atualizar exige id + segredo certos; senão cria outro aparelho. Limite: 60 criações por IP por hora (mock). Plano 1c (em uso no mock): bloqueado_menor_em, bloqueado_menor_conta_id (Q-65; código `blockedMinorAt`, `blockedMinorUserId`).
 
 ### VerificacaoIdade — proposta
 Usada por: ENT09, TRA01, POR02, SEG07 · campos: id, usuario_id, metodo (`estimativa_facial`, `documento`), provedor (conector configurado em IntegracaoProvedor), referencia_provedor, resultado (`pendente`, `aprovado`, `reprovado`, `expirado`), idade_estimada?, motivo?, criado_em, concluido_em. Não guardar imagens do rosto/documento além do exigido pelo provedor e pelo jurídico.
@@ -190,9 +190,9 @@ Usada por: PRE*, ADM06 · campos: id, nome (por idioma: pt-BR, en), categoria_id
 
 ### CategoriaPresente — proposta · id, nome, ordem, ativa.
 
-### CategoriaInteresse — proposta · Usada por: ENT12, DES (Fase 2) · id, nome_pt, nome_en, ordem, ativa.
-### PalavraReservada — proposta · Usada por: ENT11, RN-05 · termo, tipo (`username`, `nome`), origem (`plataforma`, `comprador`). Inclui a marca do tenant e variações.
-### IdentificadorBloqueado — proposta · Usada por: ENT10 (Q-65) · tipo (`telefone`, `email`, `google`), valor_hmac 🔒 (HMAC com chave do servidor), conta_id, criado_em. Impede cadastro novo com identificador de conta congelada.
+### CategoriaInteresse — em uso no mock (`fixtures/profile.json` → `interests`; ordem = posição; `ativa` ainda não usada) · Usada por: ENT12, DES (Fase 2) · id, nome_pt, nome_en, ordem, ativa.
+### PalavraReservada — em uso no mock (`fixtures/profile.json` → `reservedUsernames` e `blockedNameWords`) · Usada por: ENT11, ENT08, RN-05 · termo, tipo (`username`, `nome`), origem (`plataforma`, `comprador`). Inclui a marca do tenant (id e nome) e variações (dígitos trocados, pontos).
+### IdentificadorBloqueado — em uso no mock (`blockedIdentifiers`) · Usada por: ENT10 (Q-65) · tipo (`telefone`, `email`, `google`), valor_hmac 🔒 (HMAC com chave do servidor), conta_id, criado_em. Impede cadastro novo com identificador de conta congelada.
 
 ### EnvioPresente — proposta
 Usada por: PRE01–PRE11, PK06, CHA05, MSG02 · `POST /v1/gifts/send`
@@ -348,7 +348,7 @@ Usada por: ASS11, CHA08, MSG08, FEED06, SEG01, ADM05 · id, denunciante_id, alvo
 ## Configuração
 
 ### ConfigAuth — em uso no mock (fora do `GET /config`; editável pelo comprador no painel, ADR 0007, ADM14)
-Usada por: ENT04–ENT07, ENT19 · access_token_minutos (15; piso 5, teto 60), sessao_ociosa_dias (30, Q-50), sessao_maxima_dias (180, Q-54), refresh_carencia_segundos (10), codigo_validade_s (60), codigo_reenvio_s (60), codigo_envios_hora (5), codigo_tentativas (5, RN-02), login_falhas_max (5), ip_falhas_max (50), bloqueio_base_s (60), envios_codigo_por_ip_hora (60), aparelhos_por_ip_hora (60). Valores provisórios (`mock-server/src/auth/config.ts`).
+Usada por: ENT04–ENT07, ENT19 · access_token_minutos (15; piso 5, teto 60), sessao_ociosa_dias (30, Q-50), sessao_maxima_dias (180, Q-54), refresh_carencia_segundos (10), codigo_validade_s (60), codigo_reenvio_s (60), codigo_envios_hora (5), codigo_tentativas (5, RN-02), login_falhas_max (5), ip_falhas_max (50), bloqueio_base_s (60), envios_codigo_por_ip_hora (60), aparelhos_por_ip_hora (60), consultas_username_por_conta_minuto (30), consultas_username_por_ip_hora (600). Valores provisórios (`mock-server/src/auth/config.ts`).
 
 ### IntegracaoProvedor — em uso no mock (o mock semeia os 10 tipos com provedor `fake` e ativo; sem credenciais na Fase 0)
 Usada por: ADM19, TRV13, RN-84 · id, tipo (`pagamento_loja_alternativa`, `pagamento_web`, `repasse_saque`, `sms_whatsapp`, `verificacao_idade`, `traducao`, `moderacao_midia`, `antibot`, `push`, `analytics`), provedor, ativo, credenciais 🔒 (criptografadas; nunca devolvidas inteiras), configuracao (objeto), ultimo_teste_em, ultimo_teste_ok, atualizado_por, atualizado_em.
@@ -414,7 +414,7 @@ Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = J
 
 ### Dados só de teste no mock (Fase 0)
 - **Usuários de teste** (`mock-server/fixtures/users.json`): `u-ana`, `u-bruno` (pt-BR) e `u-carla` (en); só id, username, nome_exibicao e idioma. Fictícios. Tokens de teste `dev-token-<id>` (ver EVENTOS-TEMPO-REAL.md).
-- **Contas de teste de login** (`mock-server/fixtures/auth.json`, fictícias): `u-ana` (ana@teste.local, senha `TEST_ONLY_Ana2026`, +5511900000001), `u-bruno` (só telefone +5511900000002), `u-carla` (carla@teste.local, `TEST_ONLY_Carla2026`), `u-banido` (banido@teste.local, `status: banida`). Todas confirmadas, `needsProfile=false`, termos e privacidade v1 aceitos. As senhas só existem na fixture e viram scrypt na carga.
+- **Contas de teste de login** (`mock-server/fixtures/auth.json`, fictícias): `u-ana` (ana@teste.local, senha `TEST_ONLY_Ana2026`, +5511900000001), `u-bruno` (só telefone +5511900000002), `u-carla` (carla@teste.local, `TEST_ONLY_Carla2026`), `u-banido` (banido@teste.local, `status: banida`). Todas confirmadas, com perfil completo (nome, @, data adulta, idioma, interesses vazios: sem passos pendentes), termos, privacidade e diretrizes v1 aceitos. As senhas só existem na fixture e viram scrypt na carga.
 - **Outbox dos fakes:** `FakeOutbox.sms[] = { channel, phoneE164 🔒, code 🔒 }` e `FakeOutbox.email[] = { email 🔒, code 🔒 }` ou `{ email, kind }` (avisos); mais `lastCodes` (destino → último código) para `GET /__mock/outbox`. Só em memória e só para testes; nunca em log nem fixture.
 - **VerificacaoIdade (fake):** sessão → resultado (`aprovada`/`reprovada`), só em memória.
 
@@ -452,3 +452,4 @@ Valor inicial no mock: flags de login e anti-bot de `mock-server/fixtures/config
 | 2026-11-21 | CadastroPendente, AvisoConta, ConfigAuth e controles efêmeros (falhas, limites por IP, token anti-bot usado); CodigoVerificacao, Sessao (`mesmo_aparelho`, carência única, ociosidade), Dispositivo, AceiteTermos e Usuario.needsProfile alinhados ao código; flags de login/anti-bot; fixtures `auth.json` e outbox de e-mail; chaves do TokensLocais | Fase 1b (conferência código × docs pelo guardião de dados) |
 | 2026-11-21 | AceiteTermos: diretrizes obrigatórias (Q-55) e unicidade (usuario, documento, versão) aplicada no mock | Decisão do usuário (Q-55) |
 | 2026-11-21 | Plano 1c (proposta): CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; Usuario (gênero, interesses, sinal da loja, congelada) e Dispositivo (bloqueio de menor) | ENT08, ENT10, ENT11, ENT12 (Q-58, Q-59, Q-64, Q-65) |
+| 2026-11-21 | Plano 1c em uso no mock: Usuario com perfil e idade, Dispositivo com bloqueio de menor, CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; ConfigAuth com limites de consulta de @; fixtures de contas com perfil | ENT08, ENT10, ENT11, ENT12, CFG14 |

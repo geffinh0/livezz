@@ -2,13 +2,53 @@ import { defaultAuthConfig, type AuthConfig } from './config.js';
 
 // Entidades de autenticação em memória (DATABASE.md: Usuario parcial, MetodoLogin,
 // CodigoVerificacao, Sessao, AceiteTermos). Segredos sempre como hash.
-export type AccountStatus = 'ativa' | 'suspensa' | 'banida';
+export type AccountStatus = 'ativa' | 'suspensa' | 'banida' | 'congelada';
+export type AgeStatus = 'nao_verificada' | 'pendente' | 'verificada' | 'reprovada' | 'menor_bloqueado';
+export type Gender = 'mulher' | 'homem' | 'nao_binario' | 'prefiro_nao_dizer';
+export type Language = 'pt-BR' | 'en';
 
+/** Sinal de idade da loja (Play Age Signals), como o app recebeu. Só restringe (Q-64). */
+export interface StoreAgeSignal {
+  status: 'shared' | 'not_shared' | 'verification_required' | 'unavailable';
+  ageLower: number | null;
+  ageUpper: number | null;
+}
+
+/** Usuario (DATABASE.md): conta + perfil do cadastro inicial (plano 1c). */
 export interface AuthUser {
   id: string;
   accountStatus: AccountStatus;
-  needsProfile: boolean;
+  ageStatus: AgeStatus;
+  displayName: string | null;
+  username: string | null;
+  /** Privado (Q-59): só aparece em GET /me. */
+  gender: Gender | null;
+  /** 🔒 AAAA-MM-DD, imutável depois de gravada (RN-01). */
+  birthDate: string | null;
+  /** null = ainda não respondeu; [] = pulou (ENT12). */
+  interests: string[] | null;
+  language: Language;
+  storeAgeSignal: StoreAgeSignal | null;
+  frozenAt: string | null;
   createdAt: string;
+}
+
+export type OnboardingStep = 'profile' | 'username' | 'interests';
+
+/** Passos do cadastro que faltam (needsProfile = lista não vazia). */
+export function pendingSteps(u: AuthUser): OnboardingStep[] {
+  const steps: OnboardingStep[] = [];
+  if (!u.displayName || !u.birthDate) steps.push('profile');
+  if (!u.username) steps.push('username');
+  if (u.interests === null) steps.push('interests');
+  return steps;
+}
+
+/** IdentificadorBloqueado (Q-65): HMAC do telefone/e-mail/Google de conta congelada. */
+export interface BlockedIdentifier {
+  type: 'telefone' | 'email' | 'google';
+  userId: string;
+  at: string;
 }
 
 export interface LoginMethod {
@@ -90,6 +130,9 @@ export interface AuthStore {
   notices: Notice[];
   lastCodes: Map<string, string>; // SÓ MOCK: último código em texto por destino (outbox)
   ipHits: Map<string, number[]>; // limites por IP (envio de código, registro de aparelho)
+  blockedIdentifiers: Map<string, BlockedIdentifier>; // chave: HMAC de tipo:identificador
+  /** Limites por conta (ex.: consulta de @): horários por chave. */
+  userHits: Map<string, number[]>;
 }
 
 export function createAuthStore(): AuthStore {
@@ -107,5 +150,7 @@ export function createAuthStore(): AuthStore {
     notices: [],
     lastCodes: new Map(),
     ipHits: new Map(),
+    blockedIdentifiers: new Map(),
+    userHits: new Map(),
   };
 }
