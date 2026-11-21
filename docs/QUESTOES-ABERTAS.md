@@ -77,3 +77,13 @@
 | Q-53 | Login com Google antes da Fase 12 | Contas de teste do mock (nova/existente/erro/cancelar) seguindo o mesmo contrato do Google real | 2026-11-21 |
 | Q-54 | Validade máxima absoluta da sessão | 180 dias desde o login, mesmo com uso diário; configurável pelo comprador (além dos 30 dias sem uso da Q-50) | 2026-11-21 |
 | Q-55 | Diretrizes da comunidade obrigatórias? | Sim: termos, privacidade e diretrizes são aceitos por todos ao entrar; nova versão de qualquer um exige novo aceite (ENT16) | 2026-11-21 |
+| Q-56 | Bônus de boas-vindas e recompensa de telefone: ledger agora ou na Fase 4? | Ledger mínimo (dupla entrada, idempotente) já no plano 1c, só para créditos de bônus; a Fase 4 amplia | 2026-11-21 |
+| Q-57 | ENT09 (verificação forte de idade): quando construir? | Agora (plano 1c) com o conector fake; provedor real na Fase 12 (Q-35) | 2026-11-21 |
+| Q-58 | ENT10: o que guardar de quem é bloqueado por ser menor | A conta fica congelada inteira (sem acesso), para revisão da equipe | 2026-11-21 |
+| Q-59 | ENT08: gênero | Opcional, 4 opções (Mulher, Homem, Não-binário, Prefiro não dizer); privado: só a própria pessoa vê | 2026-11-21 |
+| Q-60 | ENT13: valor padrão do bônus de boas-vindas | Desligado por padrão; o comprador liga e define o valor no painel | 2026-11-21 |
+| Q-61 | ENT14: recompensa padrão por vincular telefone | Desligada por padrão; o comprador liga e define o valor no painel | 2026-11-21 |
+| Q-62 | RN-31: quando creditar o bônus de quem entrou sem telefone | Só depois de ter telefone (quem entrou por telefone recebe ao terminar o cadastro; e-mail/Google ao vincular o telefone); uma vez por aparelho, telefone e verificação de idade | 2026-11-21 |
+| Q-63 | ENT10: quem desfaz o congelamento e por quanto tempo guardar | Revisão da equipe (pedido pelo suporte); liberar só com verificação forte de idade aprovada; sem prazo de exclusão automática (confirmar com o jurídico, Q-41) | 2026-11-21 |
+| Q-64 | ENT08: sinal de idade da Play Store (Play Age Signals) | Interface `AgeSignalProvider` + fake no plano 1c; plugin nativo próprio com a biblioteca oficial na Fase 12 (API em beta; só testável com o app na loja) | 2026-11-21 |
+| Q-65 | ENT10: bloquear também o aparelho de quem foi congelado por ser menor? | Sim: o aparelho fica marcado; login ou cadastro nele vai para a tela de bloqueio até a revisão da equipe, que pode liberar o aparelho | 2026-11-21 |
