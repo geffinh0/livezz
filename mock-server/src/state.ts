@@ -30,19 +30,32 @@ export interface ConfigApp {
   allowedRegions: string[];
 }
 
-export type ScenarioName = 'erro-500' | 'rede-lenta' | 'manutencao' | 'versao-minima';
+export type ScenarioName = 'erro-500' | 'rede-lenta' | 'manutencao' | 'versao-minima' | 'regiao-bloqueada';
 export const scenarioNames: readonly ScenarioName[] = [
   'erro-500',
   'rede-lenta',
   'manutencao',
   'versao-minima',
+  'regiao-bloqueada',
 ];
+
+/** Dispositivo (DATABASE.md). */
+export interface Device {
+  id: string;
+  platform: 'android' | 'ios' | 'web';
+  model: string | null;
+  appVersion: string;
+  locale: 'pt-BR' | 'en';
+  registeredAt: string;
+  seenAt: string;
+}
 
 export interface State {
   config: ConfigApp;
   users: Map<string, User>;
   scenarios: Set<ScenarioName>;
   integrations: IntegracaoProvedor[];
+  devices: Map<string, Device>;
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -93,5 +106,6 @@ export function createState(tenantId = 'liveapp'): State {
     users: new Map(users.map((u) => [u.id, u])),
     scenarios: new Set(),
     integrations: defaultIntegrations(),
+    devices: new Map(),
   };
 }

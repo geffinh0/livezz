@@ -9,6 +9,7 @@ export type ErrorCode =
   | 'limite_excedido'
   | 'atualizacao_obrigatoria'
   | 'manutencao'
+  | 'regiao_bloqueada'
   | 'erro_interno';
 
 const messages: Record<ErrorCode, { pt: string; en: string }> = {
@@ -18,6 +19,10 @@ const messages: Record<ErrorCode, { pt: string; en: string }> = {
   limite_excedido: { pt: 'Muitas tentativas. Tente mais tarde.', en: 'Too many attempts. Try later.' },
   atualizacao_obrigatoria: { pt: 'Atualize o app para continuar.', en: 'Update the app to continue.' },
   manutencao: { pt: 'Estamos em manutenção. Volte em instantes.', en: 'We are under maintenance.' },
+  regiao_bloqueada: {
+    pt: 'O app não está disponível na sua região.',
+    en: 'The app is not available in your region.',
+  },
   erro_interno: { pt: 'Algo deu errado. Tente de novo.', en: 'Something went wrong. Try again.' },
 };
 

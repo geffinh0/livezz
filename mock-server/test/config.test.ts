@@ -27,6 +27,7 @@ describe('GET /v1/config (TRV04)', () => {
         'limits',
         'maintenance',
         'minAppVersion',
+        'region',
       ].sort(),
     );
   });
