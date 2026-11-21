@@ -172,3 +172,90 @@ describe('WebSocket /v1/realtime (TRV01)', () => {
     c.ws.close();
   });
 });
+
+describe('tempo real com sessões reais (ADR 0012)', () => {
+  async function login(mock: MockServer, phone = '+5511900000001') {
+    const dev = (
+      await mock.app.inject({
+        method: 'POST',
+        url: '/v1/devices',
+        payload: { platform: 'web', appVersion: '0.1.0', locale: 'pt-BR' },
+      })
+    ).json();
+    mock.state.auth.sends.clear();
+    await mock.app.inject({
+      method: 'POST',
+      url: '/v1/auth/code/send',
+      payload: { channel: 'sms', destination: phone, purpose: 'login' },
+    });
+    const code = (
+      await mock.app.inject({ method: 'GET', url: `/__mock/outbox?destination=${encodeURIComponent(phone)}` })
+    ).json().code;
+    return (
+      await mock.app.inject({
+        method: 'POST',
+        url: '/v1/auth/code/verify',
+        payload: { destination: phone, code, purpose: 'login', ...dev },
+      })
+    ).json() as { accessToken: string };
+  }
+
+  async function authWith(url: string, token: string) {
+    const c = await connect(url);
+    c.send('auth', { token }, 'a1');
+    return c;
+  }
+
+  it('token real autentica', async () => {
+    const { url, mock } = await start();
+    const t = await login(mock);
+    const c = await authWith(url, t.accessToken);
+    expect((await c.next('ack')).data).toEqual({ refId: 'a1', ok: true });
+    c.ws.close();
+  });
+
+  it('token vencido fecha com 4003 (não terminal)', async () => {
+    const { url, mock } = await start();
+    mock.state.auth.config.accessTokenSecondsOverride = -1;
+    const t = await login(mock);
+    const c = await authWith(url, t.accessToken);
+    expect((await c.next('session.invalid')).data).toEqual({ reason: 'token_expirado' });
+    expect(await c.closed).toBe(4003);
+  });
+
+  it('login em outro aparelho: a conexão antiga recebe session.replaced e fecha com 4002', async () => {
+    const { url, mock } = await start();
+    const t = await login(mock);
+    const c = await authWith(url, t.accessToken);
+    await c.next('ack');
+    await login(mock);
+    expect((await c.next('session.replaced')).data).toHaveProperty('at');
+    expect(await c.closed).toBe(4002);
+  });
+
+  it('mesma sessão reconectando fecha a conexão antiga com 4004, sem aviso', async () => {
+    const { url, mock } = await start();
+    const t = await login(mock);
+    const first = await authWith(url, t.accessToken);
+    await first.next('ack');
+    const second = await authWith(url, t.accessToken);
+    await second.next('ack');
+    expect(await first.closed).toBe(4004);
+    second.ws.close();
+  });
+
+  it('logout fecha o tempo real com session.invalid', async () => {
+    const { url, mock } = await start();
+    const t = await login(mock);
+    const c = await authWith(url, t.accessToken);
+    await c.next('ack');
+    await mock.app.inject({
+      method: 'POST',
+      url: '/v1/auth/logout',
+      headers: { authorization: `Bearer ${t.accessToken}` },
+      payload: {},
+    });
+    expect((await c.next('session.invalid')).data).toEqual({ reason: 'revogada' });
+    expect(await c.closed).toBe(4001);
+  });
+});

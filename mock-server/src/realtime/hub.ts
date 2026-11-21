@@ -3,6 +3,8 @@ import { envelope, type Envelope } from './envelope.js';
 /** Uma conexão autenticada (o transporte WebSocket implementa esta interface). */
 export interface Connection {
   userId: string | null;
+  /** Sessão (ADR 0012); null para tokens de teste do mock. */
+  sessionId: string | null;
   rooms: Set<string>;
   send(e: Envelope): void;
   close(code: number, reason: string): void;
@@ -41,6 +43,21 @@ export class Hub {
       }
     }
     return n;
+  }
+
+  /** Revogação: avisa e fecha as conexões da sessão. */
+  closeSession(sessionId: string, code: number, type: string, data: unknown) {
+    for (const c of [...this.connections]) {
+      if (c.sessionId !== sessionId) continue;
+      c.send(envelope(type, data));
+      c.close(code, type);
+      this.connections.delete(c);
+    }
+  }
+
+  bySession(sessionId: string): Connection | undefined {
+    for (const c of this.connections) if (c.sessionId === sessionId) return c;
+    return undefined;
   }
 
   closeAll(code: number, reason: string) {

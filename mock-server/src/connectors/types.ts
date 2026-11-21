@@ -6,6 +6,7 @@ export const connectorTypes = [
   'pagamento_web',
   'repasse_saque',
   'sms_whatsapp',
+  'email',
   'verificacao_idade',
   'traducao',
   'moderacao_midia',
@@ -48,4 +49,18 @@ export interface AgeVerificationConnector extends BaseConnector {
   ): Promise<{ status: 'pendente' | 'aprovada' | 'reprovada'; adult: boolean | null }>;
 }
 
-export type AnyConnector = BaseConnector | SmsWhatsappConnector | AgeVerificationConnector;
+/** email (ENT05, ENT07): e-mail transacional (códigos, avisos). */
+export interface EmailConnector extends BaseConnector {
+  readonly type: 'email';
+  sendCode(input: {
+    email: string;
+    code: string;
+    purpose: 'login' | 'signup' | 'reset';
+  }): Promise<{ delivered: boolean }>;
+  sendNotice(input: {
+    email: string;
+    kind: 'ja_tem_conta' | 'novo_aparelho' | 'sessao_revogada';
+  }): Promise<{ delivered: boolean }>;
+}
+
+export type AnyConnector = BaseConnector | SmsWhatsappConnector | AgeVerificationConnector | EmailConnector;

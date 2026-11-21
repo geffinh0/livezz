@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { hashSecret, randomToken, verifySecret } from '../auth/crypto.js';
+import type { AntiBot } from '../auth/antibot.js';
 import { Type, type Static } from '@sinclair/typebox';
 import type { FastifyInstance } from 'fastify';
 import type { State } from '../state.js';
@@ -8,6 +10,7 @@ import type { State } from '../state.js';
 const Body = Type.Object(
   {
     deviceId: Type.Optional(Type.String({ maxLength: 64 })),
+    deviceSecret: Type.Optional(Type.String({ maxLength: 128 })),
     platform: Type.Union([Type.Literal('android'), Type.Literal('ios'), Type.Literal('web')]),
     appVersion: Type.String({ pattern: '^\\d+\\.\\d+\\.\\d+$' }),
     locale: Type.Union([Type.Literal('pt-BR'), Type.Literal('en')]),
@@ -16,18 +19,27 @@ const Body = Type.Object(
   { additionalProperties: false },
 );
 
-export function registerDeviceRoutes(app: FastifyInstance, getState: () => State) {
+export function registerDeviceRoutes(app: FastifyInstance, getState: () => State, antibot: AntiBot) {
   app.post<{ Body: Static<typeof Body> }>('/v1/devices', { schema: { body: Body } }, async (req, reply) => {
+    antibot.check(req, 'devices');
     const { devices } = getState();
     const now = new Date().toISOString();
-    const { deviceId, platform, appVersion, locale, model } = req.body;
-    const known = deviceId ? devices.get(deviceId) : undefined;
+    const { deviceId, deviceSecret, platform, appVersion, locale, model } = req.body;
+    const candidate = deviceId ? devices.get(deviceId) : undefined;
+    // Atualizar exige o segredo certo (ADR 0012); sem ele, cria outro aparelho.
+    const known =
+      candidate?.secretHash && deviceSecret && (await verifySecret(deviceSecret, candidate.secretHash))
+        ? candidate
+        : undefined;
     if (known) {
       Object.assign(known, { platform, appVersion, locale, model: model ?? known.model, seenAt: now });
       return reply.status(200).send({ deviceId: known.id });
     }
     const id = randomUUID();
+    const secret = randomToken();
     devices.set(id, {
+      secretHash: await hashSecret(secret),
+      userId: null,
       id,
       platform,
       appVersion,
@@ -36,6 +48,6 @@ export function registerDeviceRoutes(app: FastifyInstance, getState: () => State
       registeredAt: now,
       seenAt: now,
     });
-    return reply.status(201).send({ deviceId: id });
+    return reply.status(201).send({ deviceId: id, deviceSecret: secret });
   });
 }

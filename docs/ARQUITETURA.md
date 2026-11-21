@@ -121,7 +121,8 @@ No servidor, cada tipo de provedor tem uma **interface de conector**; o comprado
 | Beleza/filtros | `BeautyProvider` | sem efeito | beleza básica da Agora |
 | Pagamento na loja | `StorePurchaseProvider` | compra simulada no mock | Google Play Billing + faturamento alternativo (Q-37) |
 | Recarga, assinatura e saque | conector `pagamento_web` / `repasse_saque` | simulado no mock | escolhido pelo comprador (Q-38) |
-| SMS / WhatsApp OTP | conector `sms_whatsapp` | código fixo no mock | escolhido pelo comprador |
+| SMS / WhatsApp OTP | conector `sms_whatsapp` | código no outbox do mock | escolhido pelo comprador |
+| E-mail transacional (códigos, avisos) | conector `email` | outbox do mock | escolhido pelo comprador |
 | Login Google | `SocialAuthProvider` | conta de teste | Google Sign-In |
 | Sinal de idade da loja | `StoreAgeSignalProvider` | faixa fixa por cenário | Play Age Signals |
 | Verificação forte de idade | conector `verificacao_idade` (liga/desliga) | aprovar/reprovar por cenário | escolhido pelo comprador; padrão Yoti (Q-35) |
@@ -132,7 +133,7 @@ No servidor, cada tipo de provedor tem uma **interface de conector**; o comprado
 | Analytics / crash | `AnalyticsProvider` | log no console | Firebase Analytics + Crashlytics |
 | Tradução de mensagens | conector `traducao` | tradução fake | gratuito (Q-40) |
 
-No mock-server: interfaces em `mock-server/src/connectors/types.ts`, fakes em `fakes.ts` e escolha por `IntegracaoProvedor` em `registry.ts`. Contrato detalhado já existe para `sms_whatsapp` (`sendCode`) e `verificacao_idade` (`startSession`, `getResult`); os demais têm só `testConnection` até a feature dona chegar.
+No mock-server: interfaces em `mock-server/src/connectors/types.ts`, fakes em `fakes.ts` e escolha por `IntegracaoProvedor` em `registry.ts`. Contrato detalhado já existe para `sms_whatsapp` (`sendCode`), `email` (`sendCode`, `sendNotice`) e `verificacao_idade` (`startSession`, `getResult`); os demais têm só `testConnection` até a feature dona chegar.
 
 ## 13. Segurança e conformidade
 Detalhado em `docs/SEGURANCA.md`. Resumo: tokens curtos + refresh rotativo, segredos só no servidor, rate limit, validação de toda entrada, ledger auditável, verificação de idade confiável (ECA Digital), LGPD (exportar/excluir), moderação em tempo real, logs de auditoria no painel.

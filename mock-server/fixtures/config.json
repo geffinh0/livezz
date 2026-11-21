@@ -1,10 +1,28 @@
 {
   "minAppVersion": "0.1.0",
-  "loginMethods": { "loginPhone": true, "loginEmail": true, "loginGoogle": true },
+  "loginMethods": {
+    "loginPhone": true,
+    "loginSms": true,
+    "loginWhatsapp": false,
+    "loginEmail": true,
+    "loginGoogle": true,
+    "antibotAppCheck": false,
+    "antibotRecaptcha": false,
+    "antibotTurnstile": false
+  },
   "discoverTabs": ["popular", "nearby", "new", "pk", "multi", "calls"],
   "legalTexts": {
-    "terms": { "version": 1, "path": "/legal/termos" },
-    "privacy": { "version": 1, "path": "/legal/privacidade" },
-    "guidelines": { "version": 1, "path": "/legal/diretrizes" }
+    "terms": {
+      "version": 1,
+      "path": "/legal/termos"
+    },
+    "privacy": {
+      "version": 1,
+      "path": "/legal/privacidade"
+    },
+    "guidelines": {
+      "version": 1,
+      "path": "/legal/diretrizes"
+    }
   }
 }

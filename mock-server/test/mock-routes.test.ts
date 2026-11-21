@@ -5,7 +5,13 @@ import type { Connection } from '../src/realtime/hub.js';
 
 function fakeConn(userId: string | null, rooms: string[] = []) {
   const sent: Envelope[] = [];
-  const c: Connection = { userId, rooms: new Set(rooms), send: (e) => sent.push(e), close: vi.fn() };
+  const c: Connection = {
+    userId,
+    sessionId: null,
+    rooms: new Set(rooms),
+    send: (e) => sent.push(e),
+    close: vi.fn(),
+  };
   return { c, sent };
 }
 

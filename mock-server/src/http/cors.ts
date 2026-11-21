@@ -15,7 +15,7 @@ export function registerCors(app: FastifyInstance) {
       reply.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
       reply.header(
         'Access-Control-Allow-Headers',
-        'Content-Type,Authorization,Accept-Language,X-App-Version,Idempotency-Key,X-Mock-Country',
+        'Content-Type,Authorization,Accept-Language,X-App-Version,Idempotency-Key,X-Mock-Country,X-Antibot-Provider,X-Antibot-Token',
       );
       reply.header('Access-Control-Max-Age', '600');
       return reply.status(204).send();

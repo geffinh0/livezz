@@ -53,6 +53,9 @@ function applyScenario(ctx: MockContext, name: ScenarioName, active: boolean) {
     Object.assign(cfg.flags, changed);
     bumpConfig(ctx, { flags: changed });
   }
+  if (name === 'token-expira-rapido') {
+    ctx.getState().auth.config.accessTokenSecondsOverride = active ? 5 : null;
+  }
   if (name === 'versao-minima') {
     cfg.minAppVersion = active ? forcedMinAppVersion : pristine(ctx.tenantId).minAppVersion;
     bumpConfig(ctx, { minAppVersion: cfg.minAppVersion });
@@ -85,6 +88,16 @@ export function registerMockRoutes(app: FastifyInstance, ctx: MockContext) {
       return { scenario: name, active };
     },
   );
+
+  // Último código "enviado" para um destino (E2E). SÓ MOCK; o app nunca chama.
+  app.get<{ Querystring: { destination?: string } }>('/__mock/outbox', async (req) => {
+    const dest = (req.query.destination ?? '').trim().toLowerCase();
+    const code =
+      ctx.getState().auth.lastCodes.get(dest) ??
+      ctx.getState().auth.lastCodes.get(req.query.destination ?? '');
+    if (!code) throw new ApiError(404, 'nao_encontrado');
+    return { code };
+  });
 
   app.post<{ Body: Static<typeof EmitBody> }>('/__mock/emit', { schema: { body: EmitBody } }, async (req) => {
     const { type, data, target } = req.body;

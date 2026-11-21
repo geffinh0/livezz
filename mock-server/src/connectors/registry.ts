@@ -4,6 +4,7 @@ import {
   type AgeVerificationConnector,
   type AnyConnector,
   type ConnectorType,
+  type EmailConnector,
   type SmsWhatsappConnector,
 } from './types.js';
 
@@ -24,7 +25,7 @@ type Factory = (type: ConnectorType, outbox: FakeOutbox) => AnyConnector;
 export class ConnectorRegistry {
   private readonly factories = new Map<string, Factory>([['fake', fakeFor]]);
   private readonly cache = new Map<ConnectorType, AnyConnector>();
-  readonly outbox: FakeOutbox = { sms: [] };
+  readonly outbox: FakeOutbox = { sms: [], email: [] };
 
   constructor(private readonly integrations: () => IntegracaoProvedor[]) {}
 
@@ -43,6 +44,10 @@ export class ConnectorRegistry {
 
   sms(): SmsWhatsappConnector | null {
     return this.get('sms_whatsapp') as SmsWhatsappConnector | null;
+  }
+
+  email(): EmailConnector | null {
+    return this.get('email') as EmailConnector | null;
   }
 
   ageVerification(): AgeVerificationConnector | null {

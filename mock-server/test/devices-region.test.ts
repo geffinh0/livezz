@@ -8,12 +8,14 @@ describe('POST /v1/devices (ENT01)', () => {
     const { app, state } = await buildApp();
     const r1 = await app.inject({ method: 'POST', url: '/v1/devices', payload: body });
     expect(r1.statusCode).toBe(201);
-    const { deviceId } = r1.json();
+    const { deviceId, deviceSecret } = r1.json();
     expect(deviceId).toMatch(/^[0-9a-f-]{36}$/);
+    expect(typeof deviceSecret).toBe('string');
+    expect(state.devices.get(deviceId)?.secretHash).not.toContain(deviceSecret);
     const r2 = await app.inject({
       method: 'POST',
       url: '/v1/devices',
-      payload: { ...body, deviceId, appVersion: '0.2.0' },
+      payload: { ...body, deviceId, deviceSecret, appVersion: '0.2.0' },
     });
     expect(r2.statusCode).toBe(200);
     expect(r2.json()).toEqual({ deviceId });
@@ -26,6 +28,19 @@ describe('POST /v1/devices (ENT01)', () => {
     const r = await app.inject({ method: 'POST', url: '/v1/devices', payload: { ...body, extra: 'x' } });
     expect(r.statusCode).toBe(201);
     expect(state.devices.get(r.json().deviceId)).not.toHaveProperty('extra');
+  });
+
+  it('id conhecido sem o segredo certo cria outro aparelho (ADR 0012)', async () => {
+    const { app, state } = await buildApp();
+    const { deviceId } = (await app.inject({ method: 'POST', url: '/v1/devices', payload: body })).json();
+    const r = await app.inject({
+      method: 'POST',
+      url: '/v1/devices',
+      payload: { ...body, deviceId, deviceSecret: 'errado' },
+    });
+    expect(r.statusCode).toBe(201);
+    expect(r.json().deviceId).not.toBe(deviceId);
+    expect(state.devices.size).toBe(2);
   });
 
   it('id desconhecido ou forjado não é adotado', async () => {

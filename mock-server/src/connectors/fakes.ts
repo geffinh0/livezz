@@ -4,12 +4,30 @@ import type {
   AnyConnector,
   BaseConnector,
   ConnectorType,
+  EmailConnector,
   SmsWhatsappConnector,
 } from './types.js';
 
 /** Registro de mensagens "enviadas" pelo fake de SMS, para os testes e cenários lerem o código. */
 export interface FakeOutbox {
   sms: Array<{ channel: 'sms' | 'whatsapp'; phoneE164: string; code: string }>;
+  email: Array<{ email: string; code?: string; kind?: string }>;
+}
+
+export function fakeEmail(outbox: FakeOutbox): EmailConnector {
+  return {
+    type: 'email',
+    provider: 'fake',
+    testConnection: async () => ({ ok: true }),
+    sendCode: async ({ email, code }) => {
+      outbox.email.push({ email, code });
+      return { delivered: true };
+    },
+    sendNotice: async ({ email, kind }) => {
+      outbox.email.push({ email, kind });
+      return { delivered: true };
+    },
+  };
 }
 
 export function fakeSms(outbox: FakeOutbox): SmsWhatsappConnector {
@@ -53,5 +71,6 @@ export function fakeBase(type: ConnectorType): BaseConnector {
 export function fakeFor(type: ConnectorType, outbox: FakeOutbox): AnyConnector {
   if (type === 'sms_whatsapp') return fakeSms(outbox);
   if (type === 'verificacao_idade') return fakeAgeVerification();
+  if (type === 'email') return fakeEmail(outbox);
   return fakeBase(type);
 }

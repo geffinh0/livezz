@@ -1,4 +1,6 @@
 import Fastify, { type FastifyInstance } from 'fastify';
+import { AntiBot } from './auth/antibot.js';
+import { AuthService } from './auth/service.js';
 import { ConnectorRegistry } from './connectors/registry.js';
 import { ApiError, errorBody, sendError } from './http/errors.js';
 import { registerCors } from './http/cors.js';
@@ -7,6 +9,7 @@ import { setDocumentedTypes } from './realtime/catalog.js';
 import { readDocumentedServerTypes } from './realtime/docs-catalog.js';
 import { Hub } from './realtime/hub.js';
 import { attachRealtime } from './realtime/server.js';
+import { registerAuthRoutes } from './routes/auth.js';
 import { registerConfigRoutes } from './routes/config.js';
 import { registerDeviceRoutes } from './routes/devices.js';
 import { registerMockRoutes } from './scenarios/mock-routes.js';
@@ -17,23 +20,50 @@ export interface MockServer {
   state: State;
   hub: Hub;
   connectors: ConnectorRegistry;
+  auth: AuthService;
 }
 
 export interface BuildOptions {
   tenantId?: string;
   logger?: boolean;
+  /** Para testes que conferem o conteúdo dos logs. */
+  logStream?: { write(msg: string): void };
 }
 
 export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
-  const app = Fastify({ logger: opts.logger ?? false, genReqId: () => crypto.randomUUID() });
+  // Logs nunca levam segredos (ADR 0012, SEGURANCA.md).
+  const redact = {
+    paths: [
+      'req.headers.authorization',
+      'req.headers["x-antibot-token"]',
+      '*.password',
+      '*.newPassword',
+      '*.code',
+      '*.refreshToken',
+      '*.deviceSecret',
+      '*.idToken',
+      '*.destination',
+    ],
+    censor: '[oculto]',
+  };
+  const logger = opts.logStream
+    ? { level: 'info', redact, stream: opts.logStream }
+    : opts.logger
+      ? { level: 'info', redact }
+      : false;
+  const app = Fastify({ logger, genReqId: () => crypto.randomUUID() });
   const tenantId = opts.tenantId ?? 'liveapp';
   const state = createState(tenantId);
+  const hub = new Hub();
+  const connectors = new ConnectorRegistry(() => holder.state.integrations);
   const holder: MockServer = {
     app,
     state,
-    hub: new Hub(),
-    connectors: new ConnectorRegistry(() => holder.state.integrations),
+    hub,
+    connectors,
+    auth: new AuthService(() => holder.state, hub, connectors),
   };
+  const antibot = new AntiBot(() => holder.state);
   setDocumentedTypes(readDocumentedServerTypes());
 
   app.setErrorHandler((err, req, reply) => {
@@ -49,8 +79,9 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   registerCors(app);
   registerGuards(app, getState);
   registerConfigRoutes(app, getState);
-  registerDeviceRoutes(app, getState);
-  attachRealtime(app, holder.hub, getState);
+  registerDeviceRoutes(app, getState, antibot);
+  registerAuthRoutes(app, holder.auth, antibot, getState);
+  attachRealtime(app, holder.hub, getState, holder.auth);
   registerMockRoutes(app, {
     getState,
     resetState: () => {
