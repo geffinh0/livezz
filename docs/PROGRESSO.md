@@ -4,10 +4,10 @@
 > Inclua sempre uma linha `dados:` dizendo se a tarefa mexeu no modelo de dados (e o que foi atualizado no DATABASE.md) ou `dados: sem impacto`.
 
 ## Estado atual
-Fase 1a implementada e verificada: ENT18 `[x]`; ENT01, ENT02, ENT03, ENT17, NAV01 `[~]` (faltam: restaurar sessão e retomar ação após login real → plano 1b; visitante assistir live → Fase 3; botão "Atualizar" com link da loja → M-030). Testes: app 115, mock 45, E2E web 50/50. Decisões Q-50 a Q-53 (sessão 30 dias, autopreenchimento do SMS na Fase 12, cadastro na 1c, Google por contas de teste do mock).
+Plano 1b (login, senha, termos, sessão única, anti-bot) implementado: passos 1–12 feitos (contratos + ADR 0012, autenticação no mock, sessão real no app, telas de login, E2E). Testes: mock 76, app 131, E2E web 88/88. Falta o passo 13: as 4 revisões (segurança, código, UX, dados) pararam no limite de uso da conta e serão retomadas; depois o verificador decide o status de ENT04–ENT07, ENT16, ENT19, SEG06 (e ENT01/ENT17 da 1a). Nada marcado `[x]` ainda nesta etapa.
 
 ## Próximo passo
-`/planejar` do plano 1b: ENT04, ENT05, ENT06, ENT07, ENT16, ENT19, SEG06 (login, recuperar senha, termos, sessão única, anti-bot).
+Retomar as revisões do passo 13, corrigir o que for real, rodar o verificador, atualizar a especificação; depois `/planejar` do plano 1c (cadastro ENT08–ENT15, idioma CFG14).
 
 ## Problemas conhecidos / dívidas técnicas
 - Sessão da nuvem sem Android SDK nem aparelho: APK só no CI (confirmado: run 12 verde, artefato `liveapp-debug-apk`), Maestro só na máquina do usuário (`tools/dev/setup-linux.sh` e `tools/dev/e2e-emulador.sh`).
@@ -15,6 +15,7 @@ Fase 1a implementada e verificada: ENT18 `[x]`; ENT01, ENT02, ENT03, ENT17, NAV0
 - Ver `docs/MELHORIAS.md` M-004 a M-022 (sugestões das revisões).
 
 ## Últimas sessões (manter só as 5 mais recentes)
+- 2026-11-21: plano 1b passos 1–12; ADR 0012; Q-54. dados: DATABASE.md — MetodoLogin, CodigoVerificacao, Sessao, AceiteTermos, Usuario (parcial) em uso no mock; Dispositivo.segredo_hash; TokensLocais no app (ver Histórico).
 - 2026-11-21: Fase 1a concluída (revisões + verificador); E2E web ganhou casos de erro e espera por texto; script de E2E encerra o grupo de processos. dados: API.md com cenário `entrada-desligada` e CORS do mock.
 - 2026-11-21: Fase 1a passos 1–7. dados: DATABASE.md atualizado — Dispositivo em uso no mock (id gerado pelo servidor), PreferenciasLocais no app, `region` calculado por requisição (ver Histórico).
 - 2026-11-21: auditoria final da Fase 0; bug do portão de versão mínima corrigido (o app não comparava `minAppVersion`); regra nova no CLAUDE.md (trocar de abordagem após 2 falhas); Q-44 a Q-47; plano 1a. dados: sem impacto.

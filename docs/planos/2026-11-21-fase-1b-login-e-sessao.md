@@ -114,4 +114,9 @@
 12. `features/auth/` com `domain/` (regras de senha, máscara, estados) puro e `data/` (DTOs, repositório).
 13. **ADR 0012 — Modelo de sessão** (access curto + refresh rotativo com detecção de reuso, ligação ao aparelho por `deviceSecret`, `sid` no token, códigos de fechamento do tempo real) escrita no passo 1.
 
+## Andamento (2026-11-21)
+- Passos 1–12 feitos (commits 10f4429 a 56e5469; passos 2–6 e 8–11 agrupados em um commit cada).
+- Testes: mock 76, app 131, E2E web 88/88.
+- Passo 13 pendente: revisões interrompidas pelo limite de uso; retomar e depois rodar o verificador.
+
 Status: aprovado pelo usuário em 2026-11-21
