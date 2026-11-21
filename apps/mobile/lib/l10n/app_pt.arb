@@ -172,5 +172,10 @@
   "errorErroInterno": "Tivemos um problema no servidor. Tente de novo em instantes.",
   "@errorErroInterno": {
     "description": "Erro da API: erro_interno"
-  }
+  },
+  "actionCreateAccount": "Criar conta",
+  "actionSignIn": "Entrar",
+  "actionExploreAsVisitor": "Explorar sem conta",
+  "accountRequiredTitle": "Entre para continuar",
+  "accountRequiredBody": "Crie uma conta ou entre para interagir. Depois a gente continua de onde você parou."
 }

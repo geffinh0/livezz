@@ -68,5 +68,10 @@
   "errorPagamentoFalhou": "The payment didn't go through.",
   "errorSaqueAbaixoMinimo": "The amount is below the minimum.",
   "errorDadosRecebimentoIncompletos": "Complete your payout details.",
-  "errorErroInterno": "We had a server problem. Try again in a moment."
+  "errorErroInterno": "We had a server problem. Try again in a moment.",
+  "actionCreateAccount": "Create account",
+  "actionSignIn": "Sign in",
+  "actionExploreAsVisitor": "Explore without an account",
+  "accountRequiredTitle": "Sign in to continue",
+  "accountRequiredBody": "Create an account or sign in to interact. We will pick up where you left off."
 }
