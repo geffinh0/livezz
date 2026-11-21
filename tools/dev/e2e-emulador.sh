@@ -7,6 +7,7 @@
 #       HEADLESS=1 bash tools/dev/e2e-emulador.sh     (emulador sem janela)
 #       KEEP=1 bash tools/dev/e2e-emulador.sh         (não desliga nada no fim)
 #       EMU_GPU=swiftshader_indirect|guest|host      (modo gráfico do emulador; padrão auto)
+#       EMU_VULKAN=1                                 (liga Vulkan no emulador; padrão desligado)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -47,6 +48,9 @@ passo "Emulador ($AVD_NAME)"
 if ! adb devices | grep -q "emulator-"; then
   args=(-avd "$AVD_NAME" -no-snapshot-save -no-audio -no-boot-anim -memory "${EMU_RAM_MB:-2048}" -gpu "${EMU_GPU:-auto}")
   [ "${HEADLESS:-0}" = "1" ] && args+=(-no-window)
+  # Vulkan por software do emulador trava (SIGILL) em alguns processadores
+  # quando o Flutter desenha; sem Vulkan o app usa OpenGL. EMU_VULKAN=1 liga.
+  [ "${EMU_VULKAN:-0}" = "1" ] || args+=(-feature -Vulkan)
   emulator "${args[@]}" > "$OUT/emulator.log" 2>&1 &
   PIDS+=($!)
 fi
