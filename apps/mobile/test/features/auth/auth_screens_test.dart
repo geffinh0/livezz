@@ -5,7 +5,6 @@ import 'package:livezz_mobile/core/auth/session.dart';
 import 'package:livezz_mobile/core/errors/app_failure.dart';
 import 'package:livezz_mobile/features/auth/application/auth_flow.dart';
 import 'package:livezz_mobile/features/auth/presentation/code_screen.dart';
-import 'package:livezz_mobile/features/auth/presentation/complete_profile_screen.dart';
 import 'package:livezz_mobile/features/auth/presentation/email_screen.dart';
 import 'package:livezz_mobile/features/auth/presentation/google_test_screen.dart';
 import 'package:livezz_mobile/features/auth/presentation/phone_screen.dart';
@@ -144,7 +143,6 @@ void main() {
         pendingTerms: [PendingTerm(document: 'terms', version: 2, url: _url)],
       ),
     ),
-    'complete seu cadastro': (const CompleteProfileScreen(), null),
   };
 
   group('telas de login em inglês com fonte 2x não quebram', () {

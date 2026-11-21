@@ -32,6 +32,7 @@ const _sessionEndCodes = {
   'dispositivo_invalido',
   'conta_banida',
   'conta_suspensa',
+  'menor_de_idade',
 };
 
 /// Cliente HTTP do app (TRV03). Base `{apiBaseUrl}/v1`.
@@ -124,6 +125,9 @@ class ApiClient {
               );
             } else if (failure.status == 503 && failure.code == 'manutencao') {
               onGate(GateMaintenance(failure.retryAfter));
+            } else if (failure.status == 403 &&
+                failure.code == 'menor_de_idade') {
+              onGate(GateMinorBlocked(failure.details['protocol'] as String?));
             } else if (failure.status == 403 &&
                 failure.code == 'regiao_bloqueada') {
               onGate(GateRegionBlocked(failure.details['country'] as String?));

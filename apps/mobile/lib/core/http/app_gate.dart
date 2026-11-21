@@ -22,3 +22,10 @@ final class GateRegionBlocked extends AppGate {
   const GateRegionBlocked(this.country);
   final String? country;
 }
+
+/// ENT10: conta ou aparelho bloqueado por menor de idade. [protocol] é o
+/// número que a pessoa informa ao suporte para pedir revisão (Q-68).
+final class GateMinorBlocked extends AppGate {
+  const GateMinorBlocked(this.protocol);
+  final String? protocol;
+}

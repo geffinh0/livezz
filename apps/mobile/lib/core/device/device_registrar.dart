@@ -29,6 +29,7 @@ class DeviceRegistrar {
     required String appVersion,
     required String locale,
     Map<String, String>? antibot,
+    void Function(String? protocol)? onBlocked,
   }) async {
     final known = await stored();
     final json = await _api.call(
@@ -43,6 +44,8 @@ class DeviceRegistrar {
         options: antibot == null ? null : Options(headers: antibot),
       ),
     );
+    // ENT10: aparelho marcado por conta congelada de menor.
+    if (json['blocked'] == true) onBlocked?.call(json['protocol'] as String?);
     final id = json['deviceId'] as String;
     final secret = json['deviceSecret'] as String? ?? known?.secret;
     if (secret == null) throw StateError('servidor não devolveu o segredo');

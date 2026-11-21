@@ -13,19 +13,20 @@ import 'secure_store.dart';
 class Session {
   const Session({
     required this.userId,
-    this.needsProfile = false,
     this.pendingTerms = const [],
+    this.pendingSteps = const [],
+    this.displayName,
+    this.username,
   });
   final String userId;
-  final bool needsProfile;
   final List<PendingTerm> pendingTerms;
 
-  Session copyWith({bool? needsProfile, List<PendingTerm>? pendingTerms}) =>
-      Session(
-        userId: userId,
-        needsProfile: needsProfile ?? this.needsProfile,
-        pendingTerms: pendingTerms ?? this.pendingTerms,
-      );
+  /// Passos do cadastro inicial que faltam (plano 1c).
+  final List<OnboardingStep> pendingSteps;
+  final String? displayName;
+  final String? username;
+
+  bool get needsProfile => pendingSteps.isNotEmpty;
 }
 
 /// Dependências da sessão, injetadas no bootstrap (testes trocam por falsos).
@@ -77,6 +78,7 @@ class SessionController extends Notifier<Session?> {
     'dispositivo_invalido',
     'conta_banida',
     'conta_suspensa',
+    'menor_de_idade',
   };
 
   String? _access;
@@ -151,8 +153,13 @@ class SessionController extends Notifier<Session?> {
 
   Session _fromMe(Me me) => Session(
     userId: me.id,
-    needsProfile: me.needsProfile,
     pendingTerms: me.pendingTerms,
+    // Servidor antigo sem `pendingSteps`: cai no primeiro passo.
+    pendingSteps: me.pendingSteps.isEmpty && me.needsProfile
+        ? OnboardingStep.values
+        : me.pendingSteps,
+    displayName: me.displayName,
+    username: me.username,
   );
 
   /// O servidor respondeu `403 termos_pendentes` com o app aberto (ENT16):
@@ -186,7 +193,12 @@ class SessionController extends Notifier<Session?> {
       await deps.store.write(_kUser, t.userId);
     }
     ref.read(sessionEndNoticeProvider.notifier).set(null);
-    var session = Session(userId: t.userId, needsProfile: t.needsProfile);
+    // Sem o /me (rede), decide pelo que o login disse; o servidor ainda barra
+    // com `cadastro_pendente` o que faltar.
+    var session = Session(
+      userId: t.userId,
+      pendingSteps: t.needsProfile ? OnboardingStep.values : const [],
+    );
     try {
       if (deps != null) session = _fromMe(await deps.api.me());
     } on AppFailure catch (e) {

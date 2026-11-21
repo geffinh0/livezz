@@ -39,6 +39,8 @@ Tema claro e escuro (CFG08). Na live, sempre texto claro sobre gradiente escuro 
 | AppBottomSheet | padrão para fluxos dentro da live; arrastar para fechar; altura adaptável |
 | AppDialog | confirmações (sempre com ação destrutiva destacada) |
 | AppTextField | rótulo, ajuda, erro, contador |
+| AppDateField | campo de data que abre o seletor do sistema (aceita digitar); data no idioma do app; ajuda e erro no campo; leitor de tela lê rótulo + valor |
+| AppChoiceChips | escolha múltipla em chips; selecionado com ícone de check (não só cor); limite opcional desliga o resto; alvo ≥ 48dp |
 | Avatar | tamanhos fixos; moldura de item/VIP; indicador ao vivo/online |
 | LiveCard | capa, título, host, espectadores, selos |
 | PriceTag | ícone de moeda/diamante + valor formatado (pt-BR) |

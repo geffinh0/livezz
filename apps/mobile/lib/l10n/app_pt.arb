@@ -299,8 +299,6 @@
   },
   "termsAgree": "Li e aceito os documentos acima",
   "termsAccept": "Aceitar e continuar",
-  "completeProfileTitle": "Complete seu cadastro",
-  "completeProfileBody": "Estamos finalizando esta etapa do app. Em breve você completa seu nome e data de nascimento aqui.",
   "countryOption": "{iso} +{dialCode}",
   "@countryOption": {
     "placeholders": {
@@ -315,5 +313,80 @@
   "ruleMet": "Regra atendida",
   "ruleNotMet": "Regra não atendida",
   "codeSemantics": "Código de 6 dígitos",
-  "googleUnavailable": "O login com Google ainda não está disponível nesta versão. Use telefone ou e-mail."
+  "googleUnavailable": "O login com Google ainda não está disponível nesta versão. Use telefone ou e-mail.",
+  "errorCadastroPendente": "Complete seu cadastro para continuar.",
+  "@errorCadastroPendente": {
+    "description": "Erro da API: cadastro_pendente"
+  },
+  "actionContinue": "Continuar",
+  "actionSkip": "Pular",
+  "onboardingProfileTitle": "Seus dados",
+  "onboardingStepOf": "Passo {step} de {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "displayNameLabel": "Nome de exibição",
+  "displayNameHelper": "Como as pessoas vão te ver. De 2 a 30 caracteres.",
+  "displayNameLength": "Use de 2 a 30 caracteres.",
+  "displayNameForbidden": "Este nome não é permitido. Escolha outro.",
+  "birthDateLabel": "Data de nascimento",
+  "birthDateHelper": "Não poderá ser alterada depois.",
+  "birthDateRequired": "Informe sua data de nascimento.",
+  "birthDateChoose": "Escolher data",
+  "genderLabel": "Gênero (opcional)",
+  "genderPrivacy": "Só você vê. Fica no seu perfil e você pode deixar em branco.",
+  "genderWoman": "Mulher",
+  "genderMan": "Homem",
+  "genderNonBinary": "Não-binário",
+  "genderPreferNot": "Prefiro não dizer",
+  "onboardingUsernameTitle": "Escolha seu @",
+  "usernameLabel": "Seu @",
+  "usernameHelper": "De 3 a 20: letras minúsculas, números, ponto e _.",
+  "usernameChecking": "Verificando…",
+  "usernameAvailable": "Disponível",
+  "usernameFormat": "Use de 3 a 20 letras minúsculas, números, ponto ou _, sem ponto no começo ou no fim.",
+  "usernameTaken": "Já está em uso.",
+  "usernameReserved": "Este @ é reservado.",
+  "usernameSuggestions": "Sugestões",
+  "onboardingInterestsTitle": "Do que você gosta?",
+  "interestsIntro": "Escolha até 10. Usamos para sugerir lives para você.",
+  "interestsLimit": "Você já escolheu 10.",
+  "minorBlockedTitle": "Acesso não permitido",
+  "minorBlockedBody": "Este app é só para maiores de 18 anos. Esta conta e este aparelho foram bloqueados.",
+  "minorBlockedReview": "Se você tem 18 anos ou mais e houve um engano, escreva para {email} informando o protocolo. A equipe vai pedir uma verificação de idade.",
+  "@minorBlockedReview": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "minorBlockedProtocol": "Protocolo: {protocol}",
+  "@minorBlockedProtocol": {
+    "placeholders": {
+      "protocol": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Configurações",
+  "settingsLanguage": "Idioma",
+  "languagePortuguese": "Português (Brasil)",
+  "languageEnglish": "English",
+  "usernameHint": "seu.nome",
+  "usernameHandle": "@{username}",
+  "@usernameHandle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  }
 }

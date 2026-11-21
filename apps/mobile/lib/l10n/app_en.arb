@@ -143,8 +143,6 @@
   "termsVersion": "Version {version}",
   "termsAgree": "I have read and accept the documents above",
   "termsAccept": "Accept and continue",
-  "completeProfileTitle": "Complete your profile",
-  "completeProfileBody": "We are finishing this step of the app. Soon you will complete your name and date of birth here.",
   "countryOption": "{iso} +{dialCode}",
   "ruleMet": "Rule met",
   "ruleNotMet": "Rule not met",
@@ -157,6 +155,78 @@
       },
       "seconds": {
         "type": "int"
+      }
+    }
+  },
+  "errorCadastroPendente": "Complete your sign-up to continue.",
+  "actionContinue": "Continue",
+  "actionSkip": "Skip",
+  "onboardingProfileTitle": "About you",
+  "onboardingStepOf": "Step {step} of {total}",
+  "@onboardingStepOf": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "displayNameLabel": "Display name",
+  "displayNameHelper": "How people will see you. 2 to 30 characters.",
+  "displayNameLength": "Use 2 to 30 characters.",
+  "displayNameForbidden": "This name is not allowed. Choose another one.",
+  "birthDateLabel": "Date of birth",
+  "birthDateHelper": "It cannot be changed later.",
+  "birthDateRequired": "Enter your date of birth.",
+  "birthDateChoose": "Choose date",
+  "genderLabel": "Gender (optional)",
+  "genderPrivacy": "Only you can see it. It stays on your profile and you can leave it blank.",
+  "genderWoman": "Woman",
+  "genderMan": "Man",
+  "genderNonBinary": "Non-binary",
+  "genderPreferNot": "Prefer not to say",
+  "onboardingUsernameTitle": "Choose your @",
+  "usernameLabel": "Your @",
+  "usernameHelper": "3 to 20: lowercase letters, numbers, dot and _.",
+  "usernameChecking": "Checking…",
+  "usernameAvailable": "Available",
+  "usernameFormat": "Use 3 to 20 lowercase letters, numbers, dot or _, with no dot at the start or end.",
+  "usernameTaken": "Already taken.",
+  "usernameReserved": "This @ is reserved.",
+  "usernameSuggestions": "Suggestions",
+  "onboardingInterestsTitle": "What do you like?",
+  "interestsIntro": "Choose up to 10. We use them to suggest lives to you.",
+  "interestsLimit": "You already chose 10.",
+  "minorBlockedTitle": "Access not allowed",
+  "minorBlockedBody": "This app is for adults 18 and over only. This account and this device have been blocked.",
+  "minorBlockedReview": "If you are 18 or older and this was a mistake, write to {email} with the protocol number. The team will ask for an age verification.",
+  "@minorBlockedReview": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "minorBlockedProtocol": "Protocol: {protocol}",
+  "@minorBlockedProtocol": {
+    "placeholders": {
+      "protocol": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsTitle": "Settings",
+  "settingsLanguage": "Language",
+  "languagePortuguese": "Português (Brasil)",
+  "languageEnglish": "English",
+  "usernameHint": "your.name",
+  "usernameHandle": "@{username}",
+  "@usernameHandle": {
+    "placeholders": {
+      "username": {
+        "type": "String"
       }
     }
   }

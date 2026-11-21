@@ -1,8 +1,12 @@
+import '../../../core/auth/onboarding_step.dart';
+
+export '../../../core/auth/onboarding_step.dart';
+
 /// Decisão de para onde o app vai ao abrir e a cada mudança de estado
 /// (ENT01, ENT18). Dart puro, testado em tabela.
 enum ConfigStatus { loading, error, ready }
 
-enum GateKind { none, updateRequired, maintenance, regionBlocked }
+enum GateKind { none, updateRequired, maintenance, regionBlocked, minorBlocked }
 
 enum EntryDestination {
   splash,
@@ -12,7 +16,14 @@ enum EntryDestination {
   regionBlocked,
   welcome,
   acceptTerms,
-  completeProfile,
+
+  /// Cadastro inicial (plano 1c), na ordem: dados (ENT08), @ (ENT11), interesses (ENT12).
+  onboardingProfile,
+  onboardingUsername,
+  onboardingInterests,
+
+  /// ENT10: menor de idade; sem acesso ao app.
+  minorBlocked,
   home,
 
   /// Visitante (ENT02): na Home sem sessão; pode abrir as telas de entrada.
@@ -28,13 +39,15 @@ EntryDestination decideEntry({
   required bool hasSession,
   bool sessionReady = true,
   bool pendingTerms = false,
-  bool needsProfile = false,
+  List<OnboardingStep> pendingSteps = const [],
   bool sessionEnded = false,
 }) {
   // Portões têm prioridade: atualização > região > manutenção.
   if (gate == GateKind.updateRequired) return EntryDestination.updateRequired;
   if (gate == GateKind.regionBlocked) return EntryDestination.regionBlocked;
   if (gate == GateKind.maintenance) return EntryDestination.maintenance;
+  // ENT10: acima de termos e independente de haver sessão.
+  if (gate == GateKind.minorBlocked) return EntryDestination.minorBlocked;
   switch (config) {
     case ConfigStatus.loading:
       return EntryDestination.splash;
@@ -49,7 +62,15 @@ EntryDestination decideEntry({
   if (hasSession) {
     // ENT16 antes de tudo; depois o cadastro inicial (1c); então a Home.
     if (pendingTerms) return EntryDestination.acceptTerms;
-    if (needsProfile) return EntryDestination.completeProfile;
+    if (pendingSteps.contains(OnboardingStep.profile)) {
+      return EntryDestination.onboardingProfile;
+    }
+    if (pendingSteps.contains(OnboardingStep.username)) {
+      return EntryDestination.onboardingUsername;
+    }
+    if (pendingSteps.contains(OnboardingStep.interests)) {
+      return EntryDestination.onboardingInterests;
+    }
     return EntryDestination.home;
   }
   // ENT19: a sessão acabou (outro aparelho, expirou): boas-vindas com o

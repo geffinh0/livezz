@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 
 import '../http/api_client.dart';
+import 'onboarding_step.dart';
+
+export 'onboarding_step.dart';
 
 /// Credenciais do aparelho (ADR 0012): exigidas no login e no refresh.
 class DeviceCredentials {
@@ -50,11 +53,23 @@ class Me {
     required this.id,
     required this.needsProfile,
     required this.pendingTerms,
+    this.pendingSteps = const [],
+    this.displayName,
+    this.username,
+    this.language,
   });
 
   factory Me.fromJson(Map<String, dynamic> j) => Me(
     id: j['id'] as String,
     needsProfile: j['needsProfile'] as bool,
+    // Passo desconhecido (servidor mais novo) é ignorado.
+    pendingSteps: [
+      for (final s in (j['pendingSteps'] as List? ?? const []).cast<String>())
+        ...OnboardingStep.values.where((v) => v.name == s),
+    ],
+    displayName: j['displayName'] as String?,
+    username: j['username'] as String?,
+    language: j['language'] as String?,
     pendingTerms: [
       for (final t in (j['pendingTerms'] as List).cast<Map<String, dynamic>>())
         PendingTerm(
@@ -68,6 +83,12 @@ class Me {
   final String id;
   final bool needsProfile;
   final List<PendingTerm> pendingTerms;
+  final List<OnboardingStep> pendingSteps;
+  final String? displayName;
+  final String? username;
+
+  /// `pt-BR` ou `en` (CFG14).
+  final String? language;
 }
 
 /// Anti-bot (SEG06): headers do desafio quando o servidor pediu (428).

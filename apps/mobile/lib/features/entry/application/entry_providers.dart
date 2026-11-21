@@ -59,6 +59,8 @@ final deviceRegistrationProvider = FutureProvider<DeviceCredentials?>((
         appVersion: ref.read(envProvider).appVersion,
         locale: acceptLanguageFor(ref.read(localeProvider)),
         antibot: antibot,
+        onBlocked: (protocol) =>
+            ref.read(appGateProvider.notifier).set(GateMinorBlocked(protocol)),
       );
   try {
     try {
@@ -91,6 +93,7 @@ GateKind _gateKind(AppGate g) => switch (g) {
   GateUpdateRequired() => GateKind.updateRequired,
   GateMaintenance() => GateKind.maintenance,
   GateRegionBlocked() => GateKind.regionBlocked,
+  GateMinorBlocked() => GateKind.minorBlocked,
   GateOpen() => GateKind.none,
 };
 
@@ -117,7 +120,7 @@ final entryDestinationProvider = Provider<EntryDestination>((ref) {
     hasSession: session != null,
     sessionReady: ref.watch(sessionReadyProvider),
     pendingTerms: session?.pendingTerms.isNotEmpty ?? false,
-    needsProfile: session?.needsProfile ?? false,
+    pendingSteps: session?.pendingSteps ?? const [],
     sessionEnded: ref.watch(sessionEndNoticeProvider) != null,
   );
 });

@@ -78,6 +78,8 @@ String errorMessageFor(AppLocalizations l, String code) {
       return l.errorTermosPendentes;
     case 'dispositivo_invalido':
       return l.errorDispositivoInvalido;
+    case 'cadastro_pendente':
+      return l.errorCadastroPendente;
     default:
       return l.errorUnknown;
   }
@@ -92,6 +94,7 @@ const knownErrorCodes = <String>[
   'sessao_expirada',
   'termos_pendentes',
   'dispositivo_invalido',
+  'cadastro_pendente',
   'nao_autenticado',
   'token_expirado',
   'sessao_substituida',

@@ -8,7 +8,6 @@ import 'package:go_router/go_router.dart';
 import '../core/auth/pending_action.dart';
 import '../core/auth/session.dart';
 import '../features/auth/presentation/code_screen.dart';
-import '../features/auth/presentation/complete_profile_screen.dart';
 import '../features/auth/presentation/email_screen.dart';
 import '../features/auth/presentation/google_test_screen.dart';
 import '../features/auth/presentation/phone_screen.dart';
@@ -20,7 +19,11 @@ import '../features/entry/domain/entry_decision.dart';
 import '../features/entry/presentation/entry_methods_screen.dart';
 import '../features/entry/presentation/gate_screen.dart';
 import '../features/entry/presentation/legal_screen.dart';
+import '../features/entry/presentation/minor_blocked_screen.dart';
 import '../features/entry/presentation/welcome_screen.dart';
+import '../features/onboarding/presentation/interests_step_screen.dart';
+import '../features/onboarding/presentation/profile_step_screen.dart';
+import '../features/onboarding/presentation/username_step_screen.dart';
 import '../features/shell/presentation/home_shell.dart';
 import '../features/shell/presentation/tab_placeholder.dart';
 import 'routes.dart';
@@ -54,16 +57,29 @@ String? redirectFor(EntryDestination dest, String path) {
       return path == Routes.terms || path.startsWith('/legal/')
           ? null
           : Routes.terms;
-    case EntryDestination.completeProfile:
-      return path == Routes.completeProfile ? null : Routes.completeProfile;
+    case EntryDestination.onboardingProfile:
+      return path == Routes.onboardingProfile ? null : Routes.onboardingProfile;
+    case EntryDestination.onboardingUsername:
+      return path == Routes.onboardingUsername
+          ? null
+          : Routes.onboardingUsername;
+    case EntryDestination.onboardingInterests:
+      return path == Routes.onboardingInterests
+          ? null
+          : Routes.onboardingInterests;
+    case EntryDestination.minorBlocked:
+      // ENT10: nada além da tela de bloqueio.
+      return path == Routes.minorBlocked ? null : Routes.minorBlocked;
     case EntryDestination.home:
       const outside = {
         Routes.start,
         Routes.gate,
         Routes.terms,
-        Routes.completeProfile,
+        Routes.minorBlocked,
       };
-      return outside.contains(path) || _isLoginFlow(path)
+      return outside.contains(path) ||
+              _isLoginFlow(path) ||
+              path.startsWith('/onboarding/')
           ? Routes.discover
           : null;
     case EntryDestination.visitorHome:
@@ -73,9 +89,11 @@ String? redirectFor(EntryDestination dest, String path) {
         Routes.gate,
         Routes.welcome,
         Routes.terms,
-        Routes.completeProfile,
+        Routes.minorBlocked,
       };
-      return blocked.contains(path) ? Routes.discover : null;
+      return blocked.contains(path) || path.startsWith('/onboarding/')
+          ? Routes.discover
+          : null;
     default:
       return null;
   }
@@ -123,8 +141,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.terms, builder: (c, s) => const TermsScreen()),
       GoRoute(
-        path: Routes.completeProfile,
-        builder: (c, s) => const CompleteProfileScreen(),
+        path: Routes.onboardingProfile,
+        builder: (c, s) => const ProfileStepScreen(),
+      ),
+      GoRoute(
+        path: Routes.onboardingUsername,
+        builder: (c, s) => const UsernameStepScreen(),
+      ),
+      GoRoute(
+        path: Routes.onboardingInterests,
+        builder: (c, s) => const InterestsStepScreen(),
+      ),
+      GoRoute(
+        path: Routes.minorBlocked,
+        builder: (c, s) => const MinorBlockedScreen(),
       ),
       GoRoute(
         path: '/legal/:doc',

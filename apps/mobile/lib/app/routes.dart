@@ -12,7 +12,10 @@ abstract final class Routes {
   /// Dados vão em `extra` (CodeArgs): telefone e e-mail nunca na URL.
   static const entryCode = '/entry/code';
   static const terms = '/terms';
-  static const completeProfile = '/complete-profile';
+  static const onboardingProfile = '/onboarding/profile';
+  static const onboardingUsername = '/onboarding/username';
+  static const onboardingInterests = '/onboarding/interests';
+  static const minorBlocked = '/blocked';
   static const discover = '/discover';
   static const following = '/following';
   static const live = '/live';
