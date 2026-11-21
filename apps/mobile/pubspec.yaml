@@ -7,13 +7,16 @@ environment:
   sdk: ^3.14.0
 
 dependencies:
+  dio: ^5.11.1
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+  flutter_riverpod: ^3.5.0
   intl: ^0.20.3
   material_symbols_icons: ^4.2960.0
   material_ui: ^1.1.0
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:
