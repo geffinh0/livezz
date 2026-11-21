@@ -6,6 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../errors/app_failure.dart';
 import '../theme/tokens.dart';
 import 'app_button.dart';
+import 'test_id.dart';
 
 /// Estados de tela obrigatórios (Definição de pronto): carregando, vazio,
 /// erro, sem conexão e sem permissão.
@@ -111,35 +112,41 @@ class StateView extends StatelessWidget {
     final label = actionLabel ?? defaultAction;
     return Center(
       key: ValueKey('state.${kind.name}'),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpace.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
-            const SizedBox(height: AppSpace.lg),
-            Text(
-              title ?? defaultTitle,
-              style: theme.textTheme.titleLarge,
-              textAlign: TextAlign.center,
-            ),
-            if ((message ?? defaultMessage) != null) ...[
-              const SizedBox(height: AppSpace.sm),
+      child: TestId(
+        'state.${kind.name}',
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSpace.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 48, color: theme.colorScheme.onSurfaceVariant),
+              const SizedBox(height: AppSpace.lg),
               Text(
-                message ?? defaultMessage!,
-                style: theme.textTheme.bodyMedium,
+                title ?? defaultTitle,
+                style: theme.textTheme.titleLarge,
                 textAlign: TextAlign.center,
               ),
+              if ((message ?? defaultMessage) != null) ...[
+                const SizedBox(height: AppSpace.sm),
+                Text(
+                  message ?? defaultMessage!,
+                  style: theme.textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (onAction != null && label != null) ...[
+                const SizedBox(height: AppSpace.xl),
+                TestId(
+                  'state.${kind.name}.action',
+                  child: AppButton(
+                    key: ValueKey('state.${kind.name}.action'),
+                    label: label,
+                    onPressed: onAction,
+                  ),
+                ),
+              ],
             ],
-            if (onAction != null && label != null) ...[
-              const SizedBox(height: AppSpace.xl),
-              AppButton(
-                key: ValueKey('state.${kind.name}.action'),
-                label: label,
-                onPressed: onAction,
-              ),
-            ],
-          ],
+          ),
         ),
       ),
     );

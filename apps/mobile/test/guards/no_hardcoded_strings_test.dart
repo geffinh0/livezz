@@ -8,8 +8,11 @@ import 'package:flutter_test/flutter_test.dart';
 /// Regra TRV07: nenhum texto de interface fixo no código de telas.
 /// Vale para arquivos de tela: `lib/core/ui/`, `lib/app/*_screen.dart` e
 /// `lib/features/**/presentation/`. Rotas ficam em `lib/app/routes.dart`.
-/// Permitido: strings dentro de `Key(...)`/`ValueKey(...)` (ids do Maestro),
+/// Permitido: strings dentro de `Key`/`ValueKey`/`TestId` e argumentos `id:`
+/// (ids técnicos),
 /// diretivas (import/part) e anotações.
+const _idTypes = {'Key', 'ValueKey', 'TestId'};
+
 class _Finder extends RecursiveAstVisitor<void> {
   _Finder(this.file);
   final String file;
@@ -18,13 +21,14 @@ class _Finder extends RecursiveAstVisitor<void> {
   bool _allowed(AstNode node) {
     for (AstNode? p = node.parent; p != null; p = p.parent) {
       if (p is Directive || p is Annotation) return true;
+      if (p is NamedArgument && p.name.lexeme == 'id') return true;
       if (p is InstanceCreationExpression) {
         final name = p.constructorName.type.name.lexeme;
-        if (name == 'Key' || name == 'ValueKey') return true;
+        if (_idTypes.contains(name)) return true;
       }
       if (p is MethodInvocation) {
         final name = p.methodName.name;
-        if (name == 'Key' || name == 'ValueKey') return true;
+        if (_idTypes.contains(name)) return true;
       }
     }
     return false;

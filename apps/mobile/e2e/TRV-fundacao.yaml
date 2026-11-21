@@ -1,0 +1,51 @@
+# Fase 0 — fundação: app abre com a marca do tenant, lê a config do mock-server
+# e conecta no tempo real. Erro: com erro-500 aparece "tentar de novo" e recupera.
+# Pré-requisitos: docs em apps/mobile/e2e/README.md
+appId: com.seudominio.liveapp
+env:
+  MOCK_URL: http://localhost:3000
+name: TRV-fundacao
+---
+# Caminho principal
+- runScript:
+    file: scripts/mock.js
+    env:
+      ACTION: reset
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: showcase.appName
+    timeout: 15000
+- assertVisible:
+    id: showcase.configVersion
+- extendedWaitUntil:
+    visible:
+      id: showcase.realtime.connected
+    timeout: 15000
+
+# Caminho de erro: servidor com erro 500 → tela de erro → tentar de novo
+- runScript:
+    file: scripts/mock.js
+    env:
+      ACTION: scenario/erro-500
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: state.error
+    timeout: 15000
+- runScript:
+    file: scripts/mock.js
+    env:
+      ACTION: scenario/erro-500:off
+- tapOn:
+    id: state.error.action
+- extendedWaitUntil:
+    visible:
+      id: showcase.appName
+    timeout: 15000
+- runScript:
+    file: scripts/mock.js
+    env:
+      ACTION: reset

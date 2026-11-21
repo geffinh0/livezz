@@ -8,6 +8,7 @@ import '../core/config/application/config_controller.dart';
 import '../core/http/app_gate.dart';
 import '../core/theme/tokens.dart';
 import '../core/ui/state_views.dart';
+import '../core/ui/test_id.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'routes.dart';
@@ -26,19 +27,19 @@ class StartScreen extends ConsumerWidget {
 
     final Widget body = switch ((config, gate)) {
       (_, GateUpdateRequired()) => _Blocking(
-        key: const ValueKey('gate.update'),
+        id: 'gate.update',
         icon: Symbols.system_update,
         title: l.updateRequiredTitle,
         message: l.errorAtualizacaoObrigatoria,
       ),
       (AsyncData(:final value), _) when value.maintenance.active => _Blocking(
-        key: const ValueKey('gate.maintenance'),
+        id: 'gate.maintenance',
         icon: Symbols.construction,
         title: l.maintenanceTitle,
         message: l.errorManutencao,
       ),
       (_, GateMaintenance()) => _Blocking(
-        key: const ValueKey('gate.maintenance'),
+        id: 'gate.maintenance',
         icon: Symbols.construction,
         title: l.maintenanceTitle,
         message: l.errorManutencao,
@@ -73,8 +74,10 @@ class _Blocking extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.message,
-    super.key,
+    required this.id,
   });
+
+  final String id;
 
   final IconData icon;
   final String title;
@@ -83,18 +86,22 @@ class _Blocking extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpace.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 56),
-            const SizedBox(height: AppSpace.lg),
-            Text(title, style: t.headlineSmall, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpace.sm),
-            Text(message, style: t.bodyLarge, textAlign: TextAlign.center),
-          ],
+    return TestId(
+      id,
+      child: Center(
+        key: ValueKey(id),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpace.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 56),
+              const SizedBox(height: AppSpace.lg),
+              Text(title, style: t.headlineSmall, textAlign: TextAlign.center),
+              const SizedBox(height: AppSpace.sm),
+              Text(message, style: t.bodyLarge, textAlign: TextAlign.center),
+            ],
+          ),
         ),
       ),
     );

@@ -13,6 +13,7 @@ import '../../../core/ui/app_dialog.dart';
 import '../../../core/ui/app_text_field.dart';
 import '../../../core/ui/app_toast.dart';
 import '../../../core/ui/state_views.dart';
+import '../../../core/ui/test_id.dart';
 import '../../../core/video/providers/fake/fake_video_view.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -40,9 +41,12 @@ class ShowcaseScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          l.appTitle(tenant.appName),
-          key: const ValueKey('showcase.appName'),
+        title: TestId(
+          'showcase.appName',
+          child: Text(
+            l.appTitle(tenant.appName),
+            key: const ValueKey('showcase.appName'),
+          ),
         ),
       ),
       body: ListView(
@@ -51,15 +55,21 @@ class ShowcaseScreen extends ConsumerWidget {
           Text(l.showcaseTitle, style: t.headlineSmall),
           const SizedBox(height: AppSpace.md),
           if (config.value case final c?)
-            Text(
-              l.showcaseConfigVersion(c.configVersion),
-              key: const ValueKey('showcase.configVersion'),
+            TestId(
+              'showcase.configVersion',
+              child: Text(
+                l.showcaseConfigVersion(c.configVersion),
+                key: const ValueKey('showcase.configVersion'),
+              ),
             ),
-          Semantics(
-            liveRegion: true,
-            child: Text(
-              statusText,
-              key: ValueKey('showcase.realtime.${status.name}'),
+          TestId(
+            'showcase.realtime.${status.name}',
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                statusText,
+                key: ValueKey('showcase.realtime.${status.name}'),
+              ),
             ),
           ),
           const SizedBox(height: AppSpace.xl),
