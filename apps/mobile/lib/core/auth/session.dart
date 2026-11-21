@@ -68,9 +68,23 @@ class SessionController extends Notifier<Session?> {
   static const _kRefresh = 'auth.refresh';
   static const _kUser = 'auth.user';
 
+  /// Códigos que significam "a sessão acabou" no servidor (ADR 0012).
+  static const endedCodes = {
+    'sessao_substituida',
+    'sessao_revogada',
+    'sessao_expirada',
+    'dispositivo_invalido',
+    'conta_banida',
+    'conta_suspensa',
+  };
+
   String? _access;
   String? _refresh;
   Future<String?>? _refreshing;
+
+  /// Geração da sessão: muda a cada login e a cada limpeza. Resultados de
+  /// operações iniciadas numa geração antiga são descartados (sem corrida).
+  int _gen = 0;
 
   SessionDeps? get _deps => ref.read(sessionDepsProvider);
 
@@ -86,6 +100,10 @@ class SessionController extends Notifier<Session?> {
   Future<void> restore() async {
     try {
       await _restore();
+    } on Object catch (e) {
+      // Armazenamento ilegível: segue sem sessão (visitante).
+      developer.log('restaurar sessão falhou: $e', name: 'auth');
+      await _clear().catchError((Object _) {});
     } finally {
       ref.read(sessionReadyProvider.notifier).set();
     }
@@ -94,34 +112,47 @@ class SessionController extends Notifier<Session?> {
   Future<void> _restore() async {
     final deps = _deps;
     if (deps == null) return;
-    _access = await deps.store.read(_kAccess);
-    _refresh = await deps.store.read(_kRefresh);
+    final access = await deps.store.read(_kAccess);
+    final refresh = await deps.store.read(_kRefresh);
     final userId = await deps.store.read(_kUser);
-    if (_access == null || _refresh == null || userId == null) return;
-    state = Session(userId: userId);
+    if (access == null || refresh == null || userId == null) return;
+    _access = access;
+    _refresh = refresh;
+    final gen = ++_gen;
     try {
-      await reloadMe();
+      final me = await deps.api.me();
+      if (gen == _gen) state = _fromMe(me);
     } on ApiFailure catch (e) {
-      if (e.status == 401 || e.status == 403) await _clear();
+      if (gen != _gen) return;
+      if (endedCodes.contains(e.code)) {
+        ref.read(sessionEndNoticeProvider.notifier).set(e.code);
+      }
+      await _clear();
     } on AppFailure {
-      // sem rede: mantém a sessão guardada; o servidor revalida na próxima chamada
+      // Sem rede: entra com o que estava guardado; o servidor revalida depois.
+      if (gen == _gen) state = Session(userId: userId);
     }
   }
 
+  Session _fromMe(Me me) => Session(
+    userId: me.id,
+    needsProfile: me.needsProfile,
+    pendingTerms: me.pendingTerms,
+  );
+
   Future<void> reloadMe() async {
     final deps = _deps;
-    if (deps == null || state == null) return;
+    if (deps == null || _access == null) return;
+    final gen = _gen;
     final me = await deps.api.me();
-    state = Session(
-      userId: me.id,
-      needsProfile: me.needsProfile,
-      pendingTerms: me.pendingTerms,
-    );
+    if (gen == _gen) state = _fromMe(me);
   }
 
-  /// Depois de qualquer login (telefone, e-mail, Google).
+  /// Depois de qualquer login (telefone, e-mail, Google). A sessão só é
+  /// publicada depois do `/me`, para o roteador já saber dos termos pendentes.
   Future<void> signedIn(TokenResponse t) async {
     final deps = _deps;
+    final gen = ++_gen;
     _access = t.accessToken;
     _refresh = t.refreshToken;
     if (deps != null) {
@@ -130,15 +161,17 @@ class SessionController extends Notifier<Session?> {
       await deps.store.write(_kUser, t.userId);
     }
     ref.read(sessionEndNoticeProvider.notifier).set(null);
-    state = Session(userId: t.userId, needsProfile: t.needsProfile);
+    var session = Session(userId: t.userId, needsProfile: t.needsProfile);
     try {
-      await reloadMe();
+      if (deps != null) session = _fromMe(await deps.api.me());
     } on AppFailure catch (e) {
       developer.log('me após login falhou: $e', name: 'auth');
     }
+    if (gen == _gen) state = session;
   }
 
-  /// Renova o access (fila única: chamadas simultâneas esperam a mesma renovação).
+  /// Renova o access (fila única: chamadas simultâneas esperam a mesma
+  /// renovação). Null = a sessão acabou. Lança [NetworkFailure] sem rede.
   Future<String?> refreshAccess() =>
       _refreshing ??= _doRefresh().whenComplete(() => _refreshing = null);
 
@@ -146,26 +179,29 @@ class SessionController extends Notifier<Session?> {
     final deps = _deps;
     final refresh = _refresh;
     if (deps == null || refresh == null) return null;
+    final gen = _gen;
     final device = await deps.device();
-    if (device == null) return null;
+    if (device == null) throw const NetworkFailure();
     try {
       final t = await deps.api.refresh(refresh, device);
+      if (gen != _gen) return null; // saiu ou entrou de novo no meio
       _access = t.accessToken;
       _refresh = t.refreshToken;
       await deps.store.write(_kAccess, t.accessToken);
       await deps.store.write(_kRefresh, t.refreshToken);
       return t.accessToken;
     } on ApiFailure catch (e) {
-      sessionEnded(e.code);
+      if (gen == _gen) sessionEnded(e.code);
       return null;
-    } on AppFailure {
-      return null; // sem rede: tenta de novo depois
     }
   }
 
   /// O servidor encerrou a sessão: limpa e guarda o motivo para o aviso.
-  void sessionEnded(String code) {
+  /// [usedToken] é o access usado na requisição que falhou: se não for o
+  /// atual (resposta atrasada de uma sessão anterior), ignora.
+  void sessionEnded(String code, {String? usedToken}) {
     if (state == null && _access == null) return;
+    if (usedToken != null && usedToken != _access) return;
     ref.read(sessionEndNoticeProvider.notifier).set(code);
     unawaited(_clear());
   }
@@ -186,15 +222,16 @@ class SessionController extends Notifier<Session?> {
   }
 
   Future<void> _clear() async {
+    _gen++;
     _access = null;
     _refresh = null;
+    state = null;
     final deps = _deps;
     if (deps != null) {
       for (final k in [_kAccess, _kRefresh, _kUser]) {
         await deps.store.delete(k);
       }
     }
-    state = null;
   }
 }
 

@@ -11,8 +11,11 @@ export interface AuthConfig {
   codeResendSeconds: number; // RN-02
   codeMaxSendsPerHour: number; // RN-02
   codeMaxAttempts: number; // RN-02
-  loginMaxFailures: number; // antes do bloqueio progressivo
+  loginMaxFailures: number; // por conta+aparelho, antes do bloqueio progressivo
+  ipMaxFailures: number; // por IP (alto: IP compartilhado/CGNAT é comum no Brasil)
   loginLockBaseSeconds: number;
+  codeSendsPerIpPerHour: number;
+  devicesPerIpPerHour: number;
 }
 
 export function defaultAuthConfig(): AuthConfig {
@@ -27,7 +30,10 @@ export function defaultAuthConfig(): AuthConfig {
     codeMaxSendsPerHour: 5,
     codeMaxAttempts: 5,
     loginMaxFailures: 5,
+    ipMaxFailures: 50,
     loginLockBaseSeconds: 60,
+    codeSendsPerIpPerHour: 60,
+    devicesPerIpPerHour: 60,
   };
 }
 

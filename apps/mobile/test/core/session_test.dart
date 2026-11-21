@@ -9,6 +9,7 @@ import 'package:livezz_mobile/core/auth/auth_api.dart';
 import 'package:livezz_mobile/core/auth/secure_store.dart';
 import 'package:livezz_mobile/core/auth/session.dart';
 import 'package:livezz_mobile/core/auth/token_source.dart';
+import 'package:livezz_mobile/core/errors/app_failure.dart';
 import 'package:livezz_mobile/core/http/api_client.dart';
 
 /// Servidor falso com rotas de auth e uma rota protegida.
@@ -89,7 +90,8 @@ class _Tokens implements TokenSource {
   @override
   Future<String?> refreshAccess() => s.refreshAccess();
   @override
-  void sessionEnded(String code) => s.sessionEnded(code);
+  void sessionEnded(String code, {String? usedToken}) =>
+      s.sessionEnded(code, usedToken: usedToken);
 }
 
 void main() {
@@ -219,6 +221,66 @@ void main() {
       await c.read(sessionProvider.notifier).restore();
       expect(c.read(sessionProvider), isNull);
       expect(store.data.containsKey('auth.refresh'), isFalse);
+    },
+  );
+
+  test('sair durante uma renovação não ressuscita a sessão', () async {
+    await login();
+    server
+      ..validAccess = 'outro'
+      ..refreshGate = Completer<void>();
+    final pending = c.read(sessionProvider.notifier).refreshAccess();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await c.read(sessionProvider.notifier).signOut();
+    server.refreshGate!.complete();
+    expect(await pending, isNull);
+    expect(c.read(sessionProvider), isNull);
+    expect(store.data.containsKey('auth.access'), isFalse);
+  });
+
+  test('novo login durante uma renovação não é sobrescrito', () async {
+    await login();
+    server.refreshGate = Completer<void>();
+    final pending = c.read(sessionProvider.notifier).refreshAccess();
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+    await c
+        .read(sessionProvider.notifier)
+        .signedIn(
+          const TokenResponse(
+            accessToken: 'at-novo',
+            refreshToken: 'rt-novo',
+            userId: 'u1',
+            needsProfile: false,
+          ),
+        );
+    server.refreshGate!.complete();
+    await pending;
+    expect(store.data['auth.access'], 'at-novo');
+    expect(store.data['auth.refresh'], 'rt-novo');
+  });
+
+  test(
+    'resposta atrasada de sessão antiga não derruba a sessão nova',
+    () async {
+      await login();
+      c
+          .read(sessionProvider.notifier)
+          .sessionEnded('sessao_revogada', usedToken: 'token-antigo');
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(sessionProvider), isNotNull);
+    },
+  );
+
+  test(
+    'sem rede, renovar lança NetworkFailure e não encerra a sessão',
+    () async {
+      await login();
+      server.offline = true;
+      await expectLater(
+        c.read(sessionProvider.notifier).refreshAccess(),
+        throwsA(isA<NetworkFailure>()),
+      );
+      expect(c.read(sessionProvider), isNotNull);
     },
   );
 }

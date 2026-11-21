@@ -1,4 +1,7 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart' show WidgetsBinding;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -115,6 +118,7 @@ final routerProvider = Provider<GoRouter>((ref) {
               destination: s.uri.queryParameters['dest'] ?? '',
               channel: s.uri.queryParameters['channel'] ?? 'sms',
               purpose: s.uri.queryParameters['purpose'] ?? 'login',
+              password: s.extra is String ? s.extra! as String : null,
             ),
           ),
           GoRoute(path: 'reset', builder: (c, s) => const ResetScreen()),
@@ -151,22 +155,30 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
   // ENT19: sessão expirada/encerrada → depois de entrar de novo, volta para
-  // onde a pessoa estava (mesmo mecanismo do ENT17).
+  // onde a pessoa estava (sem trocar uma ação ENT17 já guardada).
   ref.listen(sessionProvider, (prev, next) {
     if (prev == null || next != null) return;
     // Saiu por vontade própria: não precisa voltar a lugar nenhum.
     if (ref.read(sessionEndNoticeProvider) == null) return;
     final last = router.routerDelegate.currentConfiguration.uri.toString();
-    if (!last.startsWith('/discover') &&
-        !last.startsWith('/following') &&
-        !last.startsWith('/live') &&
-        !last.startsWith('/messages') &&
-        !last.startsWith('/profile')) {
-      return;
-    }
+    final inShell = HomeTab.values.any((t) => last.startsWith(t.path));
+    if (!inShell) return;
     ref
         .read(pendingActionProvider.notifier)
-        .hold(PendingAction(() async => router.go(last)));
+        .hold(PendingAction(() async => router.go(last)), keepExisting: true);
+  });
+
+  // ENT17: a ação pendente roda quando o destino vira a Home (depois de
+  // termos e cadastro), no quadro seguinte ao redirecionamento.
+  ref.listen(entryDestinationProvider, (prev, next) {
+    if (next != EntryDestination.home || prev == EntryDestination.home) return;
+    final action = ref.read(pendingActionProvider.notifier).take();
+    if (action == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      action.run().catchError((Object e) {
+        developer.log('ação pendente falhou: $e', name: 'auth');
+      });
+    });
   });
   ref.onDispose(router.dispose);
   return router;

@@ -31,10 +31,18 @@ export interface VerificationCode {
   attempts: number;
   expiresAt: number;
   usedAt: number | null;
+  /** Cadastro: hash da senha de QUEM pediu este código (confirmação exige a mesma senha). */
+  passwordHash: string | null;
 }
 
 export type RevokeReason =
-  'logout' | 'outro_aparelho' | 'senha_trocada' | 'reuso_refresh' | 'expirada' | 'conta_bloqueada';
+  | 'logout'
+  | 'outro_aparelho'
+  | 'senha_trocada'
+  | 'reuso_refresh'
+  | 'expirada'
+  | 'conta_bloqueada'
+  | 'mesmo_aparelho';
 
 export interface AuthSession {
   id: string;
@@ -43,6 +51,8 @@ export interface AuthSession {
   refreshHash: string;
   previousRefreshHash: string | null;
   rotatedAt: number | null;
+  /** O refresh anterior já foi usado na tolerância (só vale uma vez). */
+  graceUsed: boolean;
   createdAt: number;
   lastUsedAt: number;
   absoluteExpiresAt: number;
@@ -56,6 +66,7 @@ export interface TermsAcceptance {
   version: number;
   acceptedAt: string;
   deviceId: string | null;
+  ip: string | null;
 }
 
 export interface Notice {
@@ -78,6 +89,7 @@ export interface AuthStore {
   usedAntibotTokens: Set<string>;
   notices: Notice[];
   lastCodes: Map<string, string>; // SÓ MOCK: último código em texto por destino (outbox)
+  ipHits: Map<string, number[]>; // limites por IP (envio de código, registro de aparelho)
 }
 
 export function createAuthStore(): AuthStore {
@@ -94,5 +106,6 @@ export function createAuthStore(): AuthStore {
     usedAntibotTokens: new Set(),
     notices: [],
     lastCodes: new Map(),
+    ipHits: new Map(),
   };
 }

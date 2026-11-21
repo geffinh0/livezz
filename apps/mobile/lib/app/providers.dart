@@ -104,7 +104,8 @@ class _SessionTokenSource implements TokenSource {
   Future<String?> refreshAccess() => _session.refreshAccess();
 
   @override
-  void sessionEnded(String code) => _session.sessionEnded(code);
+  void sessionEnded(String code, {String? usedToken}) =>
+      _session.sessionEnded(code, usedToken: usedToken);
 }
 
 final secureStoreProvider = Provider<SecureStore>(

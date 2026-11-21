@@ -20,10 +20,14 @@ class CodeScreen extends ConsumerStatefulWidget {
     required this.channel,
     required this.purpose,
     super.key,
+    this.password,
   });
   final String destination;
   final String channel;
   final String purpose;
+
+  /// Cadastro por e-mail: a senha digitada antes (só em memória, nunca na URL).
+  final String? password;
 
   @override
   ConsumerState<CodeScreen> createState() => _CodeScreenState();
@@ -73,6 +77,7 @@ class _CodeScreenState extends ConsumerState<CodeScreen> {
             destination: widget.destination,
             code: _ctrl.text,
             purpose: widget.purpose,
+            password: widget.password,
           );
       // O roteador leva ao próximo passo (termos, cadastro ou Home).
     } on Object catch (e) {

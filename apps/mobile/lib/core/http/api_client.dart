@@ -83,7 +83,12 @@ class ApiClient {
               failure.code == 'token_expirado' &&
               req.extra[_retriedExtra] != true &&
               req.headers.containsKey('Authorization')) {
-            final fresh = await tokens.refreshAccess();
+            String? fresh;
+            try {
+              fresh = await tokens.refreshAccess();
+            } on Object {
+              fresh = null; // sem rede: devolve o erro original
+            }
             if (fresh != null) {
               try {
                 final retry = await dio.fetch<dynamic>(

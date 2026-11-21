@@ -1,12 +1,9 @@
-import 'dart:async';
-import 'dart:developer' as developer;
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'session.dart';
-
-/// Ação que o visitante tentou fazer antes de entrar (ENT17). Só em memória,
-/// expira, e a ação é revalidada no servidor quando roda (ela mesma chama a API).
+/// Ação que o visitante tentou fazer antes de entrar (ENT17), ou a tela onde
+/// a sessão expirou (ENT19). Só em memória e expira; quem executa é o
+/// roteador, quando o destino passa a ser a Home (depois de termos/cadastro).
+/// A ação é revalidada no servidor quando roda (ela mesma chama a API).
 class PendingAction {
   PendingAction(this.run, {DateTime? at}) : createdAt = at ?? DateTime.now();
   final Future<void> Function() run;
@@ -17,26 +14,7 @@ class PendingAction {
 
 class PendingActionController extends Notifier<PendingAction?> {
   @override
-  PendingAction? build() {
-    // Quando a sessão aparece, executa a ação guardada (se não expirou).
-    ref.listen(sessionProvider, (previous, next) {
-      if (previous == null && next != null) {
-        final action = state;
-        state = null;
-        if (action != null && !action.isExpired(_now())) {
-          // Espera o roteador assentar (ele também reage à sessão nova).
-          unawaited(
-            Future<void>.delayed(const Duration(milliseconds: 150))
-                .then((_) => action.run())
-                .catchError((Object e) {
-                  developer.log('ação pendente falhou: $e', name: 'auth');
-                }),
-          );
-        }
-      }
-    });
-    return null;
-  }
+  PendingAction? build() => null;
 
   DateTime Function() _now = DateTime.now;
 
@@ -44,8 +22,22 @@ class PendingActionController extends Notifier<PendingAction?> {
   // ignore: use_setters_to_change_properties
   void setClock(DateTime Function() now) => _now = now;
 
-  void hold(PendingAction action) => state = action;
+  /// Guarda a ação. Uma ação do visitante (ENT17) não é trocada pela volta
+  /// automática de sessão expirada ([keepExisting]).
+  void hold(PendingAction action, {bool keepExisting = false}) {
+    if (keepExisting && state != null && !state!.isExpired(_now())) return;
+    state = action;
+  }
+
   void clear() => state = null;
+
+  /// Entrega a ação (uma vez) se ainda não expirou.
+  PendingAction? take() {
+    final action = state;
+    state = null;
+    if (action == null || action.isExpired(_now())) return null;
+    return action;
+  }
 }
 
 final pendingActionProvider =

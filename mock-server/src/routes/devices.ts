@@ -19,9 +19,15 @@ const Body = Type.Object(
   { additionalProperties: false },
 );
 
-export function registerDeviceRoutes(app: FastifyInstance, getState: () => State, antibot: AntiBot) {
+export function registerDeviceRoutes(
+  app: FastifyInstance,
+  getState: () => State,
+  antibot: AntiBot,
+  limitIp: (ip: string) => void,
+) {
   app.post<{ Body: Static<typeof Body> }>('/v1/devices', { schema: { body: Body } }, async (req, reply) => {
     antibot.check(req, 'devices');
+    limitIp(req.ip); // criação em massa de aparelhos (e de scrypt) bloqueada por IP
     const { devices } = getState();
     const now = new Date().toISOString();
     const { deviceId, deviceSecret, platform, appVersion, locale, model } = req.body;

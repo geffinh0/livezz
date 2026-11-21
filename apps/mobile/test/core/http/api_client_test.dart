@@ -49,7 +49,7 @@ class FixedToken implements TokenSource {
   @override
   Future<String?> refreshAccess() async => null;
   @override
-  void sessionEnded(String code) {}
+  void sessionEnded(String code, {String? usedToken}) {}
 }
 
 void main() {

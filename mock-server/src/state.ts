@@ -169,7 +169,14 @@ function seedAuth(store: AuthStore): AuthStore {
       });
     }
     for (const document of ['terms', 'privacy'] as const) {
-      store.acceptances.push({ userId: a.userId, document, version: 1, acceptedAt: at, deviceId: null });
+      store.acceptances.push({
+        userId: a.userId,
+        document,
+        version: 1,
+        acceptedAt: at,
+        deviceId: null,
+        ip: null,
+      });
     }
   }
   return store;

@@ -23,6 +23,8 @@ const VerifyBody = Type.Object({
   destination: Type.String({ minLength: 3, maxLength: 254 }),
   code: Code,
   purpose: Type.Union([Type.Literal('login'), Type.Literal('signup')]),
+  // Cadastro por e-mail: a mesma senha usada ao pedir o código (anti-sequestro).
+  password: Type.Optional(Password),
   ...Device,
 });
 const SignupBody = Type.Object({ email: Email, password: Password });
@@ -50,7 +52,7 @@ export function registerAuthRoutes(
     { schema: { body: SendBody } },
     async (req) => {
       antibot.check(req, 'code_send');
-      return service.sendCode(req.body);
+      return service.sendCode(req.body, req.ip);
     },
   );
 
@@ -65,7 +67,7 @@ export function registerAuthRoutes(
     { schema: { body: SignupBody } },
     async (req, reply) => {
       antibot.check(req, 'signup');
-      await service.signupEmail(req.body.email, req.body.password);
+      await service.signupEmail(req.body.email, req.body.password, req.ip);
       return reply.status(202).send();
     },
   );
@@ -131,7 +133,7 @@ export function registerAuthRoutes(
     async (req, reply) => {
       const ctx = req.auth;
       if (!ctx) throw new Error('auth ausente');
-      service.acceptTerms(ctx, req.body.document, req.body.version);
+      service.acceptTerms(ctx, req.body.document, req.body.version, req.ip);
       return reply.status(204).send();
     },
   );

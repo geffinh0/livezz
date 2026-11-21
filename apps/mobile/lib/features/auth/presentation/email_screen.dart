@@ -66,6 +66,7 @@ class _EmailScreenState extends ConsumerState<EmailScreen> {
               channel: 'email',
               purpose: 'signup',
             ),
+            extra: _password.text,
           ),
         );
       } else {

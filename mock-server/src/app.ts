@@ -43,6 +43,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
       '*.deviceSecret',
       '*.idToken',
       '*.destination',
+      '*.email',
     ],
     censor: '[oculto]',
   };
@@ -79,7 +80,7 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
   registerCors(app);
   registerGuards(app, getState);
   registerConfigRoutes(app, getState);
-  registerDeviceRoutes(app, getState, antibot);
+  registerDeviceRoutes(app, getState, antibot, (ip) => holder.auth.hitIp('device', ip));
   registerAuthRoutes(app, holder.auth, antibot, getState);
   attachRealtime(app, holder.hub, getState, holder.auth);
   registerMockRoutes(app, {

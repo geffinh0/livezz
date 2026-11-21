@@ -56,12 +56,14 @@ class AuthFlow {
     required String destination,
     required String code,
     required String purpose,
+    String? password,
   }) async {
     final t = await _api.verifyCode(
       destination: destination,
       code: code,
       purpose: purpose,
       device: await _device(),
+      password: password,
     );
     await _ref.read(sessionProvider.notifier).signedIn(t);
   }

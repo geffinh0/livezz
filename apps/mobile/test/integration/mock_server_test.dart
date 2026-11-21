@@ -16,7 +16,7 @@ class _Dev implements TokenSource {
   @override
   Future<String?> refreshAccess() async => null;
   @override
-  void sessionEnded(String code) {}
+  void sessionEnded(String code, {String? usedToken}) {}
 }
 
 Future<void> _post(String path) async {

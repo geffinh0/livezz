@@ -109,6 +109,7 @@ class AuthApi {
     required String code,
     required String purpose,
     required DeviceCredentials device,
+    String? password,
   }) async => TokenResponse.fromJson(
     await _api.call(
       (d) => d.post<Map<String, dynamic>>(
@@ -117,6 +118,7 @@ class AuthApi {
           'destination': destination,
           'code': code,
           'purpose': purpose,
+          'password': ?password,
           ...device.toJson(),
         },
         options: _opts(),

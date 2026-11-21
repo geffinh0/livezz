@@ -244,7 +244,13 @@ class RealtimeClient {
 
   /// Token vencido (4003): renova e reconecta; sem renovação, encerra.
   Future<void> _renewAndRetry() async {
-    final fresh = await tokens.refreshAccess();
+    final String? fresh;
+    try {
+      fresh = await tokens.refreshAccess();
+    } on Object {
+      _scheduleRetry(); // sem rede: tenta de novo depois, sem encerrar a sessão
+      return;
+    }
     if (fresh == null) {
       _end(RealtimeEnd.revoked);
       return;

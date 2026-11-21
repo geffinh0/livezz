@@ -149,6 +149,7 @@ describe('e-mail e senha (ENT05, RN-03)', () => {
       destination: 'nova@teste.local',
       code,
       purpose: 'signup',
+      password: 'Livezz2026x',
       ...dev,
     });
     expect(v.statusCode).toBe(200);
@@ -423,5 +424,108 @@ describe('logs sem segredos (ADR 0012)', () => {
     expect(all).not.toContain('TEST_ONLY_Ana2026');
     expect(all).not.toContain('segredo-no-header');
     expect(all).not.toContain(dev.deviceSecret);
+  });
+});
+
+describe('correções da auditoria de segurança (Fase 1b)', () => {
+  it('cadastro: confirmar exige a senha de quem pediu o código (anti-sequestro)', async () => {
+    const { mock, dev } = await setup();
+    // atacante pede cadastro com o e-mail da vítima e a senha dele
+    await post(mock, '/v1/auth/email/signup', { email: 'vitima@teste.local', password: 'Atacante2026x' });
+    const code = await outbox(mock, 'vitima@teste.local');
+    // a vítima (com a senha DELA) não consegue confirmar com o código do atacante…
+    const victim = await post(mock, '/v1/auth/code/verify', {
+      destination: 'vitima@teste.local',
+      code,
+      purpose: 'signup',
+      password: 'Vitima2026x',
+      ...dev,
+    });
+    expect(victim.json().error.code).toBe('codigo_invalido');
+    // …e a conta não nasce com a senha do atacante.
+    expect(mock.state.auth.methods.some((m) => m.identifier === 'vitima@teste.local' && m.verifiedAt)).toBe(
+      false,
+    );
+  });
+
+  it('tolerância do refresh vale uma única vez (não reabre a janela)', async () => {
+    const { mock, dev } = await setup();
+    const t = (await phoneLogin(mock, dev)).json();
+    await post(mock, '/v1/auth/refresh', { refreshToken: t.refreshToken, ...dev }); // rotação normal
+    const first = await post(mock, '/v1/auth/refresh', { refreshToken: t.refreshToken, ...dev });
+    expect(first.statusCode).toBe(200); // 1º uso do antigo na tolerância
+    const second = await post(mock, '/v1/auth/refresh', { refreshToken: t.refreshToken, ...dev });
+    expect(second.json().error.code).toBe('sessao_revogada'); // 2º uso: reuso → revoga
+  });
+
+  it('limite por IP no envio de códigos e no registro de aparelhos', async () => {
+    const { mock } = await setup();
+    mock.state.auth.config.codeSendsPerIpPerHour = 2;
+    mock.state.auth.config.devicesPerIpPerHour = 2;
+    const send = (n: number) =>
+      post(mock, '/v1/auth/code/send', {
+        channel: 'sms',
+        destination: `+55119000099${n}0`,
+        purpose: 'login',
+      });
+    expect((await send(1)).statusCode).toBe(200);
+    expect((await send(2)).statusCode).toBe(200);
+    expect((await send(3)).statusCode).toBe(429);
+    await mock.app.inject({ method: 'POST', url: '/v1/devices', payload: devBody }); // 2º (o setup criou 1)
+    const third = await mock.app.inject({ method: 'POST', url: '/v1/devices', payload: devBody });
+    expect(third.statusCode).toBe(429);
+  });
+
+  it('erros de outro aparelho não trancam o dono da conta', async () => {
+    const { mock, dev } = await setup();
+    const attacker = await newDevice(mock);
+    for (let i = 0; i < 6; i++) {
+      await post(mock, '/v1/auth/email/login', {
+        email: 'carla@teste.local',
+        password: 'Errada2026x',
+        ...attacker,
+      });
+    }
+    const owner = await post(mock, '/v1/auth/email/login', {
+      email: 'carla@teste.local',
+      password: 'TEST_ONLY_Carla2026',
+      ...dev,
+    });
+    expect(owner.statusCode).toBe(200);
+  });
+
+  it('login em aparelho novo registra alerta ao dono; no mesmo aparelho não vira "outro aparelho"', async () => {
+    const { mock, dev } = await setup();
+    const a = (await phoneLogin(mock, dev, '+5511900000001')).json();
+    mock.state.auth.sends.clear();
+    await phoneLogin(mock, dev, '+5511900000001'); // mesmo aparelho
+    const me = await mock.app.inject({ method: 'GET', url: '/v1/me', headers: authed(a.accessToken) });
+    expect(me.json().error.code).toBe('sessao_revogada');
+    const other = await newDevice(mock);
+    mock.state.auth.sends.clear();
+    await phoneLogin(mock, other, '+5511900000001');
+    expect(mock.state.auth.notices.at(-1)).toMatchObject({ kind: 'novo_aparelho', userId: 'u-ana' });
+  });
+
+  it('conta suspensa não entra; máximo absoluto de 180 dias; access entre 5 e 60 min', async () => {
+    const { mock, dev } = await setup();
+    const t = (await phoneLogin(mock, dev, '+5511900000002')).json();
+    const user = mock.state.auth.users.get('u-bruno');
+    if (user) user.accountStatus = 'suspensa';
+    const r = await post(mock, '/v1/auth/refresh', { refreshToken: t.refreshToken, ...dev });
+    expect(r.json().error.code).toBe('conta_suspensa');
+    if (user) user.accountStatus = 'ativa';
+
+    const dev2 = await newDevice(mock);
+    const t2 = (await phoneLogin(mock, dev2, '+5511912312312')).json();
+    for (const s of mock.state.auth.sessions.values()) s.absoluteExpiresAt = Date.now() - 1;
+    const r2 = await post(mock, '/v1/auth/refresh', { refreshToken: t2.refreshToken, ...dev2 });
+    expect(r2.json().error.code).toBe('sessao_expirada');
+
+    mock.state.auth.config.accessTokenMinutes = 1;
+    const { accessTokenTtlMs } = await import('../src/auth/config.js');
+    expect(accessTokenTtlMs(mock.state.auth.config)).toBe(5 * 60_000);
+    mock.state.auth.config.accessTokenMinutes = 999;
+    expect(accessTokenTtlMs(mock.state.auth.config)).toBe(60 * 60_000);
   });
 });
