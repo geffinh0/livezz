@@ -84,4 +84,4 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 - Tela do painel para revisar contas congeladas (ADM).
 - Troca de @ a cada 30 dias e edição de perfil (PER02, Fase 2).
 
-Status: aguardando aprovação
+Status: aprovado pelo usuário em 2026-11-21
