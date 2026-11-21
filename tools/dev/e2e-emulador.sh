@@ -56,7 +56,15 @@ adb shell settings put global transition_animation_scale 0
 adb shell settings put global animator_duration_scale 0
 adb reverse tcp:3000 tcp:3000
 
-adb install -r "$APK"
+# O boot termina antes do serviço de instalação estar pronto em emuladores lentos.
+for _ in $(seq 1 60); do adb shell cmd package list packages >/dev/null 2>&1 && break; sleep 3; done
+instalado=""
+for tentativa in 1 2 3 4 5; do
+  if adb install -r "$APK"; then instalado=1; break; fi
+  echo "instalação falhou (tentativa $tentativa); tentando de novo em 10 s..."
+  sleep 10
+done
+[ -n "$instalado" ] || { echo "Não consegui instalar o APK."; exit 1; }
 
 passo "mock-server"
 if ! curl -sf http://127.0.0.1:3000/v1/config >/dev/null; then
