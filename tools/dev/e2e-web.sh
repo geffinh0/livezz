@@ -37,7 +37,7 @@ done
 echo "==> Fluxos"
 cd "$ROOT"
 status=0
-for f in apps/mobile/e2e/web/*.cjs; do
+for f in apps/mobile/e2e/web/[!_]*.cjs; do
   echo "--- $f"
   node "$f" "$OUT" || status=1
 done
