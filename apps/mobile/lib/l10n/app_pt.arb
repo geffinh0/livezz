@@ -209,5 +209,33 @@
         "type": "int"
       }
     }
+  },
+  "errorCredenciaisInvalidas": "E-mail ou senha incorretos.",
+  "@errorCredenciaisInvalidas": {
+    "description": "Erro da API: credenciais_invalidas"
+  },
+  "errorEmailNaoConfirmado": "Confirme seu e-mail com o código que enviamos para entrar.",
+  "@errorEmailNaoConfirmado": {
+    "description": "Erro da API: email_nao_confirmado"
+  },
+  "errorDesafioNecessario": "Precisamos confirmar que você não é um robô.",
+  "@errorDesafioNecessario": {
+    "description": "Erro da API: desafio_necessario"
+  },
+  "errorSessaoRevogada": "Sua sessão foi encerrada. Entre de novo.",
+  "@errorSessaoRevogada": {
+    "description": "Erro da API: sessao_revogada"
+  },
+  "errorSessaoExpirada": "Sua sessão expirou. Entre de novo.",
+  "@errorSessaoExpirada": {
+    "description": "Erro da API: sessao_expirada"
+  },
+  "errorTermosPendentes": "Aceite os termos atualizados para continuar.",
+  "@errorTermosPendentes": {
+    "description": "Erro da API: termos_pendentes"
+  },
+  "errorDispositivoInvalido": "Não reconhecemos este aparelho. Entre de novo.",
+  "@errorDispositivoInvalido": {
+    "description": "Erro da API: dispositivo_invalido"
   }
 }

@@ -98,5 +98,12 @@
   "pressBackAgainToExit": "Press back again to exit",
   "methodsNoneTitle": "Sign in unavailable right now",
   "methodsNoneBody": "No sign-in method is active. Please try again later.",
-  "unreadMessages": "{count, plural, =1{1 unread message} other{{count} unread messages}}"
+  "unreadMessages": "{count, plural, =1{1 unread message} other{{count} unread messages}}",
+  "errorCredenciaisInvalidas": "Wrong email or password.",
+  "errorEmailNaoConfirmado": "Confirm your email with the code we sent to sign in.",
+  "errorDesafioNecessario": "We need to confirm you are not a robot.",
+  "errorSessaoRevogada": "Your session ended. Please sign in again.",
+  "errorSessaoExpirada": "Your session expired. Please sign in again.",
+  "errorTermosPendentes": "Accept the updated terms to continue.",
+  "errorDispositivoInvalido": "We don't recognize this device. Please sign in again."
 }

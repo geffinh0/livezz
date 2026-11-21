@@ -46,6 +46,10 @@ ResponseBody json(
 class FixedToken implements TokenSource {
   @override
   Future<String?> accessToken() async => 'tkn';
+  @override
+  Future<String?> refreshAccess() async => null;
+  @override
+  void sessionEnded(String code) {}
 }
 
 void main() {

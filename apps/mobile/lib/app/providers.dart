@@ -4,6 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../core/auth/auth_api.dart';
+import '../core/auth/secure_store.dart';
+import '../core/auth/session.dart';
 import '../core/auth/token_source.dart';
 import '../core/config/application/config_controller.dart';
 import '../core/config/data/config_repository.dart';
@@ -18,6 +21,7 @@ import '../core/tenant/tenant.generated.dart';
 import '../core/tenant/tenant_config.dart';
 import '../core/video/providers/fake/fake_video_provider.dart';
 import '../core/video/video_provider.dart';
+import '../features/entry/application/entry_providers.dart';
 
 final tenantProvider = Provider<TenantConfig>((ref) => generatedTenant);
 
@@ -79,20 +83,37 @@ class AppGateController extends Notifier<AppGate> {
   void set(AppGate gate) => state = gate;
 }
 
-/// Token de acesso. Fase 0: só em debug, token de teste do mock passado por
-/// `--dart-define=MOCK_DEV_TOKEN=dev-token-<usuario>`. Fase 1 troca pela sessão.
-final tokenSourceProvider = Provider<TokenSource>((ref) {
-  const devToken = String.fromEnvironment('MOCK_DEV_TOKEN');
-  if (kDebugMode && devToken.isNotEmpty) return const _DevToken(devToken);
-  return const NoTokenSource();
-});
+/// Token de acesso vem da sessão (ADR 0012). Só em debug e só sem sessão,
+/// aceita o token de teste do mock (`--dart-define=MOCK_DEV_TOKEN=...`), usado
+/// pela vitrine de debug.
+final tokenSourceProvider = Provider<TokenSource>(_SessionTokenSource.new);
 
-class _DevToken implements TokenSource {
-  const _DevToken(this.value);
-  final String value;
+class _SessionTokenSource implements TokenSource {
+  _SessionTokenSource(this._ref);
+  final Ref _ref;
+  static const _devToken = String.fromEnvironment('MOCK_DEV_TOKEN');
+
+  SessionController get _session => _ref.read(sessionProvider.notifier);
+
   @override
-  Future<String?> accessToken() async => value;
+  Future<String?> accessToken() async =>
+      _session.accessToken ??
+      (kDebugMode && _devToken.isNotEmpty ? _devToken : null);
+
+  @override
+  Future<String?> refreshAccess() => _session.refreshAccess();
+
+  @override
+  void sessionEnded(String code) => _session.sessionEnded(code);
 }
+
+final secureStoreProvider = Provider<SecureStore>(
+  (ref) => FlutterSecureStore(),
+);
+
+final authApiProvider = Provider<AuthApi>(
+  (ref) => AuthApi(ref.watch(apiClientProvider)),
+);
 
 final apiClientProvider = Provider<ApiClient>((ref) {
   final env = ref.watch(envProvider);
@@ -109,8 +130,15 @@ final keyValueStoreProvider = Provider<KeyValueStore>(
   (ref) => SharedPrefsStore(),
 );
 
-/// Sobrescreve o provider abstrato do core com as dependências reais.
+/// Sobrescreve os providers abstratos do core com as dependências reais.
 final appOverrides = [
+  sessionDepsProvider.overrideWith(
+    (ref) => SessionDeps(
+      api: ref.watch(authApiProvider),
+      store: ref.watch(secureStoreProvider),
+      device: () => ref.read(deviceCredentialsProvider.future),
+    ),
+  ),
   configRepositoryProvider.overrideWith(
     (ref) => ConfigRepository(
       ref.watch(apiClientProvider),
@@ -126,10 +154,25 @@ final realtimeClientProvider = Provider<RealtimeClient>((ref) {
     tokens: ref.watch(tokenSourceProvider),
   );
   final config = ref.read(configControllerProvider.notifier);
+  final session = ref.read(sessionProvider.notifier);
   final subs = [
     client.on('config.updated').listen((e) => config.applyRemote(e.data)),
     client.reconnected.listen((_) => config.refresh()),
+    // Sessão encerrada pelo servidor no tempo real (ADR 0012).
+    client.ended.listen(
+      (r) => session.sessionEnded(
+        r == RealtimeEnd.replaced ? 'sessao_substituida' : 'sessao_revogada',
+      ),
+    ),
   ];
+  // Entrou: conecta com o token da sessão. Saiu: desconecta.
+  ref.listen(sessionProvider, (prev, next) {
+    if (prev == null && next != null) {
+      unawaited(client.stop().then((_) => client.start()));
+    } else if (prev != null && next == null) {
+      unawaited(client.stop());
+    }
+  });
   unawaited(client.start());
   ref.onDispose(() async {
     for (final s in subs) {

@@ -9,6 +9,9 @@ import 'app_gate.dart';
 /// `Idempotency-Key` (e a mesma chave é reusada se a requisição for repetida).
 const idempotentExtra = 'idempotent';
 
+/// Marca requisições que não levam o access token (ex.: o próprio refresh).
+const noAuthExtra = 'auth.none';
+
 /// Options para operações idempotentes. Passe `key` para reusar a mesma chave
 /// ao tentar de novo após falha de rede.
 Options idempotent({String? key}) => Options(
@@ -18,6 +21,18 @@ Options idempotent({String? key}) => Options(
 
 typedef LanguageTag = String Function();
 typedef GateListener = void Function(AppGate gate);
+
+const _retriedExtra = 'auth.retried';
+
+/// Códigos que significam "a sessão acabou" (ADR 0012).
+const _sessionEndCodes = {
+  'sessao_substituida',
+  'sessao_revogada',
+  'sessao_expirada',
+  'dispositivo_invalido',
+  'conta_banida',
+  'conta_suspensa',
+};
 
 /// Cliente HTTP do app (TRV03). Base `{apiBaseUrl}/v1`.
 class ApiClient {
@@ -50,12 +65,42 @@ class ApiClient {
               () => const Uuid().v4(),
             );
           }
-          final token = await tokens.accessToken();
-          if (token != null) options.headers['Authorization'] = 'Bearer $token';
+          if (options.extra[_retriedExtra] != true &&
+              options.extra[noAuthExtra] != true) {
+            final token = await tokens.accessToken();
+            if (token != null) {
+              options.headers['Authorization'] = 'Bearer $token';
+            }
+          }
           handler.next(options);
         },
-        onError: (e, handler) {
+        onError: (e, handler) async {
           final failure = mapDioException(e);
+          final req = e.requestOptions;
+          // Access vencido: renova uma vez e repete a requisição (ADR 0012).
+          if (failure is ApiFailure &&
+              failure.status == 401 &&
+              failure.code == 'token_expirado' &&
+              req.extra[_retriedExtra] != true &&
+              req.headers.containsKey('Authorization')) {
+            final fresh = await tokens.refreshAccess();
+            if (fresh != null) {
+              try {
+                final retry = await dio.fetch<dynamic>(
+                  req
+                    ..extra[_retriedExtra] = true
+                    ..headers['Authorization'] = 'Bearer $fresh',
+                );
+                return handler.resolve(retry);
+              } on DioException catch (again) {
+                return handler.next(again);
+              }
+            }
+          }
+          if (failure is ApiFailure &&
+              _sessionEndCodes.contains(failure.code)) {
+            tokens.sessionEnded(failure.code);
+          }
           if (failure is ApiFailure) {
             if (failure.status == 426) {
               onGate(

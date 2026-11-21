@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../core/auth/session.dart';
 import '../core/config/application/config_controller.dart';
 import '../core/i18n/locales.dart';
 import '../core/theme/app_theme.dart';
@@ -29,8 +30,11 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
       onResume: () =>
           unawaited(ref.read(configControllerProvider.notifier).refresh()),
     );
-    // ENT01: registro do aparelho em segundo plano (não bloqueia a abertura).
-    unawaited(ref.read(deviceRegistrationProvider.future));
+    // ENT01: registro do aparelho em segundo plano (não bloqueia a abertura)
+    // e restauração da sessão guardada.
+    unawaited(ref.read(deviceCredentialsProvider.future));
+    unawaited(ref.read(sessionProvider.notifier).restore());
+    ref.read(realtimeClientProvider); // tempo real acompanha a sessão
   }
 
   @override

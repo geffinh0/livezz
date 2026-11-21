@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/auth/auth_api.dart';
 import '../../../core/auth/session.dart';
 import '../../../core/config/application/config_controller.dart';
 import '../../../core/device/device_registrar.dart';
@@ -35,7 +36,7 @@ final visitorModeProvider = AsyncNotifierProvider<VisitorModeController, bool>(
 final deviceRegistrarProvider = Provider<DeviceRegistrar>(
   (ref) => DeviceRegistrar(
     ref.watch(apiClientProvider),
-    ref.watch(keyValueStoreProvider),
+    ref.watch(secureStoreProvider),
   ),
 );
 
@@ -46,7 +47,9 @@ String _platform() {
 
 /// Registro do aparelho em segundo plano (ENT01): não bloqueia a abertura;
 /// se falhar, tenta de novo na próxima abertura.
-final deviceRegistrationProvider = FutureProvider<String?>((ref) async {
+final deviceRegistrationProvider = FutureProvider<DeviceCredentials?>((
+  ref,
+) async {
   try {
     return await ref
         .read(deviceRegistrarProvider)
@@ -60,6 +63,14 @@ final deviceRegistrationProvider = FutureProvider<String?>((ref) async {
     developer.log('registro do aparelho falhou: $e', name: 'device');
     return null;
   }
+}, retry: (retryCount, error) => null);
+
+/// Credenciais do aparelho para login/refresh: as guardadas ou um registro novo.
+final deviceCredentialsProvider = FutureProvider<DeviceCredentials?>((
+  ref,
+) async {
+  final stored = await ref.read(deviceRegistrarProvider).stored();
+  return stored ?? await ref.read(deviceRegistrationProvider.future);
 }, retry: (retryCount, error) => null);
 
 GateKind _gateKind(AppGate g) => switch (g) {
@@ -89,5 +100,6 @@ final entryDestinationProvider = Provider<EntryDestination>((ref) {
       _ => null,
     },
     hasSession: ref.watch(sessionProvider) != null,
+    sessionReady: ref.watch(sessionReadyProvider),
   );
 });

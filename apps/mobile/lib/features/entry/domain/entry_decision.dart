@@ -21,6 +21,7 @@ EntryDestination decideEntry({
   required bool maintenance,
   required bool? visitorMode,
   required bool hasSession,
+  bool sessionReady = true,
 }) {
   // Portões têm prioridade: atualização > região > manutenção.
   if (gate == GateKind.updateRequired) return EntryDestination.updateRequired;
@@ -36,6 +37,7 @@ EntryDestination decideEntry({
   }
   if (!regionAllowed) return EntryDestination.regionBlocked;
   if (maintenance) return EntryDestination.maintenance;
+  if (!sessionReady) return EntryDestination.splash;
   if (hasSession) return EntryDestination.home;
   if (visitorMode == null) return EntryDestination.splash;
   return visitorMode ? EntryDestination.home : EntryDestination.welcome;

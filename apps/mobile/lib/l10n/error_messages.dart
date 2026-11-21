@@ -64,6 +64,20 @@ String errorMessageFor(AppLocalizations l, String code) {
       return l.errorDadosRecebimentoIncompletos;
     case 'erro_interno':
       return l.errorErroInterno;
+    case 'credenciais_invalidas':
+      return l.errorCredenciaisInvalidas;
+    case 'email_nao_confirmado':
+      return l.errorEmailNaoConfirmado;
+    case 'desafio_necessario':
+      return l.errorDesafioNecessario;
+    case 'sessao_revogada':
+      return l.errorSessaoRevogada;
+    case 'sessao_expirada':
+      return l.errorSessaoExpirada;
+    case 'termos_pendentes':
+      return l.errorTermosPendentes;
+    case 'dispositivo_invalido':
+      return l.errorDispositivoInvalido;
     default:
       return l.errorUnknown;
   }
@@ -71,6 +85,13 @@ String errorMessageFor(AppLocalizations l, String code) {
 
 /// Códigos conhecidos pelo app (iguais ao catálogo da API).
 const knownErrorCodes = <String>[
+  'credenciais_invalidas',
+  'email_nao_confirmado',
+  'desafio_necessario',
+  'sessao_revogada',
+  'sessao_expirada',
+  'termos_pendentes',
+  'dispositivo_invalido',
   'nao_autenticado',
   'token_expirado',
   'sessao_substituida',

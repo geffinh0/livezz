@@ -8,6 +8,7 @@ import 'package:livezz_mobile/app/app.dart';
 import 'package:livezz_mobile/app/providers.dart';
 import 'package:livezz_mobile/app/router.dart';
 import 'package:livezz_mobile/app/routes.dart';
+import 'package:livezz_mobile/core/auth/secure_store.dart';
 import 'package:livezz_mobile/core/auth/session.dart';
 import 'package:livezz_mobile/core/auth/token_source.dart';
 import 'package:livezz_mobile/core/config/data/key_value_store.dart';
@@ -45,7 +46,7 @@ void main() {
     store = MemoryStore()..data['entry.visitorMode'] = '1';
     final adapter = StubAdapter(
       (RequestOptions o) => o.path == '/devices'
-          ? jsonBody(201, {'deviceId': 'd'})
+          ? jsonBody(201, {'deviceId': 'd', 'deviceSecret': 's'})
           : jsonBody(200, sampleConfig()),
     );
     await t.pumpWidget(
@@ -53,6 +54,7 @@ void main() {
         overrides: [
           ...testOverrides(adapter),
           keyValueStoreProvider.overrideWithValue(store),
+          secureStoreProvider.overrideWithValue(MemorySecureStore()),
           ...extra.cast(),
         ],
         child: const LivezzApp(),

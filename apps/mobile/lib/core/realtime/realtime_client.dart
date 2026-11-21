@@ -12,13 +12,15 @@ import 'transport.dart';
 enum RealtimeStatus { disconnected, connecting, connected }
 
 /// Por que a sessão de tempo real acabou sem reconexão automática.
-enum RealtimeEnd { invalidToken, replaced }
+enum RealtimeEnd { invalidToken, replaced, revoked }
 
 /// Códigos de fechamento (docs/EVENTOS-TEMPO-REAL.md).
 abstract final class RealtimeCloseCodes {
   static const authTimeout = 4000;
   static const invalidToken = 4001;
   static const replaced = 4002;
+  static const tokenExpired = 4003; // não terminal: renova e reconecta
+  static const sameSession = 4004; // outra conexão da mesma sessão assumiu
 }
 
 /// Cliente de tempo real (TRV01): envelope versionado, autenticação,
@@ -187,7 +189,14 @@ class RealtimeClient {
         _pongTimer?.cancel();
         return;
       case 'session.invalid':
-        _end(RealtimeEnd.invalidToken);
+        final reason = e.data['reason'];
+        // O 4003 que vem em seguida renova e reconecta.
+        if (reason == 'token_expirado') return;
+        _end(
+          reason == 'token_invalido'
+              ? RealtimeEnd.invalidToken
+              : RealtimeEnd.revoked,
+        );
         return;
       case 'session.replaced':
         _end(RealtimeEnd.replaced);
@@ -222,9 +231,25 @@ class RealtimeClient {
       _end(RealtimeEnd.invalidToken);
     } else if (code == RealtimeCloseCodes.replaced) {
       _end(RealtimeEnd.replaced);
+    } else if (code == RealtimeCloseCodes.sameSession) {
+      // Outra conexão desta mesma sessão assumiu: não disputa.
+      _wanted = false;
+      _setStatus(RealtimeStatus.disconnected);
+    } else if (code == RealtimeCloseCodes.tokenExpired) {
+      unawaited(_renewAndRetry());
     } else {
       _scheduleRetry();
     }
+  }
+
+  /// Token vencido (4003): renova e reconecta; sem renovação, encerra.
+  Future<void> _renewAndRetry() async {
+    final fresh = await tokens.refreshAccess();
+    if (fresh == null) {
+      _end(RealtimeEnd.revoked);
+      return;
+    }
+    _scheduleRetry();
   }
 
   /// Conexão ruim (sem pong, sem ack): derruba e tenta de novo.

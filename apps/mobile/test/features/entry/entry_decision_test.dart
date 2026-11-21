@@ -54,6 +54,18 @@ void main() {
       d(gate: GateKind.updateRequired, region: false, maintenance: true),
       EntryDestination.updateRequired,
     ),
+    'sessão ainda restaurando → splash': (
+      decideEntry(
+        config: ConfigStatus.ready,
+        gate: GateKind.none,
+        regionAllowed: true,
+        maintenance: false,
+        visitorMode: false,
+        hasSession: false,
+        sessionReady: false,
+      ),
+      EntryDestination.splash,
+    ),
     'região vence manutenção': (
       d(region: false, maintenance: true),
       EntryDestination.regionBlocked,

@@ -64,8 +64,19 @@ class FakeSocket implements RealtimeSocket {
 class Token implements TokenSource {
   Token(this.value);
   String? value;
+  String? renewed;
+  int refreshes = 0;
   @override
   Future<String?> accessToken() async => value;
+  @override
+  Future<String?> refreshAccess() async {
+    refreshes++;
+    if (renewed != null) value = renewed;
+    return renewed;
+  }
+
+  @override
+  void sessionEnded(String code) {}
 }
 
 void main() {
@@ -285,4 +296,67 @@ void main() {
       'pong',
     );
   });
+
+  test('token vencido (4003) renova e reconecta com o token novo', () {
+    fakeAsync((async) {
+      token.renewed = 'novo-token';
+      final c = client();
+      final ends = <RealtimeEnd>[];
+      c.ended.listen(ends.add);
+      unawaited(c.start());
+      async.flushMicrotasks();
+      sockets.single
+        ..serverSends('session.invalid', {'reason': 'token_expirado'})
+        ..serverCloses(4003);
+      async.flushMicrotasks();
+      async.elapse(const Duration(seconds: 2));
+      expect(token.refreshes, 1);
+      expect(sockets, hasLength(2));
+      expect(sockets.last.sent.first['data'], {'token': 'novo-token'});
+      expect(ends, isEmpty);
+      unawaited(c.dispose());
+    });
+  });
+
+  test('token vencido sem conseguir renovar encerra como revogada', () {
+    fakeAsync((async) {
+      final c = client();
+      final ends = <RealtimeEnd>[];
+      c.ended.listen(ends.add);
+      unawaited(c.start());
+      async.flushMicrotasks();
+      sockets.single.serverCloses(4003);
+      async.elapse(const Duration(seconds: 5));
+      expect(ends, [RealtimeEnd.revoked]);
+      expect(sockets, hasLength(1));
+      unawaited(c.dispose());
+    });
+  });
+
+  test(
+    'session.invalid revogada encerra como revoked; 4004 para sem reconectar',
+    () {
+      fakeAsync((async) {
+        final c = client();
+        final ends = <RealtimeEnd>[];
+        c.ended.listen(ends.add);
+        unawaited(c.start());
+        async.flushMicrotasks();
+        sockets.single
+          ..ackAuth()
+          ..serverSends('session.invalid', {'reason': 'senha_trocada'});
+        async.flushMicrotasks();
+        expect(ends, [RealtimeEnd.revoked]);
+        unawaited(c.dispose());
+
+        final c2 = client();
+        unawaited(c2.start());
+        async.flushMicrotasks();
+        sockets.last.serverCloses(4004);
+        async.elapse(const Duration(minutes: 1));
+        expect(c2.status, RealtimeStatus.disconnected);
+        unawaited(c2.dispose());
+      });
+    },
+  );
 }

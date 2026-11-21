@@ -7,6 +7,7 @@ import 'package:livezz_mobile/app/providers.dart';
 import 'package:livezz_mobile/app/router.dart';
 import 'package:livezz_mobile/app/routes.dart';
 import 'package:livezz_mobile/core/auth/pending_action.dart';
+import 'package:livezz_mobile/core/auth/secure_store.dart';
 import 'package:livezz_mobile/core/auth/session.dart';
 import 'package:livezz_mobile/core/config/data/key_value_store.dart';
 import 'package:livezz_mobile/features/entry/domain/entry_decision.dart';
@@ -30,7 +31,10 @@ class Server {
     }
     if (o.path == '/devices') {
       devicesPosted.add(o.data);
-      return jsonBody(201, {'deviceId': 'srv-device'});
+      return jsonBody(201, {
+        'deviceId': 'srv-device',
+        'deviceSecret': 'srv-secret',
+      });
     }
     return jsonBody(200, {
       ...config,
@@ -42,6 +46,7 @@ class Server {
 void main() {
   late Server server;
   late MemoryStore store;
+  late MemorySecureStore secure;
 
   Future<void> pumpApp(
     WidgetTester t, {
@@ -56,6 +61,7 @@ void main() {
         overrides: [
           ...testOverrides(adapter),
           keyValueStoreProvider.overrideWithValue(store),
+          secureStoreProvider.overrideWithValue(secure),
           ...extra,
         ],
         child: const LivezzApp(),
@@ -76,6 +82,7 @@ void main() {
   setUp(() {
     server = Server();
     store = MemoryStore();
+    secure = MemorySecureStore();
   });
 
   testWidgets('primeira abertura: boas-vindas e registra o aparelho', (
@@ -85,7 +92,8 @@ void main() {
     expect(find.text('Criar conta'), findsOneWidget);
     expect(find.text('Explorar sem conta'), findsOneWidget);
     expect(server.devicesPosted, hasLength(1));
-    expect(store.data['device.id'], 'srv-device');
+    expect(secure.data['device.id'], 'srv-device');
+    expect(secure.data['device.secret'], 'srv-secret');
   });
 
   testWidgets('explorar sem conta vai para Descobrir e lembra a escolha', (

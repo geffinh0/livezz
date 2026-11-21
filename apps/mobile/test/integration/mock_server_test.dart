@@ -13,6 +13,10 @@ final _url = Platform.environment['MOCK_SERVER_URL'];
 class _Dev implements TokenSource {
   @override
   Future<String?> accessToken() async => 'dev-token-u-ana';
+  @override
+  Future<String?> refreshAccess() async => null;
+  @override
+  void sessionEnded(String code) {}
 }
 
 Future<void> _post(String path) async {
