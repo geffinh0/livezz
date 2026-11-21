@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../app/routes.dart';
@@ -35,7 +36,20 @@ class TabPlaceholder extends ConsumerWidget {
       );
     }
     return Scaffold(
-      appBar: AppBar(title: Text(tab.label(l))),
+      appBar: AppBar(
+        title: Text(tab.label(l)),
+        actions: [
+          if (tab == HomeTab.profile && !visitor)
+            TestId(
+              'tab.profile.settings',
+              child: IconButton(
+                tooltip: l.settingsTitle,
+                icon: const Icon(Symbols.settings),
+                onPressed: () => context.push(Routes.settings),
+              ),
+            ),
+        ],
+      ),
       body: TestId('tab.${tab.name}', child: body),
     );
   }

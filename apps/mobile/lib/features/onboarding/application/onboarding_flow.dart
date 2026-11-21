@@ -1,10 +1,12 @@
 import 'dart:developer' as developer;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart' show Locale;
 
 import '../../../app/providers.dart';
 import '../../../core/age/age_signal_provider.dart';
 import '../../../core/auth/session.dart';
+import '../../../core/i18n/locales.dart';
 import '../data/profile_api.dart';
 
 /// Sinal de idade da loja (Q-64): fake até a Fase 12.
@@ -50,6 +52,8 @@ class OnboardingFlow {
       displayName: displayName,
       birthDate: iso,
       gender: gender,
+      // A conta nova fica com o idioma que a pessoa está usando (CFG14).
+      language: acceptLanguageFor(_ref.read(localeProvider)),
       storeAgeSignal: await _signal(),
     );
     await _reload();
@@ -63,6 +67,14 @@ class OnboardingFlow {
   }
 
   Future<List<Interest>> interests() => _api.interests();
+
+  /// CFG14: troca o idioma na hora; com conta, avisa o servidor (textos e push).
+  Future<void> changeLanguage(Locale locale) async {
+    await _ref.read(localeProvider.notifier).set(locale);
+    if (_ref.read(sessionProvider) != null) {
+      await _api.saveLanguage(acceptLanguageFor(locale));
+    }
+  }
 
   /// ENT12: lista vazia = pulou.
   Future<void> setInterests(List<String> ids) async {

@@ -45,6 +45,12 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
 
   @override
   Widget build(BuildContext context) {
+    // CFG14: ao entrar numa conta, vale o idioma dela.
+    ref.listen(sessionProvider, (prev, next) {
+      final lang = next?.language;
+      if (lang == null || prev?.userId == next?.userId) return;
+      unawaited(ref.read(localeProvider.notifier).set(localeFromTag(lang)));
+    });
     final tenant = ref.watch(tenantProvider);
     final theme = AppTheme(tenant);
     return MaterialApp.router(

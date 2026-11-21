@@ -402,7 +402,7 @@ erDiagram
 `alterada_por` e `alterada_em` ainda não existem no mock (entram com o painel, ADM14).
 
 ### PreferenciasLocais — em uso no app (aparelho, não vai para o banco)
-Usada por: ENT02 · `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"). Sem dado pessoal. (`device.id` passou para TokensLocais.)
+Usada por: ENT02, CFG14 · `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"); `app.language` (`pt-BR`/`en`: idioma escolhido; sem ele, segue o aparelho; ao entrar numa conta, vale `Usuario.idioma`). Sem dado pessoal. (`device.id` passou para TokensLocais.)
 
 ### TokensLocais — em uso no app (aparelho, armazenamento seguro/Keystore, fora do backup)
 Usada por: ENT01, ENT19 · chaves `auth.access` (access token), `auth.refresh` (refresh token 🔒), `auth.user` (id do usuário, para restaurar sem rede), `device.id` e `device.secret` 🔒 (devolvidos por `POST /devices`). `allowBackup=false`. No fim da sessão apaga `auth.*`; `device.*` permanecem. Nunca em SharedPreferences nem em log.
@@ -453,3 +453,4 @@ Valor inicial no mock: flags de login e anti-bot de `mock-server/fixtures/config
 | 2026-11-21 | AceiteTermos: diretrizes obrigatórias (Q-55) e unicidade (usuario, documento, versão) aplicada no mock | Decisão do usuário (Q-55) |
 | 2026-11-21 | Plano 1c (proposta): CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; Usuario (gênero, interesses, sinal da loja, congelada) e Dispositivo (bloqueio de menor) | ENT08, ENT10, ENT11, ENT12 (Q-58, Q-59, Q-64, Q-65) |
 | 2026-11-21 | Plano 1c em uso no mock: Usuario com perfil e idade, Dispositivo com bloqueio de menor, CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; ConfigAuth com limites de consulta de @; fixtures de contas com perfil | ENT08, ENT10, ENT11, ENT12, CFG14 |
+| 2026-11-21 | PreferenciasLocais.idioma (`app.language`) no app; o cadastro envia o idioma atual para `Usuario.idioma` | CFG14 |

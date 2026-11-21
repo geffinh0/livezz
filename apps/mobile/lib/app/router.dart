@@ -24,6 +24,7 @@ import '../features/entry/presentation/welcome_screen.dart';
 import '../features/onboarding/presentation/interests_step_screen.dart';
 import '../features/onboarding/presentation/profile_step_screen.dart';
 import '../features/onboarding/presentation/username_step_screen.dart';
+import '../features/settings/presentation/settings_screen.dart';
 import '../features/shell/presentation/home_shell.dart';
 import '../features/shell/presentation/tab_placeholder.dart';
 import 'routes.dart';
@@ -37,6 +38,7 @@ const _gates = {
 
 bool _isEntryFlow(String path) =>
     path == Routes.welcome ||
+    path == Routes.settings ||
     path.startsWith(Routes.entry) ||
     path.startsWith('/legal/');
 
@@ -152,6 +154,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: Routes.onboardingInterests,
         builder: (c, s) => const InterestsStepScreen(),
       ),
+      GoRoute(path: Routes.settings, builder: (c, s) => const SettingsScreen()),
       GoRoute(
         path: Routes.minorBlocked,
         builder: (c, s) => const MinorBlockedScreen(),

@@ -29,15 +29,55 @@ final envProvider = Provider<AppEnv>(
   (ref) => AppEnv.from(ref.watch(tenantProvider)),
 );
 
-/// Idioma atual (padrão do tenant; troca pelo usuário entra no CFG).
+/// Idioma do aparelho (testes trocam por um fixo).
+final deviceLocaleProvider = Provider<Locale>(
+  (ref) => PlatformDispatcher.instance.locale,
+);
+
+/// Idioma atual (CFG14): o do aparelho na primeira vez; depois a escolha da
+/// pessoa (guardada no aparelho) ou o idioma da conta ao entrar.
 final localeProvider = NotifierProvider<LocaleController, Locale>(
   LocaleController.new,
 );
 
 class LocaleController extends Notifier<Locale> {
+  /// PreferenciasLocais.idioma (`pt-BR` ou `en`).
+  static const prefKey = 'app.language';
+  bool _changed = false;
+
   @override
-  Locale build() => localeFromTag(ref.read(tenantProvider).defaultLocale);
-  void set(Locale locale) => state = locale;
+  Locale build() {
+    final tenant = ref.read(tenantProvider);
+    unawaited(_loadSaved());
+    return initialLocale(
+      ref.read(deviceLocaleProvider),
+      tenant.supportedLocales,
+      tenant.defaultLocale,
+    );
+  }
+
+  Future<void> _loadSaved() async {
+    try {
+      final saved = await ref.read(keyValueStoreProvider).read(prefKey);
+      if (saved != null && !_changed) state = localeFromTag(saved);
+    } on Object catch (e) {
+      debugPrint('idioma salvo ilegível: $e');
+    }
+  }
+
+  /// Troca na hora (sem reiniciar) e guarda no aparelho.
+  Future<void> set(Locale locale) async {
+    _changed = true;
+    if (state == locale) return;
+    state = locale;
+    try {
+      await ref
+          .read(keyValueStoreProvider)
+          .write(prefKey, acceptLanguageFor(locale));
+    } on Object catch (e) {
+      debugPrint('não guardou o idioma: $e');
+    }
+  }
 }
 
 /// Tema claro/escuro/sistema (CFG08 guarda a escolha na Fase 8).
@@ -51,7 +91,7 @@ class ThemeModeController extends Notifier<ThemeMode> {
   void set(ThemeMode mode) => state = mode;
 }
 
-/// Portão global (426 → atualizar; 503 manutenção).
+/// Portão global (426 → atualizar; 503 manutenção; ENT10 menor bloqueado).
 final appGateProvider = NotifierProvider<AppGateController, AppGate>(
   AppGateController.new,
 );
@@ -80,7 +120,12 @@ class AppGateController extends Notifier<AppGate> {
     return const GateOpen();
   }
 
-  void set(AppGate gate) => state = gate;
+  void set(AppGate gate) {
+    // ENT10: o bloqueio de menor só sai ao reabrir o app (servidor decide);
+    // outro portão passageiro não o apaga. Atualização obrigatória vence.
+    if (state is GateMinorBlocked && gate is! GateUpdateRequired) return;
+    state = gate;
+  }
 }
 
 /// Token de acesso vem da sessão (ADR 0012). Só em debug e só sem sessão,

@@ -37,6 +37,7 @@ class ProfileApi {
     required String displayName,
     required String birthDate,
     String? gender,
+    String? language,
     AgeSignal? storeAgeSignal,
   }) => _api.call(
     (d) => d.patch<Object?>(
@@ -45,6 +46,7 @@ class ProfileApi {
         'displayName': displayName,
         'birthDate': birthDate,
         'gender': gender,
+        'language': ?language,
         if (storeAgeSignal != null) 'storeAgeSignal': storeAgeSignal.toJson(),
       },
     ),

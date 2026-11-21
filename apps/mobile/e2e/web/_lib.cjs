@@ -22,7 +22,7 @@ function flow(name, body) {
   const errors = [];
   (async () => {
     const browser = await chromium.launch();
-    const ctx = await browser.newContext({ viewport: { width: 412, height: 915 } });
+    const ctx = await browser.newContext({ viewport: { width: 412, height: 915 }, locale: 'pt-BR' });
     const page = await ctx.newPage();
     page.on('pageerror', (e) => errors.push(e.message));
     const t = {
@@ -40,7 +40,7 @@ function flow(name, body) {
       shot: (file) => page.screenshot({ path: `${out}/${name}-${file}.png` }),
       // Abre o app do zero (sem dados locais) num caminho (rota go_router).
       newPage: async () => {
-        const p2 = await (await browser.newContext({ viewport: { width: 412, height: 915 } })).newPage();
+        const p2 = await (await browser.newContext({ viewport: { width: 412, height: 915 }, locale: 'pt-BR' })).newPage();
         p2.on('pageerror', (e) => errors.push(e.message));
         return p2;
       },

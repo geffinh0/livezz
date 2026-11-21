@@ -63,6 +63,8 @@ ResponseBody jsonBody(
 );
 
 List<Override> testOverrides(StubAdapter adapter) => [
+  // Testes em português, seja qual for o idioma da máquina (CFG14).
+  deviceLocaleProvider.overrideWithValue(const Locale('pt', 'BR')),
   apiClientProvider.overrideWith(
     (ref) => ApiClient(
       apiBaseUrl: 'http://test',

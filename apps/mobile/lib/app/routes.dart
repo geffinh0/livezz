@@ -16,6 +16,7 @@ abstract final class Routes {
   static const onboardingUsername = '/onboarding/username';
   static const onboardingInterests = '/onboarding/interests';
   static const minorBlocked = '/blocked';
+  static const settings = '/settings';
   static const discover = '/discover';
   static const following = '/following';
   static const live = '/live';

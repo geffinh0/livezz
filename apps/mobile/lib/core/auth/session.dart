@@ -17,6 +17,7 @@ class Session {
     this.pendingSteps = const [],
     this.displayName,
     this.username,
+    this.language,
   });
   final String userId;
   final List<PendingTerm> pendingTerms;
@@ -25,6 +26,9 @@ class Session {
   final List<OnboardingStep> pendingSteps;
   final String? displayName;
   final String? username;
+
+  /// Idioma da conta (`pt-BR`/`en`, CFG14).
+  final String? language;
 
   bool get needsProfile => pendingSteps.isNotEmpty;
 }
@@ -160,6 +164,7 @@ class SessionController extends Notifier<Session?> {
         : me.pendingSteps,
     displayName: me.displayName,
     username: me.username,
+    language: me.language,
   );
 
   /// O servidor respondeu `403 termos_pendentes` com o app aberto (ENT16):

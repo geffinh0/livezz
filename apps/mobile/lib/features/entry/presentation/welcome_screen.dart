@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../../app/providers.dart';
@@ -36,7 +37,19 @@ class WelcomeScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const SizedBox(height: AppSpace.xxl),
+                    // CFG14: trocar o idioma antes de criar conta.
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: TestId(
+                        'entry.welcome.language',
+                        child: IconButton(
+                          tooltip: l.settingsLanguage,
+                          icon: const Icon(Symbols.language),
+                          onPressed: () => context.push(Routes.settings),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpace.lg),
                     Column(
                       children: [
                         Semantics(
