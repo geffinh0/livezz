@@ -243,6 +243,7 @@ void main() {
     server.refreshGate = Completer<void>();
     final pending = c.read(sessionProvider.notifier).refreshAccess();
     await Future<void>.delayed(const Duration(milliseconds: 10));
+    server.validAccess = 'at-novo'; // o servidor aceita o token do login novo
     await c
         .read(sessionProvider.notifier)
         .signedIn(
