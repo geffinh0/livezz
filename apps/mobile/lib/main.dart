@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
-import 'core/tenant/tenant_config.g.dart';
+import 'core/tenant/tenant.generated.dart';
 
 void main() {
   runApp(const LivezzApp());

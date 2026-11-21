@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:livezz_mobile/core/tenant/tenant_config.g.dart';
+import 'package:livezz_mobile/core/tenant/tenant.generated.dart';
 import 'package:livezz_mobile/core/theme/app_theme.dart';
 import 'package:livezz_mobile/core/theme/contrast.dart';
 import 'package:material_ui/material_ui.dart';

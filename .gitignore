@@ -15,6 +15,7 @@ CLAUDE.local.md
 .claude/settings.local.json
 # Gerados (não versionar; CI e o gerador recriam)
 *.g.dart
+apps/mobile/lib/core/tenant/tenant.generated.dart
 *.freezed.dart
 apps/mobile/lib/l10n/generated/
 apps/*/src/tenant.generated.ts

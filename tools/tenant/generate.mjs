@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Gera a configuração de marca do tenant para o app e os sites.
 // Uso: node tools/tenant/generate.mjs [tenantId]   (padrão: liveapp)
-// Saídas (não versionadas): apps/mobile/lib/core/tenant/tenant_config.g.dart,
+// Saídas (não versionadas): apps/mobile/lib/core/tenant/tenant.generated.dart,
 //                           apps/admin/src/tenant.generated.ts, apps/portal/src/tenant.generated.ts
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
@@ -74,7 +74,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   const id = process.argv[2] ?? 'liveapp';
   try {
     const t = loadTenant(id);
-    write(join(root, 'apps/mobile/lib/core/tenant/tenant_config.g.dart'), toDart(t));
+    write(join(root, 'apps/mobile/lib/core/tenant/tenant.generated.dart'), toDart(t));
     for (const app of ['admin', 'portal']) {
       if (existsSync(join(root, 'apps', app))) write(join(root, 'apps', app, 'src/tenant.generated.ts'), toTs(t));
     }
