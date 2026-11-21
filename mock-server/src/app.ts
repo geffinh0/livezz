@@ -1,5 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify';
 import { ApiError, errorBody, sendError } from './http/errors.js';
+import { registerGuards } from './http/guards.js';
+import { registerConfigRoutes } from './routes/config.js';
 import { createState, type State } from './state.js';
 
 export interface MockServer {
@@ -24,6 +26,10 @@ export async function buildApp(opts: BuildOptions = {}): Promise<MockServer> {
     return reply.status(500).send(errorBody(req, 'erro_interno'));
   });
   app.setNotFoundHandler((req, reply) => reply.status(404).send(errorBody(req, 'nao_encontrado')));
+
+  const getState = () => holder.state;
+  registerGuards(app, getState);
+  registerConfigRoutes(app, getState);
 
   return holder;
 }
