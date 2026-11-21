@@ -127,4 +127,10 @@ Ordem dos passos revisada: 1, 2, 3, 4, 5, 6, 7, 8, **17 (CI)**, 9, 10, 11, 12, 1
 ## 9. Fora do escopo
 - Login, sessão e refresh real (Fase 1); telas de produto; câmera real e permissões (Fase 3); push, analytics real, Crashlytics (Fases 8/12); painel e portal funcionais (Fase 9); Agora (Fase 12); script completo de novo cliente (Fase 13).
 
-Status: aprovado pelo usuário em 2026-11-21
+## Andamento (2026-11-21)
+- Passos 1–19 implementados, um commit por passo (ver `git log`), mais correções das revisões.
+- Testes: mock-server 35 · app 68 (+2 de integração contra o mock real, passando) · tenant 7 · painel 3 · portal 3.
+- Revisões: arquiteto (plano), revisor, revisor-seguranca, revisor-ux, guardiao-dados, verificador-spec. Problemas reais corrigidos nos commits `fix(mobile)` e `fix(mock)`; sugestões em `docs/MELHORIAS.md` (M-004 a M-022).
+- Pendente para fechar a fase: rodar `apps/mobile/e2e/TRV-fundacao.yaml` num aparelho (sem aparelho na sessão da nuvem) e confirmar o APK no CI. Por isso os TRV ficam `[~]`.
+
+Status: aprovado pelo usuário em 2026-11-21 · implementado, aguardando E2E no aparelho

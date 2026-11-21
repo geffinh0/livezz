@@ -5,15 +5,16 @@
 > Os IDs entre parênteses estão em `docs/ESPECIFICACAO.md`.
 
 ## Fase 0 — Fundação
-- [ ] Monorepo: `apps/mobile`, `apps/admin`, `apps/portal`, `mock-server`, `tenants/liveapp`
-- [ ] Flutter Android com flavor `liveapp` gerado de `tenants/liveapp/tenant.json`; tema claro/escuro; pt-BR e inglês; layout pronto para RTL
+> `[~]` = código e testes prontos; falta rodar o E2E num aparelho e/ou confirmar o APK no CI (ver docs/PROGRESSO.md).
+- [x] Monorepo: `apps/mobile`, `apps/admin`, `apps/portal`, `mock-server`, `tenants/liveapp`
+- [~] Flutter Android com flavor `liveapp` gerado de `tenants/liveapp/tenant.json`; tema claro/escuro; pt-BR e inglês; layout pronto para RTL
 - [x] Escolher cores e fonte do demo (Q-42)
-- [ ] Núcleo do app: tema a partir do design system, rotas, HTTP, erros padronizados, i18n pt-BR, flags (TRV03, TRV04, TRV07, TRV09)
-- [ ] Cliente de tempo real com reconexão (TRV01)
-- [ ] `VideoProvider` + `FakeVideoProvider` (TRV02)
-- [ ] mock-server: estrutura, fixtures, envelope de eventos, rotas `/__mock/*`, conectores fake (TRV13), configurações editáveis, testes de contrato
-- [ ] CI: lint, testes, build APK debug
-- [ ] Maestro configurado com um fluxo de exemplo
+- [~] Núcleo do app: tema a partir do design system, rotas, HTTP, erros padronizados, i18n pt-BR, flags (TRV03, TRV04, TRV07, TRV09)
+- [~] Cliente de tempo real com reconexão (TRV01)
+- [~] `VideoProvider` + `FakeVideoProvider` (TRV02)
+- [x] mock-server: estrutura, fixtures, envelope de eventos, rotas `/__mock/*`, conectores fake (TRV13), configurações editáveis, testes de contrato
+- [~] CI: lint, testes, build APK debug
+- [~] Maestro configurado com um fluxo de exemplo
 
 ## Fase 1 — Entrada e conta
 - [ ] ENT01–ENT19, NAV01, NAV04, CFG14, SEG06
