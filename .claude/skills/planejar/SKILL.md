@@ -10,6 +10,7 @@ Não escreva código de produção nesta etapa.
 
 ## 1. Entender
 - Leia os itens em `docs/ESPECIFICACAO.md` (critérios de aceite e Definição de pronto), as regras `RN-xx` citadas, as entidades do `docs/DATABASE.md`, os endpoints e eventos envolvidos, `docs/ARQUITETURA.md`, `docs/SEGURANCA.md` e o que já existe no código (subagente Explore se for muita coisa).
+- **Caçar ambiguidade:** releia cada critério de aceite e cada regra citada perguntando "dá para ler isto de mais de um jeito?" (ex.: quais documentos são obrigatórios, quem vê o quê, o que acontece no erro ou sem rede). Cada leitura dupla vira pergunta ao usuário **antes** da aprovação do plano, não durante a implementação.
 - Liste o que **não está definido** (comportamento, texto, valor, regra). Para cada ponto: é decisão óbvia (decida e diga) ou precisa do usuário (pergunte agora, até 4 por vez)?
 - Se a tarefa usa biblioteca, SDK ou política externa, peça ao `pesquisador` a documentação atual.
 

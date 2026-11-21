@@ -68,6 +68,10 @@ Prefira esperar a resposta a fazer algo errado. Registre toda resposta em `docs/
 - Se a mesma abordagem falhar **duas vezes por motivos diferentes**, pare. Liste as alternativas (inclusive as que mudam o caminho, não só o próximo ajuste), com prós e contras, recomende uma e só então siga. Não peça ao usuário uma terceira rodada do mesmo caminho sem fazer isso.
 - Prefira caminhos que você consegue executar e verificar sozinho (ex.: app no navegador com Playwright, CI) a idas e vindas com a máquina do usuário.
 
+## Edições por script e testes encadeados
+- Todo script (python/sed) que troca texto **confere que a troca aconteceu** (ex.: `assert s.count(old) == 1`) e falha alto se não. Depois de rodar um formatador, releia o trecho antes de trocar de novo: o formatador muda o texto e a troca falha calada.
+- Comando de teste encadeado com `|` (ex.: `flutter test | tail`) usa `set -o pipefail`. Nunca commitar sem ter lido a linha final da saída dos testes.
+
 ## O kit evolui com o projeto
 - Corrigiu o mesmo tipo de erro duas vezes, ou o usuário te corrigiu? Proponha uma regra nova em `CLAUDE.md` ou `.claude/rules/`.
 - Ao fim de cada fase, rode `/retro`: o que deu errado, o que repetiu, o que falta nas regras, skills e agentes. **Proponha** as mudanças e só aplique com aprovação do usuário.

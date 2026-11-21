@@ -12,6 +12,7 @@ paths:
 - Guardar prints dos estados principais (claro/escuro, pt/en): o print já pegou bug de contraste que o teste de widget não pegou.
 - O fluxo cobre os critérios de aceite do item e pelo menos um caminho de erro (usando `/__mock/scenario/*` para forçar a situação).
 - Antes de cada fluxo: `POST /__mock/reset` para começar de um estado conhecido.
+- Um `flow()` por arquivo no navegador (`flow` encerra o processo ao terminar; um segundo fluxo no mesmo arquivo nunca roda). Variações do mesmo item vão para `<ID>-<variante>.cjs` (ex.: `ENT19-visitante.cjs`).
 - Encontrar elementos por `id` (`TestId` → `Semantics.identifier`; no navegador vira `flt-semantics-identifier`), nunca por texto que muda por tenant.
 - Roda contra o flavor `liveapp` e o mock-server local.
 - Item de tela sem fluxo E2E passando não é considerado pronto.

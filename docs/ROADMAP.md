@@ -17,7 +17,9 @@
 - [x] E2E configurado (navegador no CI; Maestro pronto para Android) com um fluxo de exemplo
 
 ## Fase 1 — Entrada e conta
-- [ ] ENT01–ENT19, NAV01, NAV04, CFG14, SEG06
+- [~] ENT01–ENT19, NAV01, NAV04, CFG14, SEG06
+  - 1a (abertura, boas-vindas, visitante, região, navegação) e 1b (login, termos, sessão única, anti-bot) concluídos em 2026-11-21: prontos ENT01, ENT05, ENT07, ENT16, ENT17, ENT18, ENT19; ENT04, ENT06, SEG06 com o restante na Fase 12
+  - 1c: cadastro (ENT08–ENT15) e idioma (CFG14)
 
 ## Fase 2 — Descoberta e perfil
 - [ ] DES01–DES09, PER01–PER09, NAV02, NAV03
