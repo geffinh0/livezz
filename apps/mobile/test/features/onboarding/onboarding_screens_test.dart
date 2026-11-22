@@ -216,6 +216,73 @@ void main() {
     expect(flow.calls.last, 'set:ana.teste2');
   });
 
+  testWidgets('ENT11: reservado mostra o motivo', (t) async {
+    await show(
+      t,
+      const UsernameStepScreen(debounce: Duration(milliseconds: 10)),
+      setup: (f) =>
+          f.onCheck = (u) =>
+              const UsernameCheck(available: false, reason: 'reservado'),
+    );
+    await t.enterText(field('onboarding.username.input'), 'admin');
+    await t.pump(const Duration(milliseconds: 50));
+    await t.pump();
+    expect(find.text(_pt.usernameReserved), findsOneWidget);
+  });
+
+  testWidgets('ENT11: consulta sem rede mostra "tentar de novo" e refaz', (
+    t,
+  ) async {
+    var fail = true;
+    await show(
+      t,
+      const UsernameStepScreen(debounce: Duration(milliseconds: 10)),
+      setup: (f) => f.onCheck = (u) {
+        if (fail) throw const NetworkFailure();
+        return const UsernameCheck(available: true);
+      },
+    );
+    await t.enterText(field('onboarding.username.input'), 'ana.nova');
+    await t.pump(const Duration(milliseconds: 50));
+    await t.pump();
+    expect(find.text(_pt.errorNetwork), findsOneWidget);
+    fail = false;
+    await tapId(t, 'onboarding.username.retry');
+    await t.pump(const Duration(milliseconds: 50));
+    await t.pump();
+    expect(find.text(_pt.usernameAvailable), findsOneWidget);
+  });
+
+  testWidgets(
+    'ENT11: alguém pegou o @ no meio do caminho (409) consulta de novo',
+    (t) async {
+      var taken = false;
+      await show(
+        t,
+        const UsernameStepScreen(debounce: Duration(milliseconds: 10)),
+        setup: (f) => f.onCheck = (u) => taken
+            ? const UsernameCheck(
+                available: false,
+                reason: 'ocupado',
+                suggestions: ['ana.nova1'],
+              )
+            : const UsernameCheck(available: true),
+      );
+      await t.enterText(field('onboarding.username.input'), 'ana.nova');
+      await t.pump(const Duration(milliseconds: 50));
+      await t.pump();
+      taken = true;
+      flow.error = const ApiFailure(status: 409, code: 'username_indisponivel');
+      await tapId(t, 'onboarding.username.submit');
+      await t.pump();
+      expect(find.text(_pt.usernameTaken), findsOneWidget);
+      expect(
+        find.bySemanticsIdentifier('onboarding.username.suggestion.0'),
+        findsOneWidget,
+      );
+    },
+  );
+
   testWidgets('ENT11: só consulta depois de parar de digitar', (t) async {
     await show(
       t,
@@ -246,6 +313,16 @@ void main() {
     expect(t.widget<FilterChip>(eleventh).onSelected, isNull);
     await tapId(t, 'onboarding.interests.submit');
     expect(flow.calls.last, startsWith('interests:i0,i1'));
+    await tapId(t, 'onboarding.interests.skip');
+    expect(flow.calls.last, 'interests:');
+  });
+
+  testWidgets('ENT12: sem categorias mostra o vazio e ainda deixa pular', (
+    t,
+  ) async {
+    await show(t, const InterestsStepScreen(), setup: (f) => f.list = const []);
+    await t.pump(const Duration(milliseconds: 50));
+    expect(find.text(_pt.interestsEmptyTitle), findsOneWidget);
     await tapId(t, 'onboarding.interests.skip');
     expect(flow.calls.last, 'interests:');
   });

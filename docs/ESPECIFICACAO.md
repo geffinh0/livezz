@@ -33,7 +33,7 @@
   - Dados: Usuario, MetodoLogin, CodigoVerificacao
 - [x] **ENT05 E-mail + senha**
   - Aceite: cadastro e login; força mínima da senha (RN-03); confirmação de e-mail por código; mensagens de erro que não revelam se o e-mail existe.
-- [~] **ENT06 Login com Google** — falta: conta nova cair no cadastro ENT08 (plano 1c, Q-52) e Google real (Fase 12, Q-53); hoje contas de teste
+- [~] **ENT06 Login com Google** — conta nova já cai no cadastro ENT08 (plano 1c); falta: Google real (Fase 12, Q-53); hoje contas de teste
   - Aceite: conta nova cai em ENT08; conta existente entra direto; erro e cancelamento tratados.
 - [x] **ENT07 Recuperar senha**
   - Aceite: código por e-mail → nova senha → encerra outras sessões (RN-04).

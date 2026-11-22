@@ -36,6 +36,7 @@ const PatchBody = Type.Object(
   },
   { additionalProperties: false },
 );
+const UsernameParams = Type.Object({ u: Type.String({ minLength: 1, maxLength: 40 }) });
 const UsernameBody = Type.Object(
   { username: Type.String({ maxLength: 40 }) },
   { additionalProperties: false },
@@ -71,12 +72,16 @@ export function registerProfileRoutes(app: FastifyInstance, auth: AuthService, p
     },
   );
 
-  app.get<{ Params: { u: string } }>('/v1/usernames/:u/availability', { preHandler: open }, async (req) => {
-    if (!req.auth) throw new Error('auth ausente');
-    auth.hitIp('username', req.ip);
-    profile.limitUser(req.auth.user.id);
-    return profile.availability(req.auth.user, req.params.u.slice(0, 40));
-  });
+  app.get<{ Params: Static<typeof UsernameParams> }>(
+    '/v1/usernames/:u/availability',
+    { schema: { params: UsernameParams }, preHandler: open },
+    async (req) => {
+      if (!req.auth) throw new Error('auth ausente');
+      auth.hitIp('username', req.ip);
+      profile.limitUser(req.auth.user.id);
+      return profile.availability(req.auth.user, req.params.u);
+    },
+  );
 
   app.post<{ Body: Static<typeof UsernameBody> }>(
     '/v1/me/username',

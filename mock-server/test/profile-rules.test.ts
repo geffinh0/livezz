@@ -29,6 +29,10 @@ describe('regras de nome e @ (RN-05)', () => {
     expect(isReserved('suporte.oficial', r)).toBe(true);
     expect(isReserved('live.app2', r)).toBe(true);
     expect(isReserved('ana.teste', r)).toBe(false);
+    // Sem falso positivo por trecho.
+    expect(isReserved('groot', ['root'])).toBe(false);
+    expect(isReserved('helpdesk.ana', ['help'])).toBe(false);
+    expect(isReserved('adminx', r)).toBe(true);
   });
 
   it('sugestão base a partir do nome', () => {

@@ -229,5 +229,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "interestsEmptyTitle": "Nothing here yet",
+  "interestsEmptyBody": "There are no categories yet. You can skip and choose later."
 }

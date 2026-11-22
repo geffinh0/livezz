@@ -187,6 +187,23 @@ void main() {
     expect((gates.single as GateRegionBlocked).country, 'PT');
   });
 
+  test(
+    '403 menor_de_idade abre o portão de bloqueio com o protocolo (ENT10)',
+    () async {
+      adapter.handler = (_) => json(403, {
+        'error': {
+          'code': 'menor_de_idade',
+          'details': {'protocol': 'P-ABCD1234'},
+        },
+      });
+      await expectLater(
+        client().call((d) => d.get<Object?>('/x')),
+        throwsA(isA<ApiFailure>()),
+      );
+      expect((gates.single as GateMinorBlocked).protocol, 'P-ABCD1234');
+    },
+  );
+
   test('falha de conexão vira NetworkFailure; timeout vira TimeoutFailure', () {
     final o = RequestOptions(path: '/x');
     expect(

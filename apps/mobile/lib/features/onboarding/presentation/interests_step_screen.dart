@@ -58,6 +58,10 @@ class _InterestsStepScreenState extends ConsumerState<InterestsStepScreen> {
         Text(l.interestsIntro),
         const SizedBox(height: AppSpace.lg),
         switch (items) {
+          AsyncData(:final value) when value.isEmpty => StateView.empty(
+            title: l.interestsEmptyTitle,
+            message: l.interestsEmptyBody,
+          ),
           AsyncData(:final value) => AppChoiceChips<Interest>(
             options: value,
             selected: {

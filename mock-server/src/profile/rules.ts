@@ -32,12 +32,20 @@ export function usernameFormatOk(u: string): boolean {
   return USERNAME.test(u) && !u.startsWith('.') && !u.endsWith('.') && !u.includes('..');
 }
 
-/** Reservado: termo da lista (ou a marca do tenant) dentro do @, inclusive com variações. */
+/**
+ * Reservado: termo da lista (ou a marca do tenant), inclusive com variações
+ * ("adm1n", "suporte.oficial", "live.app"). Para não recusar @ inocentes
+ * ("groot", "helpdesk.ana"), compara pedaço a pedaço e só aceita prefixo de
+ * termos longos (≥ 5 letras: "adminx", "liveappbr").
+ */
 export function isReserved(u: string, reserved: readonly string[]): boolean {
-  const core = unleet(u).replace(/[._0-9]/g, '');
+  const l = unleet(u);
+  const parts = l.split(/[._0-9]+/).filter(Boolean);
+  const core = parts.join('');
   return reserved.some((r) => {
     const term = fold(r).replace(/[^a-z]/g, '');
-    return term.length > 0 && core.includes(term);
+    if (!term) return false;
+    return core === term || parts.includes(term) || (term.length >= 5 && core.startsWith(term));
   });
 }
 

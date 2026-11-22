@@ -71,8 +71,38 @@ class OnboardingFlow {
   /// CFG14: troca o idioma na hora; com conta, avisa o servidor (textos e push).
   Future<void> changeLanguage(Locale locale) async {
     await _ref.read(localeProvider.notifier).set(locale);
-    if (_ref.read(sessionProvider) != null) {
+    if (_ref.read(sessionProvider) == null) return;
+    final store = _ref.read(keyValueStoreProvider);
+    try {
       await _api.saveLanguage(acceptLanguageFor(locale));
+      await store.write(_pendingKey, '');
+    } on Object {
+      // Fica pendente: reenviado na próxima abertura com conta.
+      await store.write(_pendingKey, acceptLanguageFor(locale));
+      rethrow;
+    }
+  }
+
+  static const _pendingKey = 'app.language.pendingSync';
+
+  /// Ao entrar numa conta (CFG14): troca que não chegou ao servidor é
+  /// reenviada (vale a do aparelho); senão, vale o idioma da conta.
+  Future<void> onAccountLanguage(String? accountLanguage) async {
+    final store = _ref.read(keyValueStoreProvider);
+    try {
+      final pending = await store.read(_pendingKey);
+      if (pending != null && pending.isNotEmpty) {
+        await _api.saveLanguage(pending);
+        await store.write(_pendingKey, '');
+        return;
+      }
+      if (accountLanguage != null) {
+        await _ref
+            .read(localeProvider.notifier)
+            .set(localeFromTag(accountLanguage));
+      }
+    } on Object catch (e) {
+      developer.log('idioma da conta não sincronizou: $e', name: 'i18n');
     }
   }
 

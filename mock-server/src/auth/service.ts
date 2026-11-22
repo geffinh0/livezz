@@ -7,6 +7,7 @@ import { accessTokenTtlMs, passwordProblems } from './config.js';
 import {
   dummyHashPromise,
   hashSecret,
+  hmac,
   randomCode,
   randomToken,
   sha256,
@@ -94,7 +95,7 @@ export class AuthService {
 
   // ---------- bloqueio de menor (ENT10) ----------
   private identifierKey(type: 'telefone' | 'email' | 'google', identifier: string) {
-    return sha256(`${type}:${identifier}`); // HMAC com a chave do servidor
+    return hmac(`${type}:${identifier}`); // HMAC com a chave do servidor (telefone é enumerável)
   }
 
   private assertNotBlockedIdentifier(type: 'telefone' | 'email' | 'google', identifier: string) {

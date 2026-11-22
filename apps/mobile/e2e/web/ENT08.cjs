@@ -10,8 +10,13 @@ flow('ENT08', async (t) => {
   t.check('nome vazio: erro no campo', await t.text('Use de 2 a 30 caracteres.'));
   t.check('data vazia: erro no campo', await t.text('Informe sua data de nascimento.'));
   await t.shot('erros');
-  await t.type('onboarding.profile.name', 'Pessoa E2E');
+  // Erro do servidor: nome com palavra proibida volta no próprio campo.
+  await t.type('onboarding.profile.name', 'Sou idiota');
   await t.pickDate('onboarding.profile.birth', '10/04/1995');
+  await t.tap('onboarding.profile.submit');
+  t.check('nome proibido pelo servidor: erro no campo', await t.text('Este nome não é permitido'));
+  await t.clear('onboarding.profile.name');
+  await t.type('onboarding.profile.name', 'Pessoa E2E');
   await t.tap('onboarding.profile.gender.prefiro_nao_dizer');
   await t.shot('preenchido');
   await t.tap('onboarding.profile.submit');

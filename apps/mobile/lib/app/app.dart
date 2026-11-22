@@ -8,6 +8,7 @@ import '../core/config/application/config_controller.dart';
 import '../core/i18n/locales.dart';
 import '../core/theme/app_theme.dart';
 import '../features/entry/application/entry_providers.dart';
+import '../features/onboarding/application/onboarding_flow.dart';
 import '../l10n/generated/app_localizations.dart';
 import 'providers.dart';
 import 'router.dart';
@@ -48,9 +49,10 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
   Widget build(BuildContext context) {
     // CFG14: ao entrar numa conta, vale o idioma dela.
     ref.listen(sessionProvider, (prev, next) {
-      final lang = next?.language;
-      if (lang == null || prev?.userId == next?.userId) return;
-      unawaited(ref.read(localeProvider.notifier).set(localeFromTag(lang)));
+      if (next == null || prev?.userId == next.userId) return;
+      unawaited(
+        ref.read(onboardingFlowProvider).onAccountLanguage(next.language),
+      );
     });
     final tenant = ref.watch(tenantProvider);
     final theme = AppTheme(tenant);

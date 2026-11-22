@@ -72,7 +72,7 @@ export interface Device {
 
 /** Listas do comprador para o cadastro (fixtures/profile.json; editáveis no painel). */
 export interface ProfileLists {
-  interests: Array<{ id: string; pt: string; en: string }>;
+  interests: Array<{ id: string; pt: string; en: string; active?: boolean }>;
   reservedUsernames: string[];
   blockedNameWords: string[];
 }

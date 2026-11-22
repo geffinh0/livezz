@@ -190,7 +190,7 @@ Usada por: PRE*, ADM06 · campos: id, nome (por idioma: pt-BR, en), categoria_id
 
 ### CategoriaPresente — proposta · id, nome, ordem, ativa.
 
-### CategoriaInteresse — em uso no mock (`fixtures/profile.json` → `interests`; ordem = posição; `ativa` ainda não usada) · Usada por: ENT12, DES (Fase 2) · id, nome_pt, nome_en, ordem, ativa.
+### CategoriaInteresse — em uso no mock (`fixtures/profile.json` → `interests`; ordem = posição; `ativa` = campo `active`, padrão verdadeiro: inativa some da lista e é recusada) · Usada por: ENT12, DES (Fase 2) · id, nome_pt, nome_en, ordem, ativa.
 ### PalavraReservada — em uso no mock (`fixtures/profile.json` → `reservedUsernames` e `blockedNameWords`) · Usada por: ENT11, ENT08, RN-05 · termo, tipo (`username`, `nome`), origem (`plataforma`, `comprador`). Inclui a marca do tenant (id e nome) e variações (dígitos trocados, pontos).
 ### IdentificadorBloqueado — em uso no mock (`blockedIdentifiers`) · Usada por: ENT10 (Q-65) · tipo (`telefone`, `email`, `google`), valor_hmac 🔒 (HMAC com chave do servidor), conta_id, criado_em. Impede cadastro novo com identificador de conta congelada.
 
@@ -402,7 +402,7 @@ erDiagram
 `alterada_por` e `alterada_em` ainda não existem no mock (entram com o painel, ADM14).
 
 ### PreferenciasLocais — em uso no app (aparelho, não vai para o banco)
-Usada por: ENT02, CFG14 · `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"); `app.language` (`pt-BR`/`en`: idioma escolhido; sem ele, segue o aparelho; ao entrar numa conta, vale `Usuario.idioma`). Sem dado pessoal. (`device.id` passou para TokensLocais.)
+Usada por: ENT02, CFG14 · `entry.visitorMode` (`'1'`/`'0'`: o visitante escolheu "Explorar sem conta"); `app.language` (`pt-BR`/`en`: idioma escolhido; sem ele, segue o aparelho; ao entrar numa conta, vale `Usuario.idioma`); `app.language.pendingSync` (troca que o servidor não recebeu; reenviada ao entrar com conta, vazio = nada pendente). Sem dado pessoal. (`device.id` passou para TokensLocais.)
 
 ### TokensLocais — em uso no app (aparelho, armazenamento seguro/Keystore, fora do backup)
 Usada por: ENT01, ENT19 · chaves `auth.access` (access token), `auth.refresh` (refresh token 🔒), `auth.user` (id do usuário, para restaurar sem rede), `device.id` e `device.secret` 🔒 (devolvidos por `POST /devices`). `allowBackup=false`. No fim da sessão apaga `auth.*`; `device.*` permanecem. Nunca em SharedPreferences nem em log.

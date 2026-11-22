@@ -207,6 +207,19 @@ describe('bloqueio de menor (ENT10)', () => {
     expect(adultSignalMinorDate.json().error.code).toBe('menor_de_idade');
   });
 
+  it('identificador de conta congelada não cria conta nova (Q-65)', async () => {
+    const mock = await buildApp();
+    const t = await newAccount(mock, '+5511977770007');
+    await req(mock, 'PATCH', '/v1/me', t.accessToken, { displayName: 'Jovem', birthDate: '2015-06-01' });
+    // Simula o telefone sendo desvinculado da conta congelada (ENT15 vem no 1d).
+    mock.state.auth.methods = mock.state.auth.methods.filter((m) => m.userId !== t.user.id);
+    const again = await phoneLogin(mock, await device(mock), '+5511977770007');
+    expect(again.json().error.code).toBe('menor_de_idade');
+    // A chave guardada é HMAC (não o número em claro).
+    const keys = [...mock.state.auth.blockedIdentifiers.keys()];
+    expect(keys.some((k) => k.includes('5511977770007'))).toBe(false);
+  });
+
   it('a equipe libera a conta e o aparelho depois da revisão', async () => {
     const mock = await buildApp();
     const t = await newAccount(mock);
@@ -248,6 +261,20 @@ describe('@ (ENT11)', () => {
     });
   });
 
+  it('nome com termo reservado ainda recebe sugestões neutras', async () => {
+    const mock = await buildApp();
+    const t = await newAccount(mock, '+5511977770006');
+    await req(mock, 'PATCH', '/v1/me', t.accessToken, {
+      displayName: 'Suporte Ana',
+      birthDate: '1990-04-12',
+    });
+    const r = (await req(mock, 'GET', '/v1/usernames/admin/availability', t.accessToken)).json();
+    expect(r.suggestions.length).toBeGreaterThan(0);
+    expect(r.suggestions[0]).toBe('usuario');
+    const long = await req(mock, 'GET', `/v1/usernames/${'a'.repeat(41)}/availability`, t.accessToken);
+    expect(long.statusCode).toBe(400);
+  });
+
   it('consulta exige login e tem limite por conta', async () => {
     const mock = await buildApp();
     expect((await mock.app.inject({ method: 'GET', url: '/v1/usernames/ana/availability' })).statusCode).toBe(
@@ -269,6 +296,14 @@ describe('interesses (ENT12)', () => {
     await req(mock, 'PATCH', '/v1/me', t.accessToken, adult);
     const pt = (await req(mock, 'GET', '/v1/interests', t.accessToken)).json();
     expect(pt.items[0]).toEqual({ id: 'musica', name: 'Música' });
+    // Categoria desativada pelo comprador some da lista e não é aceita.
+    const musica = mock.state.profileLists.interests.find((i) => i.id === 'musica');
+    if (musica) musica.active = false;
+    expect((await req(mock, 'GET', '/v1/interests', t.accessToken)).json().items[0].id).toBe('danca');
+    expect((await req(mock, 'POST', '/v1/me/interests', t.accessToken, { ids: ['musica'] })).statusCode).toBe(
+      400,
+    );
+    if (musica) musica.active = true;
     const en = await mock.app.inject({
       method: 'GET',
       url: '/v1/interests',

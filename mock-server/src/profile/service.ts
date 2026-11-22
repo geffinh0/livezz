@@ -121,7 +121,9 @@ export class ProfileService {
   }
 
   private suggest(user: AuthUser, taken: Set<string>): string[] {
-    const base = usernameBase(user.displayName);
+    // Nome com termo reservado ("Suporte Ana") daria só sugestões reservadas: usa a base neutra.
+    const fromName = usernameBase(user.displayName);
+    const base = isReserved(fromName, this.reserved()) ? 'usuario' : fromName;
     const out: string[] = [];
     const candidates = [base, ...Array.from({ length: 40 }, (_, i) => `${base}${(i * 37 + 11) % 1000}`)];
     for (const c of candidates) {
@@ -169,12 +171,16 @@ export class ProfileService {
 
   interests(english: boolean) {
     return {
-      items: this.state.profileLists.interests.map((i) => ({ id: i.id, name: english ? i.en : i.pt })),
+      items: this.state.profileLists.interests
+        .filter((i) => i.active !== false)
+        .map((i) => ({ id: i.id, name: english ? i.en : i.pt })),
     };
   }
 
   setInterests(user: AuthUser, ids: string[]) {
-    const known = new Set(this.state.profileLists.interests.map((i) => i.id));
+    const known = new Set(
+      this.state.profileLists.interests.filter((i) => i.active !== false).map((i) => i.id),
+    );
     if (new Set(ids).size !== ids.length || ids.some((id) => !known.has(id))) {
       throw new ApiError(400, 'validacao', { field: 'ids' });
     }

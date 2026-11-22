@@ -388,5 +388,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "interestsEmptyTitle": "Nada por aqui ainda",
+  "interestsEmptyBody": "Ainda não há categorias. Você pode pular e escolher depois."
 }

@@ -44,6 +44,11 @@ export function sha256(value: string): string {
   return createHash('sha256').update(signingKey).update(value).digest('base64url');
 }
 
+/** HMAC-SHA256 com a chave do servidor: identificadores enumeráveis (telefone, e-mail). */
+export function hmac(value: string): string {
+  return createHmac('sha256', signingKey).update(value).digest('base64url');
+}
+
 export function randomToken(bytes = 32): string {
   return randomBytes(bytes).toString('base64url');
 }

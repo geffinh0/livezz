@@ -40,6 +40,9 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
   String? _checkedFor;
   String? _error;
 
+  /// A consulta falhou (rede/servidor): mostra "tentar de novo".
+  bool _checkFailed = false;
+
   @override
   void dispose() {
     _timer?.cancel();
@@ -52,6 +55,7 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
     setState(() {
       _check = null;
       _error = null;
+      _checkFailed = false;
       _checking = v.isNotEmpty;
     });
     if (v.isEmpty) return;
@@ -72,6 +76,7 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
       if (!mounted || seq != _seq) return;
       setState(() {
         _checking = false;
+        _checkFailed = true;
         _error = authErrorText(AppLocalizations.of(context), e);
       });
     }
@@ -170,6 +175,15 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
           ),
         ],
         AuthError(_error),
+        if (_checkFailed)
+          TestId(
+            'onboarding.username.retry',
+            child: AppButton(
+              label: l.actionRetry,
+              variant: AppButtonVariant.text,
+              onPressed: () => _onChanged(_ctrl.text),
+            ),
+          ),
         const SizedBox(height: AppSpace.xl),
         TestId(
           'onboarding.username.submit',
