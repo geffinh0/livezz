@@ -19,7 +19,8 @@
 ## Fase 1 — Entrada e conta
 - [~] ENT01–ENT19, NAV01, NAV04, CFG14, SEG06
   - 1a (abertura, boas-vindas, visitante, região, navegação) e 1b (login, termos, sessão única, anti-bot) concluídos em 2026-11-21: prontos ENT01, ENT05, ENT07, ENT16, ENT17, ENT18, ENT19; ENT04, ENT06, SEG06 com o restante na Fase 12
-  - 1c: cadastro (ENT08–ENT15) e idioma (CFG14)
+  - 1c concluído em 2026-11-22: ENT10, ENT11, CFG14 prontos; ENT08 (Play Age Signals real) e ENT12 (uso na descoberta) com o restante em fases futuras
+  - 1d: ledger mínimo, ENT13, ENT14, ENT15, ENT09 (rascunho em docs/planos)
 
 ## Fase 2 — Descoberta e perfil
 - [ ] DES01–DES09, PER01–PER09, NAV02, NAV03

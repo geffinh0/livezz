@@ -76,7 +76,7 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 8. app: telas ENT11 e ENT12 + widget. ✅
 9. app: Configurações mínimas + CFG14 + widget. ✅
 10. E2E web dos itens; prints claro/escuro, pt/en. ✅ (prints em pt; inglês coberto por CFG14 e pelos testes de widget em en com fonte 2x)
-11. Conferir a lista de testes; verificador; revisões (código, UX, segurança, dados); correções; verificador final; documentos.
+11. Conferir a lista de testes; verificador; revisões (código, UX, segurança, dados); correções; verificador final; documentos. ✅
 
 ## Fora do escopo
 - Plano 1d: ledger mínimo (ADR 0013), ENT13, ENT14, ENT15, ENT09.
@@ -84,4 +84,8 @@ Decisões usadas: Q-55 a Q-69 (`docs/QUESTOES-ABERTAS.md`). Revisado pelo `arqui
 - Tela do painel para revisar contas congeladas (ADM).
 - Troca de @ a cada 30 dias e edição de perfil (PER02, Fase 2).
 
-Status: aprovado pelo usuário em 2026-11-21
+## Resultado (2026-11-22)
+- Prontos: ENT10, ENT11, CFG14. Em andamento por fase futura: ENT08 (Play Age Signals real, Fase 12), ENT12 (uso na descoberta, Fase 2), ENT06 (Google real, Fase 12).
+- Testes finais: mock 110, app 197, E2E web 139/139. Revisões de código, segurança, UX e dados aplicadas (commits 0318e96, 92a0b88).
+
+Status: concluído em 2026-11-22 (aprovado pelo usuário em 2026-11-21)

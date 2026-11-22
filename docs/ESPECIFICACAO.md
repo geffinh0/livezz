@@ -37,16 +37,16 @@
   - Aceite: conta nova cai em ENT08; conta existente entra direto; erro e cancelamento tratados.
 - [x] **ENT07 Recuperar senha**
   - Aceite: código por e-mail → nova senha → encerra outras sessões (RN-04).
-- [ ] **ENT08 Dados iniciais**
+- [~] **ENT08 Dados iniciais** — feito no plano 1c; falta: sinal de idade real da loja (plugin nativo do Play Age Signals, Fase 12, Q-64)
   - Aceite: nome de exibição (RN-05), data de nascimento (não editável depois, RN-01), gênero opcional; o app consulta o sinal de idade/faixa etária da loja (Play Age Signals) e, se indicar menor, ou se a data indicar menor, vai para ENT10.
 - [ ] **ENT09 Verificação forte de idade**
   - Aceite: exigida para transmitir e para sacar (RN-01) quando ligada pelo comprador (padrão ligada); métodos estimativa facial e documento; provedor escolhido pelo comprador via conector (padrão Yoti); estados pendente/aprovado/reprovado/expirado; reprovado não transmite nem saca; menor detectado vai para ENT10; resultado chega por evento. Desligada pelo comprador: o fluxo some e TRA01 não exige.
   - Dados: VerificacaoIdade · Depende: TRV13, ADM19 · Jurídico: Q-41
-- [ ] **ENT10 Bloqueio de menor de idade**
-  - Aceite: tela explicativa, sem acesso ao app; conta marcada e dados mínimos retidos conforme RN-01; sem como "voltar e mudar a data".
-- [ ] **ENT11 Criar @ (nome de usuário)**
+- [x] **ENT10 Bloqueio de menor de idade**
+  - Aceite: tela explicativa, sem acesso ao app; conta congelada e guardada conforme RN-01 (Q-58, Q-63: inteira, para revisão da equipe; aparelho marcado, Q-65; contato de suporte e protocolo na tela, Q-68); sem como "voltar e mudar a data".
+- [x] **ENT11 Criar @ (nome de usuário)**
   - Aceite: validação em tempo real de disponibilidade e formato (RN-05); sugestões.
-- [ ] **ENT12 Escolher interesses**
+- [~] **ENT12 Escolher interesses** — feito no plano 1c; falta: uso na descoberta (DES, Fase 2)
   - Aceite: categorias do servidor; pular permitido; usadas na descoberta.
 - [ ] **ENT13 Bônus de boas-vindas**
   - Aceite: overlay com moedas iniciais quando ativo (RN-30); crédito via ledger; uma vez por pessoa (anti-abuso, RN-31).
@@ -416,7 +416,7 @@
   - Aceite: pedir cópia dos dados (entregue por e-mail/arquivo); excluir conta com confirmação, carência (RN-80) e aviso do que é mantido por obrigação legal (ex.: registros financeiros).
 - [ ] **CFG13 Permissões negadas**
   - Aceite: explicação antes de pedir; se negada para sempre, atalho para as configurações do Android.
-- [ ] **CFG14 Idioma**
+- [x] **CFG14 Idioma**
   - Aceite: português (padrão) ou inglês; segue o idioma do aparelho na primeira vez; troca sem reiniciar o app.
 
 ## SEG · Segurança, moderação e proteção

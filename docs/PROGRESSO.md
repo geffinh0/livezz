@@ -4,19 +4,19 @@
 > Inclua sempre uma linha `dados:` dizendo se a tarefa mexeu no modelo de dados (e o que foi atualizado no DATABASE.md) ou `dados: sem impacto`.
 
 ## Estado atual
-Plano 1b concluído (login, senha, termos, sessão única, anti-bot), com revisões de segurança, código, UX e dados e duas rodadas do verificador. Prontos `[x]`: ENT01, ENT05, ENT07, ENT16, ENT17, ENT19 (além de ENT18 e TRV01/04/07). Em andamento por decisão registrada: ENT04 (Q-51, SMS real na Fase 12), ENT06 (cadastro no 1c, Google real na Fase 12), SEG06 (provedores reais na Fase 12). Testes: mock 84, app 162, E2E web 102/102.
+Plano 1c concluído (cadastro inicial, bloqueio de menor, @, interesses, idioma), com revisões de código, segurança, UX e dados e verificador antes e depois. Prontos `[x]` na Fase 1: ENT01, ENT05, ENT07, ENT10, ENT11, ENT16, ENT17, ENT18, ENT19, CFG14. Em andamento por fase futura: ENT04, ENT06, SEG06, ENT08 (Fase 12) e ENT12 (Fase 2). Testes: mock 110, app 197, E2E web 139/139.
 
 ## Próximo passo
-`/retro` curto da etapa (propor a regra M-045: conferir edição por script e `pipefail`) e depois `/planejar` do plano 1c (cadastro ENT08–ENT15, idioma CFG14).
+`/planejar` do plano 1d (ledger mínimo com ADR 0013, ENT13 bônus, ENT14 telefone com recompensa, ENT15 contas vinculadas, ENT09 verificação forte com provedor fake), a partir do rascunho em `docs/planos/2026-11-21-fase-1d-ledger-bonus-e-verificacao.md`. Depois NAV04 para fechar a Fase 1.
 
 ## Problemas conhecidos / dívidas técnicas
 - Sessão da nuvem sem Android SDK nem aparelho: APK só no CI (confirmado: run 12 verde, artefato `liveapp-debug-apk`), Maestro só na máquina do usuário (`tools/dev/setup-linux.sh` e `tools/dev/e2e-emulador.sh`).
 - Em release, a tela inicial fica vazia depois de carregar a config (as telas de produto chegam na ENT01).
-- Ver `docs/MELHORIAS.md` (M-037 a M-051 vieram das revisões do plano 1b).
+- Ver `docs/MELHORIAS.md` (M-037 a M-051 das revisões do 1b; M-052 a M-067 das revisões do 1c; altas: M-052 identidade do aparelho, M-054 liberação com verificação, M-056 retenção de dados de menor).
 
 ## Últimas sessões (manter só as 5 mais recentes)
+- 2026-11-22: plano 1c concluído (Q-55 a Q-69; ENT10/ENT11/CFG14 prontos). dados: DATABASE.md — Usuario com perfil e idade, Dispositivo com bloqueio de menor, CategoriaInteresse, PalavraReservada, IdentificadorBloqueado, ConfigTenant, LimiteConta, PreferenciasLocais.idioma; API.md com a seção Cadastro inicial; RN-01 com cálculo por fuso e congelamento.
 - 2026-11-21: retro do plano 1b aprovada: regra de edição por script e `pipefail` (CLAUDE.md), `/implementar` confere testes do plano e roda o verificador antes das revisões, DATABASE.md no mesmo commit, `/planejar` caça ambiguidade, E2E um fluxo por arquivo. dados: sem impacto.
 - 2026-11-21: plano 1b concluído: passo 13 (revisões, correções, Q-55, verificador: ENT01/05/07/16/17/19 prontos). dados: DATABASE.md — CadastroPendente, AvisoConta, ConfigAuth, controles efêmeros de autenticação, CodigoVerificacao/Sessao/Dispositivo/AceiteTermos alinhados, TokensLocais com chaves reais; API.md com erros de cada rota de auth, `/devices`, cenários e `/__mock/ping-autenticado`; signup devolve tempos do código.
 - 2026-11-21: plano 1b passos 1–12; ADR 0012; Q-54. dados: DATABASE.md — MetodoLogin, CodigoVerificacao, Sessao, AceiteTermos, Usuario (parcial) em uso no mock; Dispositivo.segredo_hash; TokensLocais no app (ver Histórico).
 - 2026-11-21: Fase 1a concluída (revisões + verificador); E2E web ganhou casos de erro e espera por texto; script de E2E encerra o grupo de processos. dados: API.md com cenário `entrada-desligada` e CORS do mock.
-- 2026-11-21: Fase 1a passos 1–7. dados: DATABASE.md atualizado — Dispositivo em uso no mock (id gerado pelo servidor), PreferenciasLocais no app, `region` calculado por requisição (ver Histórico).
