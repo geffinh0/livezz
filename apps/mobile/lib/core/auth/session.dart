@@ -15,8 +15,6 @@ class Session {
     required this.userId,
     this.pendingTerms = const [],
     this.pendingSteps = const [],
-    this.displayName,
-    this.username,
     this.language,
   });
   final String userId;
@@ -24,8 +22,6 @@ class Session {
 
   /// Passos do cadastro inicial que faltam (plano 1c).
   final List<OnboardingStep> pendingSteps;
-  final String? displayName;
-  final String? username;
 
   /// Idioma da conta (`pt-BR`/`en`, CFG14).
   final String? language;
@@ -162,14 +158,13 @@ class SessionController extends Notifier<Session?> {
     pendingSteps: me.pendingSteps.isEmpty && me.needsProfile
         ? OnboardingStep.values
         : me.pendingSteps,
-    displayName: me.displayName,
-    username: me.username,
     language: me.language,
   );
 
-  /// O servidor respondeu `403 termos_pendentes` com o app aberto (ENT16):
-  /// recarrega o `/me` para o roteador levar à tela de termos.
-  void termsPending() {
+  /// O servidor respondeu `403 termos_pendentes` ou `cadastro_pendente` com o
+  /// app aberto (ex.: a sessão voltou sem rede e sem os passos): recarrega o
+  /// `/me` para o roteador levar aos termos ou ao cadastro.
+  void accountOutdated() {
     unawaited(
       reloadMe().catchError((Object e) {
         developer.log('reloadMe falhou: $e', name: 'auth');

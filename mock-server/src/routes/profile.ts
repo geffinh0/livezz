@@ -47,7 +47,10 @@ const InterestsBody = Type.Object(
 );
 
 export function registerProfileRoutes(app: FastifyInstance, auth: AuthService, profile: ProfileService) {
+  // GET /me: liberado com termos e cadastro pendentes (o app precisa saber o que falta).
   const open = requireAuth(auth, { allowPendingTerms: true, allowPendingProfile: true });
+  // Cadastro: dado pessoal (data, gênero) só depois de aceitar termos e privacidade (LGPD).
+  const onboarding = requireAuth(auth, { allowPendingProfile: true });
   const gated = requireAuth(auth);
 
   app.get('/v1/me', { preHandler: open }, async (req) => {
@@ -57,7 +60,7 @@ export function registerProfileRoutes(app: FastifyInstance, auth: AuthService, p
 
   app.patch<{ Body: Static<typeof PatchBody> }>(
     '/v1/me',
-    { schema: { body: PatchBody }, preHandler: open },
+    { schema: { body: PatchBody }, preHandler: onboarding },
     async (req) => {
       if (!req.auth) throw new Error('auth ausente');
       const { user, session } = req.auth;
@@ -74,7 +77,7 @@ export function registerProfileRoutes(app: FastifyInstance, auth: AuthService, p
 
   app.get<{ Params: Static<typeof UsernameParams> }>(
     '/v1/usernames/:u/availability',
-    { schema: { params: UsernameParams }, preHandler: open },
+    { schema: { params: UsernameParams }, preHandler: onboarding },
     async (req) => {
       if (!req.auth) throw new Error('auth ausente');
       auth.hitIp('username', req.ip);
@@ -88,6 +91,8 @@ export function registerProfileRoutes(app: FastifyInstance, auth: AuthService, p
     { schema: { body: UsernameBody }, preHandler: gated },
     async (req) => {
       if (!req.auth) throw new Error('auth ausente');
+      auth.hitIp('username', req.ip); // mesmos limites da consulta (anti-enumeração)
+      profile.limitUser(req.auth.user.id);
       return profile.setUsername(req.auth.user, req.body.username);
     },
   );

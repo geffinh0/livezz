@@ -2,6 +2,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../theme/tokens.dart';
 
 /// Campo de data (DESIGN-SYSTEM §3): mostra a data no idioma do app e abre o
 /// seletor do sistema (acessível, com digitação). Erro e ajuda no próprio campo.
@@ -53,10 +54,10 @@ class AppDateField extends StatelessWidget {
     // ajuda e o erro do próprio campo.
     return Semantics(
       button: true,
-      hint: text.isEmpty ? l.birthDateChoose : null,
+      hint: text.isEmpty ? l.birthDateChoose : l.birthDateChange,
       child: InkWell(
         onTap: enabled ? () => _pick(context) : null,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppRadius.field),
         child: InputDecorator(
           isEmpty: value == null,
           decoration: InputDecoration(

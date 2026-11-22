@@ -92,7 +92,7 @@ describe('perfil e portão de cadastro (ENT08)', () => {
       (await req(mock, 'PATCH', '/v1/me', t.accessToken, body)).json().error;
     // Campo fora da lista é ignorado (não muda nada): compatível com versões futuras do app.
     const ignored = await req(mock, 'PATCH', '/v1/me', t.accessToken, {
-      accountStatus: 'ativa',
+      accountStatus: 'banida',
       ageStatus: 'verificada',
     });
     expect(ignored.json()).toMatchObject({ accountStatus: 'ativa', ageStatus: 'nao_verificada' });
@@ -335,5 +335,71 @@ describe('logs sem dados de idade e gênero', () => {
     const all = lines.join('\n');
     expect(all).not.toContain('1987-03-09');
     expect(all).not.toContain('nao_binario');
+  });
+});
+
+describe('correções da revisão do plano 1c', () => {
+  it('dado pessoal só depois de aceitar termos e privacidade (LGPD)', async () => {
+    const mock = await buildApp();
+    const t = (await phoneLogin(mock, await device(mock), '+5511977770101')).json();
+    const r = await req(mock, 'PATCH', '/v1/me', t.accessToken, adult);
+    expect(r.json().error.code).toBe('termos_pendentes');
+  });
+
+  it('troca de @ não revela @ ocupados e tem limite', async () => {
+    const mock = await buildApp();
+    const t = await newAccount(mock, '+5511977770102');
+    await req(mock, 'PATCH', '/v1/me', t.accessToken, adult);
+    await req(mock, 'POST', '/v1/me/username', t.accessToken, { username: 'nova.pessoa' });
+    const taken = (
+      await req(mock, 'POST', '/v1/me/username', t.accessToken, { username: 'ana.teste' })
+    ).json();
+    const free = (
+      await req(mock, 'POST', '/v1/me/username', t.accessToken, { username: 'livre.mesmo' })
+    ).json();
+    expect(taken.error.details).toEqual({ reason: 'ja_definido' });
+    expect(free.error.details).toEqual({ reason: 'ja_definido' });
+    const own = (await req(mock, 'GET', '/v1/usernames/nova.pessoa/availability', t.accessToken)).json();
+    expect(own.available).toBe(true);
+    mock.state.auth.config.usernameChecksPerUserPerMinute = 1;
+    mock.state.auth.userHits.clear();
+    await req(mock, 'POST', '/v1/me/username', t.accessToken, { username: 'x.y.z' });
+    expect(
+      (await req(mock, 'POST', '/v1/me/username', t.accessToken, { username: 'x.y.w' })).statusCode,
+    ).toBe(429);
+  });
+
+  it('sinal inconsistente (idade mínima < 18 sem máxima) também restringe', async () => {
+    const mock = await buildApp();
+    const t = await newAccount(mock, '+5511977770103');
+    const r = await req(mock, 'PATCH', '/v1/me', t.accessToken, {
+      ...adult,
+      storeAgeSignal: { status: 'shared', ageLower: 13, ageUpper: null },
+    });
+    expect(r.json().error.code).toBe('menor_de_idade');
+  });
+
+  it('depois de liberada pela equipe, trocar o idioma não congela de novo', async () => {
+    const mock = await buildApp();
+    const t = await newAccount(mock, '+5511977770104');
+    await req(mock, 'PATCH', '/v1/me', t.accessToken, { displayName: 'Jovem', birthDate: '2015-06-01' });
+    await mock.app.inject({ method: 'POST', url: '/__mock/minor/unfreeze', payload: { userId: t.user.id } });
+    const again = (await phoneLogin(mock, t.dev, '+5511977770104')).json();
+    const r = await req(mock, 'PATCH', '/v1/me', again.accessToken, { language: 'en' });
+    expect(r.statusCode).toBe(200);
+  });
+
+  it('Google não liga método novo a conta congelada', async () => {
+    const mock = await buildApp();
+    const user = mock.state.auth.users.get('u-carla');
+    if (user) user.accountStatus = 'congelada';
+    const before = mock.state.auth.methods.length;
+    const r = await mock.app.inject({
+      method: 'POST',
+      url: '/v1/auth/google',
+      payload: { idToken: 'mock-google:carla@teste.local', ...(await device(mock)) },
+    });
+    expect(r.json().error.code).toBe('menor_de_idade');
+    expect(mock.state.auth.methods.length).toBe(before);
   });
 });

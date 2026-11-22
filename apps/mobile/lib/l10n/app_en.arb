@@ -182,7 +182,7 @@
   "birthDateRequired": "Enter your date of birth.",
   "birthDateChoose": "Choose date",
   "genderLabel": "Gender (optional)",
-  "genderPrivacy": "Only you can see it. It stays on your profile and you can leave it blank.",
+  "genderPrivacy": "Only you can see this. You can leave it blank.",
   "genderWoman": "Woman",
   "genderMan": "Man",
   "genderNonBinary": "Non-binary",
@@ -192,16 +192,16 @@
   "usernameHelper": "3 to 20: lowercase letters, numbers, dot and _.",
   "usernameChecking": "Checking…",
   "usernameAvailable": "Available",
-  "usernameFormat": "Use 3 to 20 lowercase letters, numbers, dot or _, with no dot at the start or end.",
+  "usernameFormat": "Invalid format: use lowercase letters, numbers, dot or _, with no dot at the ends.",
   "usernameTaken": "Already taken.",
   "usernameReserved": "This @ is reserved.",
   "usernameSuggestions": "Suggestions",
   "onboardingInterestsTitle": "What do you like?",
   "interestsIntro": "Choose up to 10. We use them to suggest lives to you.",
   "interestsLimit": "You already chose 10.",
-  "minorBlockedTitle": "Access not allowed",
-  "minorBlockedBody": "This app is for adults 18 and over only. This account and this device have been blocked.",
-  "minorBlockedReview": "If you are 18 or older and this was a mistake, write to {email} with the protocol number. The team will ask for an age verification.",
+  "minorBlockedTitle": "This app is for adults 18 and over",
+  "minorBlockedBody": "For everyone's safety, only adults 18 and over can use the app. That is why this account is paused on this device.",
+  "minorBlockedReview": "If you are 18 or older and entered the date by mistake, write to {email} with the protocol below. We will ask for an age verification.",
   "@minorBlockedReview": {
     "placeholders": {
       "email": {
@@ -231,5 +231,10 @@
     }
   },
   "interestsEmptyTitle": "Nothing here yet",
-  "interestsEmptyBody": "There are no categories yet. You can skip and choose later."
+  "interestsEmptyBody": "There are no categories yet. You can skip and choose later.",
+  "minorBlockedCopy": "Copy protocol",
+  "minorBlockedCopied": "Protocol copied",
+  "birthDateInvalid": "Check the date of birth.",
+  "birthDateChange": "Change date",
+  "onboardingSignOut": "Sign out"
 }

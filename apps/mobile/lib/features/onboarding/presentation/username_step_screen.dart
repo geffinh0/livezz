@@ -97,6 +97,7 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
     try {
       await ref.read(onboardingFlowProvider).setUsername(_ctrl.text);
     } on ApiFailure catch (e) {
+      if (!mounted) return;
       if (e.code == 'username_indisponivel') {
         // Alguém pegou no meio do caminho: consulta de novo para mostrar sugestões.
         await _run(_ctrl.text);
@@ -104,6 +105,7 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
         setState(() => _error = authErrorText(l, e));
       }
     } on Object catch (e) {
+      if (!mounted) return;
       setState(() => _error = authErrorText(l, e));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -150,6 +152,12 @@ class _UsernameStepScreenState extends ConsumerState<UsernameStepScreen> {
             ],
             onChanged: _onChanged,
           ),
+        ),
+        // Anuncia "Verificando…", "Disponível" ou o motivo ao leitor de tela.
+        Semantics(
+          liveRegion: true,
+          label: fieldError ?? status,
+          child: const SizedBox.shrink(),
         ),
         if (current && !c.available && c.suggestions.isNotEmpty) ...[
           const SizedBox(height: AppSpace.md),

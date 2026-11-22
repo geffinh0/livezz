@@ -11,7 +11,7 @@ flow('ENT10', async (t) => {
   await t.tap('onboarding.profile.submit');
   t.check('menor: tela de bloqueio', await t.visible('minor.blocked', 20000));
   t.check('mostra o protocolo', await t.visible('minor.blocked.protocol'));
-  t.check('mostra o e-mail de suporte do tenant', await t.text('suporte@liveapp.example'));
+  t.check('mostra o contato de suporte do tenant', await t.visible('minor.blocked.support'));
   await t.shot('bloqueio');
   await t.open('/', { fresh: false });
   // A sessão já foi apagada no 403: quem bloqueia agora é o aparelho marcado (Q-65).

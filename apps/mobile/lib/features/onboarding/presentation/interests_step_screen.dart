@@ -40,6 +40,7 @@ class _InterestsStepScreenState extends ConsumerState<InterestsStepScreen> {
     try {
       await ref.read(onboardingFlowProvider).setInterests(ids);
     } on Object catch (e) {
+      if (!mounted) return;
       setState(() => _error = authErrorText(l, e));
     } finally {
       if (mounted) setState(() => _busy = false);

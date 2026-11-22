@@ -21,6 +21,7 @@ class FakeServer implements HttpClientAdapter {
   int? meStatus;
   Completer<void>? meGate;
   bool termsPendingOnPing = false;
+  bool profilePending = false;
   final paths = <String>[];
   Completer<void>? refreshGate;
 
@@ -73,6 +74,11 @@ class FakeServer implements HttpClientAdapter {
         'error': {'code': meStatus == 401 ? 'nao_autenticado' : 'erro_interno'},
       });
     }
+    if (o.path == '/ping' && profilePending) {
+      return json(403, {
+        'error': {'code': 'cadastro_pendente'},
+      });
+    }
     if (o.path == '/ping' && termsPendingOnPing) {
       return json(403, {
         'error': {'code': 'termos_pendentes'},
@@ -81,7 +87,8 @@ class FakeServer implements HttpClientAdapter {
     if (o.path == '/me') {
       return json(200, {
         'id': 'u1',
-        'needsProfile': false,
+        'needsProfile': profilePending,
+        'pendingSteps': [if (profilePending) 'profile'],
         'accountStatus': 'ativa',
         'pendingTerms': [
           {'document': 'terms', 'version': 2, 'url': 'http://p/legal/termos'},
@@ -107,7 +114,7 @@ class _Tokens implements TokenSource {
   void sessionEnded(String code, {String? usedToken}) =>
       s.sessionEnded(code, usedToken: usedToken);
   @override
-  void termsPending() => s.termsPending();
+  void accountOutdated() => s.accountOutdated();
 }
 
 void main() {
@@ -355,6 +362,21 @@ void main() {
       expect(c.read(sessionReadyProvider), isTrue);
       expect(c.read(sessionProvider)?.userId, 'u1');
       server.meGate!.complete();
+    },
+  );
+
+  test(
+    '403 cadastro_pendente (sessão voltou sem os passos) leva ao cadastro',
+    () async {
+      await login();
+      c.read(sessionProvider.notifier).set(const Session(userId: 'u1'));
+      server.profilePending = true;
+      await expectLater(
+        api.call((d) => d.get<Object?>('/ping')),
+        throwsA(anything),
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      expect(c.read(sessionProvider)?.pendingSteps, [OnboardingStep.profile]);
     },
   );
 }

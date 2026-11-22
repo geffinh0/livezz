@@ -46,10 +46,10 @@ class _ProfileStepScreenState extends ConsumerState<ProfileStepScreen> {
     super.dispose();
   }
 
-  String? _checkName(AppLocalizations l, String v) {
-    final len = v.trim().replaceAll(RegExp(r'\s+'), ' ').runes.length;
-    return len < 2 || len > 30 ? l.displayNameLength : null;
-  }
+  // Só "vazio" aqui: tamanho e palavras proibidas são regras do servidor
+  // (RN-05), que responde no próprio campo.
+  String? _checkName(AppLocalizations l, String v) =>
+      v.trim().isEmpty ? l.displayNameLength : null;
 
   Future<void> _submit() async {
     final l = AppLocalizations.of(context);
@@ -71,6 +71,7 @@ class _ProfileStepScreenState extends ConsumerState<ProfileStepScreen> {
           );
       // O roteador segue para o próximo passo (ou ENT10, se menor).
     } on ApiFailure catch (e) {
+      if (!mounted) return;
       final field = e.details['field'];
       setState(() {
         if (field == 'displayName') {
@@ -78,12 +79,13 @@ class _ProfileStepScreenState extends ConsumerState<ProfileStepScreen> {
               ? l.displayNameForbidden
               : l.displayNameLength;
         } else if (field == 'birthDate') {
-          _birthError = l.birthDateRequired;
+          _birthError = l.birthDateInvalid;
         } else {
           _error = authErrorText(l, e);
         }
       });
     } on Object catch (e) {
+      if (!mounted) return;
       setState(() => _error = authErrorText(l, e));
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -116,7 +118,6 @@ class _ProfileStepScreenState extends ConsumerState<ProfileStepScreen> {
             maxLength: 30,
             textInputAction: TextInputAction.next,
             autofillHints: const [AutofillHints.name],
-            validator: (v) => v.isEmpty ? null : _checkName(l, v),
             onChanged: (_) {
               if (_nameError != null) setState(() => _nameError = null);
             },
@@ -132,7 +133,8 @@ class _ProfileStepScreenState extends ConsumerState<ProfileStepScreen> {
             error: _birthError,
             firstDate: DateTime(today.year - 120, today.month, today.day),
             lastDate: today,
-            initialDate: DateTime(today.year - 25),
+            // Abre perto da idade mínima (RN-01), sem sugerir uma data.
+            initialDate: DateTime(today.year - 18, today.month, today.day),
             onChanged: (d) => setState(() {
               _birth = d;
               _birthError = null;
@@ -140,24 +142,36 @@ class _ProfileStepScreenState extends ConsumerState<ProfileStepScreen> {
           ),
         ),
         const SizedBox(height: AppSpace.lg),
-        Text(l.genderLabel, style: Theme.of(context).textTheme.titleSmall),
+        Semantics(
+          header: true,
+          child: Text(
+            l.genderLabel,
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+        ),
         Text(l.genderPrivacy, style: Theme.of(context).textTheme.bodySmall),
         RadioGroup<String>(
           groupValue: _gender,
           onChanged: (v) => setState(() => _gender = v),
-          child: Column(
-            children: [
-              for (final g in genders)
-                TestId(
-                  'onboarding.profile.gender.$g',
-                  child: RadioListTile<String>(
-                    value: g,
-                    title: Text(genderText(g)),
-                    toggleable: true,
-                    contentPadding: EdgeInsetsDirectional.zero,
+          // Grupo com nome: o leitor diz "Gênero (opcional)" junto das opções.
+          child: Semantics(
+            container: true,
+            label: l.genderLabel,
+            explicitChildNodes: true,
+            child: Column(
+              children: [
+                for (final g in genders)
+                  TestId(
+                    'onboarding.profile.gender.$g',
+                    child: RadioListTile<String>(
+                      value: g,
+                      title: Text(genderText(g)),
+                      toggleable: true,
+                      contentPadding: EdgeInsetsDirectional.zero,
+                    ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         AuthError(_error),

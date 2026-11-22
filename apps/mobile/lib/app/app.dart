@@ -49,7 +49,11 @@ class _LivezzAppState extends ConsumerState<LivezzApp> {
   Widget build(BuildContext context) {
     // CFG14: ao entrar numa conta, vale o idioma dela.
     ref.listen(sessionProvider, (prev, next) {
-      if (next == null || prev?.userId == next.userId) return;
+      // Entrou numa conta, ou o idioma da conta acabou de chegar (ex.: /me
+      // depois de abrir sem rede).
+      if (next == null) return;
+      final sameUser = prev?.userId == next.userId;
+      if (sameUser && (prev?.language != null || next.language == null)) return;
       unawaited(
         ref.read(onboardingFlowProvider).onAccountLanguage(next.language),
       );

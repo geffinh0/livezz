@@ -41,7 +41,6 @@ const DAY = 86_400_000;
 
 export const normalizeEmail = (e: string) => e.trim().toLowerCase();
 
-/** Motivo de revogação → código de erro HTTP e motivo do evento de tempo real. */
 /**
  * Protocolo para a pessoa informar ao suporte ao pedir revisão (Q-68): opaco
  * (não expõe o id), mas a equipe acha a conta por ele.
@@ -54,6 +53,7 @@ export function minorError(userId: string | null) {
   return new ApiError(403, 'menor_de_idade', { protocol: minorProtocol(userId) });
 }
 
+/** Motivo de revogação → código de erro HTTP e motivo do evento de tempo real. */
 const revokeErrors: Record<
   RevokeReason,
   { code: 'sessao_substituida' | 'sessao_revogada' | 'sessao_expirada'; event: string }
@@ -450,6 +450,8 @@ export class AuthService {
         this.assertNotBlockedIdentifier('google', sub);
         this.assertNotBlockedIdentifier('email', email);
       }
+      // Conta congelada (ou banida): recusa antes de ligar um método novo a ela.
+      if (byEmail?.verifiedAt) this.assertActiveAccount(this.store.users.get(byEmail.userId));
       const userId = byEmail?.verifiedAt ? byEmail.userId : this.createUser().id;
       method = {
         userId,

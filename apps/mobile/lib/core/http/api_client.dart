@@ -113,10 +113,13 @@ class ApiClient {
                   : null,
             );
           }
+          // O app achava que a conta estava em dia, mas o servidor diz que
+          // faltam termos (ENT16) ou cadastro (plano 1c): recarrega o /me.
           if (failure is ApiFailure &&
               failure.status == 403 &&
-              failure.code == 'termos_pendentes') {
-            tokens.termsPending();
+              (failure.code == 'termos_pendentes' ||
+                  failure.code == 'cadastro_pendente')) {
+            tokens.accountOutdated();
           }
           if (failure is ApiFailure) {
             if (failure.status == 426) {

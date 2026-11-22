@@ -341,26 +341,26 @@
   "birthDateRequired": "Informe sua data de nascimento.",
   "birthDateChoose": "Escolher data",
   "genderLabel": "Gênero (opcional)",
-  "genderPrivacy": "Só você vê. Fica no seu perfil e você pode deixar em branco.",
+  "genderPrivacy": "Só você vê esta informação. Pode deixar em branco.",
   "genderWoman": "Mulher",
   "genderMan": "Homem",
-  "genderNonBinary": "Não-binário",
+  "genderNonBinary": "Não binário",
   "genderPreferNot": "Prefiro não dizer",
   "onboardingUsernameTitle": "Escolha seu @",
   "usernameLabel": "Seu @",
   "usernameHelper": "De 3 a 20: letras minúsculas, números, ponto e _.",
   "usernameChecking": "Verificando…",
   "usernameAvailable": "Disponível",
-  "usernameFormat": "Use de 3 a 20 letras minúsculas, números, ponto ou _, sem ponto no começo ou no fim.",
+  "usernameFormat": "Formato inválido: use letras minúsculas, números, ponto ou _, sem ponto nas pontas.",
   "usernameTaken": "Já está em uso.",
   "usernameReserved": "Este @ é reservado.",
   "usernameSuggestions": "Sugestões",
   "onboardingInterestsTitle": "Do que você gosta?",
   "interestsIntro": "Escolha até 10. Usamos para sugerir lives para você.",
   "interestsLimit": "Você já escolheu 10.",
-  "minorBlockedTitle": "Acesso não permitido",
-  "minorBlockedBody": "Este app é só para maiores de 18 anos. Esta conta e este aparelho foram bloqueados.",
-  "minorBlockedReview": "Se você tem 18 anos ou mais e houve um engano, escreva para {email} informando o protocolo. A equipe vai pedir uma verificação de idade.",
+  "minorBlockedTitle": "Este app é para maiores de 18 anos",
+  "minorBlockedBody": "Para a segurança de todos, só maiores de 18 anos podem usar o app. Por isso, esta conta está pausada neste aparelho.",
+  "minorBlockedReview": "Se você tem 18 anos ou mais e informou a data por engano, escreva para {email} com o protocolo abaixo. Vamos pedir uma verificação de idade.",
   "@minorBlockedReview": {
     "placeholders": {
       "email": {
@@ -390,5 +390,10 @@
     }
   },
   "interestsEmptyTitle": "Nada por aqui ainda",
-  "interestsEmptyBody": "Ainda não há categorias. Você pode pular e escolher depois."
+  "interestsEmptyBody": "Ainda não há categorias. Você pode pular e escolher depois.",
+  "minorBlockedCopy": "Copiar protocolo",
+  "minorBlockedCopied": "Protocolo copiado",
+  "birthDateInvalid": "Confira a data de nascimento.",
+  "birthDateChange": "Alterar data",
+  "onboardingSignOut": "Sair da conta"
 }

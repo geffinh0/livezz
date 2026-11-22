@@ -82,11 +82,17 @@ export class ProfileService {
     }
     const signal = body.storeAgeSignal ?? user.storeAgeSignal;
 
-    // O servidor decide a idade. O sinal da loja vem do app: só restringe, nunca libera.
+    // O servidor decide a idade, só quando chega data ou sinal novo (trocar o
+    // idioma não reavalia) e nunca depois de a equipe liberar com verificação.
+    // O sinal da loja vem do app: só restringe, nunca libera.
+    const ageInput = body.birthDate !== undefined || body.storeAgeSignal !== undefined;
     const today = todayIn(this.state.tenant.timezone, new Date(this.clock()));
     const minorByDate = birthDate !== null && ageOn(birthDate, today) < ADULT;
-    const minorBySignal = signal?.status === 'shared' && signal.ageUpper !== null && signal.ageUpper < ADULT;
-    if (minorByDate || minorBySignal) {
+    const minorBySignal =
+      signal?.status === 'shared' &&
+      ((signal.ageUpper !== null && signal.ageUpper < ADULT) ||
+        (signal.ageLower !== null && signal.ageLower < ADULT));
+    if (ageInput && user.ageStatus !== 'verificada' && (minorByDate || minorBySignal)) {
       user.birthDate = birthDate;
       user.storeAgeSignal = signal;
       this.auth.freezeMinor(user, deviceId);
@@ -147,6 +153,7 @@ export class ProfileService {
 
   availability(user: AuthUser, raw: string) {
     const u = raw.toLowerCase();
+    if (user.username === u) return { available: true, suggestions: [] as string[] }; // o próprio @
     const taken = this.takenUsernames();
     const reason = this.reasonFor(u, taken);
     return reason === null
@@ -157,14 +164,15 @@ export class ProfileService {
   /** POST /me/username: checa e grava num passo só (sem await). */
   setUsername(user: AuthUser, raw: string) {
     const u = raw.toLowerCase();
+    // Troca a cada 30 dias é do PER02 (Fase 2): no cadastro, só a primeira
+    // definição. Checado antes de tudo para não virar oráculo de @ ocupados.
+    if (user.username !== null) {
+      if (user.username === u) return { username: u };
+      throw new ApiError(409, 'conflito', { reason: 'ja_definido' });
+    }
     const reason = this.reasonFor(u, this.takenUsernames());
     if (reason === 'formato') throw new ApiError(400, 'validacao', { field: 'username' });
-    if (reason !== null && user.username !== u) {
-      throw new ApiError(409, 'username_indisponivel', { reason });
-    }
-    // Troca a cada 30 dias é do PER02 (Fase 2): no cadastro, só a primeira definição.
-    if (user.username !== null && user.username !== u)
-      throw new ApiError(409, 'conflito', { reason: 'ja_definido' });
+    if (reason !== null) throw new ApiError(409, 'username_indisponivel', { reason });
     user.username = u;
     return { username: u };
   }

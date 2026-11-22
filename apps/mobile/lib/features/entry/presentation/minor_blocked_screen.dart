@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:material_ui/material_ui.dart';
@@ -5,6 +6,8 @@ import 'package:material_ui/material_ui.dart';
 import '../../../app/providers.dart';
 import '../../../core/http/app_gate.dart';
 import '../../../core/theme/tokens.dart';
+import '../../../core/ui/app_button.dart';
+import '../../../core/ui/app_toast.dart';
 import '../../../core/ui/test_id.dart';
 import '../../../l10n/generated/app_localizations.dart';
 
@@ -32,15 +35,16 @@ class MinorBlockedScreen extends ConsumerWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
-                      Symbols.block,
-                      size: 56,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ExcludeSemantics(
+                      child: Icon(
+                        Symbols.shield_person,
+                        size: 56,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                     const SizedBox(height: AppSpace.lg),
                     Semantics(
                       header: true,
-                      liveRegion: true,
                       child: Text(
                         l.minorBlockedTitle,
                         style: t.headlineSmall,
@@ -54,10 +58,13 @@ class MinorBlockedScreen extends ConsumerWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpace.lg),
-                    Text(
-                      l.minorBlockedReview(email),
-                      style: t.bodyMedium,
-                      textAlign: TextAlign.center,
+                    TestId(
+                      'minor.blocked.support',
+                      child: SelectableText(
+                        l.minorBlockedReview(email),
+                        style: t.bodyMedium,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                     if (protocol != null) ...[
                       const SizedBox(height: AppSpace.md),
@@ -67,6 +74,22 @@ class MinorBlockedScreen extends ConsumerWidget {
                           l.minorBlockedProtocol(protocol),
                           style: t.titleMedium,
                           textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpace.sm),
+                      TestId(
+                        'minor.blocked.copy',
+                        child: AppButton(
+                          label: l.minorBlockedCopy,
+                          variant: AppButtonVariant.secondary,
+                          onPressed: () async {
+                            await Clipboard.setData(
+                              ClipboardData(text: protocol),
+                            );
+                            if (context.mounted) {
+                              AppToast.show(context, l.minorBlockedCopied);
+                            }
+                          },
                         ),
                       ),
                     ],

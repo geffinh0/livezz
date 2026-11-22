@@ -219,6 +219,14 @@ describe('tempo real com sessões reais (ADR 0012)', () => {
     const t = (await login(mock, '+5511977771234')) as { accessToken: string };
     const c = await authWith(url, t.accessToken);
     await c.next('ack');
+    for (const document of ['terms', 'privacy', 'guidelines']) {
+      await mock.app.inject({
+        method: 'POST',
+        url: '/v1/me/terms/accept',
+        headers: { authorization: `Bearer ${t.accessToken}` },
+        payload: { document, version: 1 },
+      });
+    }
     await mock.app.inject({
       method: 'PATCH',
       url: '/v1/me',

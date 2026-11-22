@@ -97,6 +97,13 @@ final appGateProvider = NotifierProvider<AppGateController, AppGate>(
 );
 
 class AppGateController extends Notifier<AppGate> {
+  /// ENT10: guardado à parte. Quando outro portão (ex.: atualização) sai,
+  /// volta o bloqueio de menor, nunca a tela liberada. Só some ao reabrir
+  /// o app (o servidor decide de novo).
+  GateMinorBlocked? _minor;
+
+  AppGate get _released => _minor ?? const GateOpen();
+
   @override
   AppGate build() {
     // Config nova sem manutenção (refresh ou config.updated) libera o portão.
@@ -109,21 +116,24 @@ class AppGateController extends Notifier<AppGate> {
         state = GateUpdateRequired(c.minAppVersion);
         return;
       }
-      if (state is GateUpdateRequired) state = const GateOpen();
+      if (state is GateUpdateRequired) state = _released;
       if (!c.maintenance.active && state is GateMaintenance) {
-        state = const GateOpen();
+        state = _released;
       }
       if (c.regionAllowed && state is GateRegionBlocked) {
-        state = const GateOpen();
+        state = _released;
       }
     });
     return const GateOpen();
   }
 
   void set(AppGate gate) {
-    // ENT10: o bloqueio de menor só sai ao reabrir o app (servidor decide);
-    // outro portão passageiro não o apaga. Atualização obrigatória vence.
-    if (state is GateMinorBlocked && gate is! GateUpdateRequired) return;
+    if (gate is GateMinorBlocked) _minor = gate;
+    // Atualização obrigatória vence o bloqueio; os demais não o apagam.
+    if (_minor != null && gate is! GateUpdateRequired) {
+      state = _minor!;
+      return;
+    }
     state = gate;
   }
 }
@@ -152,7 +162,7 @@ class _SessionTokenSource implements TokenSource {
   void sessionEnded(String code, {String? usedToken}) =>
       _session.sessionEnded(code, usedToken: usedToken);
   @override
-  void termsPending() => _session.termsPending();
+  void accountOutdated() => _session.accountOutdated();
 }
 
 final secureStoreProvider = Provider<SecureStore>(

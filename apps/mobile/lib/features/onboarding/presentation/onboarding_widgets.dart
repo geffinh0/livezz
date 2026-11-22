@@ -33,12 +33,12 @@ class OnboardingScaffold extends ConsumerWidget {
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text(title),
+          title: Text(title, maxLines: 2, overflow: TextOverflow.ellipsis),
           actions: [
             TestId(
               '$id.signout',
               child: AppButton(
-                label: l.actionSignOut,
+                label: l.onboardingSignOut,
                 variant: AppButtonVariant.text,
                 onPressed: () => ref.read(sessionProvider.notifier).signOut(),
               ),
@@ -51,9 +51,8 @@ class OnboardingScaffold extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsetsDirectional.all(AppSpace.xl),
               children: [
-                Semantics(
-                  label: l.onboardingStepOf(step, totalSteps),
-                  excludeSemantics: true,
+                // Uma leitura só para o leitor de tela: a barra é decorativa.
+                ExcludeSemantics(
                   child: LinearProgressIndicator(value: step / totalSteps),
                 ),
                 const SizedBox(height: AppSpace.sm),

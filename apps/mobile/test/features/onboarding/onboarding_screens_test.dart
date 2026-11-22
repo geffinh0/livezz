@@ -158,7 +158,7 @@ void main() {
     await fillProfile(t);
     await tapId(t, 'onboarding.profile.gender.nao_binario');
     await tapId(t, 'onboarding.profile.submit');
-    expect(flow.calls.single, 'profile:Ana Teste:2001:nao_binario');
+    expect(flow.calls.single, 'profile:Ana Teste:2008:nao_binario');
   });
 
   testWidgets('ENT08: nome proibido pelo servidor aparece no campo', (t) async {

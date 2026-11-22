@@ -39,7 +39,7 @@ Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | username_alterado_em | data | RN-05 |
 | nome_exibicao | texto | RN-05 |
 | bio | texto | ≤ 200, filtrado |
-| genero | enum? | opcional |
+| genero | enum? | opcional e privado (Q-59): `mulher`, `homem`, `nao_binario`, `prefiro_nao_dizer`; só a própria pessoa vê (só em GET /me) |
 | data_nascimento 🔒 | data | imutável (RN-01) |
 | pais | texto (ISO) | |
 | situacao_idade | enum | `nao_verificada`, `pendente`, `verificada`, `reprovada`, `menor_bloqueado` |
@@ -52,14 +52,17 @@ Usada por: ENT*, PER*, quase tudo · `/v1/me`, `/v1/users/*`
 | contagem_seguidores / contagem_seguindo | inteiro | contadores desnormalizados |
 | privacidade | objeto | ocultar online, localização, visitas, diamantes, moedas enviadas, seguidores (VIP07, CFG03) |
 | preferencias | objeto | tema, notificações, conteúdo sensível, não perturbe |
-| interesses | lista de texto | ENT12 |
+| interesses | lista de texto? | ENT12; nulo = ainda não respondeu; lista vazia = pulou |
 | idioma | enum | `pt-BR`, `en` (RN-07, CFG14) |
-| faixa_etaria_loja | texto? | sinal de idade da loja (Play Age Signals) no cadastro (RN-01) |
+| faixa_etaria_loja | objeto? | sinal de idade da loja (Play Age Signals) enviado pelo app no cadastro: { status: shared/not_shared/verification_required/unavailable, idade_min?, idade_max? } (JSON `storeAgeSignal` com `ageLower`/`ageUpper`). Só restringe: idade_min ou idade_max < 18 congela a conta (RN-01, Q-64) |
+| congelada_em | data? | quando a conta foi congelada por menor de idade (Q-58, ENT10) |
 | faixa_etaria_consultada_em | data? | |
 | tutoriais_vistos | lista de texto | NAV04 |
 | criado_em / atualizado_em / excluido_em | data | |
 
 **Plano 1c (em uso no mock):** `genero` privado com valores `mulher`, `homem`, `nao_binario`, `prefiro_nao_dizer` (Q-59); `interesses` null = não respondeu, lista vazia = pulou; `faixa_etaria_loja` = { status, ageLower, ageUpper } (Q-64); `situacao_conta = congelada` com `situacao_idade = menor_bloqueado` e `congelada_em` (Q-58). Código: `AuthUser` em `mock-server/src/auth/store.ts` (`displayName`, `username`, `gender`, `birthDate`, `interests`, `language`, `storeAgeSignal`, `ageStatus`, `frozenAt`).
+
+**Protocolo do menor (Q-68):** não é coluna no mock; derivado do id (`P-` + 8 caracteres de hash com chave) e devolvido em `details.protocol` do `403 menor_de_idade` e em `POST /devices`. No banco real: protocolo aleatório gravado no congelamento, com índice único (M-057). **GET /me** nunca devolve `data_nascimento` (🔒), só `birthDateSet`. A equipe libera com `situacao_idade = verificada` (no mock direto; no painel, só com verificação forte aprovada, M-054).
 
 **Derivado (não é coluna):** `passos_pendentes` (JSON `pendingSteps`): `profile` (sem nome ou data), `username`, `interests` (null); `precisa_perfil` (JSON `needsProfile`) = lista não vazia. Ids no mock: `u_<uuid>` nas contas criadas por login e `u-ana` etc. nas semeadas.
 
@@ -98,7 +101,8 @@ Usada por: ENT16, TRA01 · campos: id, usuario_id, documento (`termos`, `privaci
 ### Controles efêmeros de autenticação — em uso no mock (cache, não vão para o banco relacional)
 Usada por: SEG06, RN-02, ENT04–ENT07
 - **TentativaFalha** (força bruta): chave → { contagem, bloqueado_ate }. Chaves: `acct:<e-mail>|dev:<aparelho>` (login por e-mail), `dest:<destino>|dev:<aparelho>` (confirmação de código), `dest:<e-mail>|ip:<ip>` (recuperar senha) e `ip:<ip>` (limite alto, 50, por causa de CGNAT). 5 falhas por chave de conta/destino; bloqueio de 60 s dobrando a cada falha extra. Sucesso zera só a chave de conta/destino. Outro aparelho errando não tranca o dono.
-- **LimiteIp:** `send|<ip>` (envio de código, 60/h) e `device|<ip>` (registro de aparelho, 60/h): lista de horários.
+- **LimiteIp:** `send|<ip>` (envio de código, 60/h), `device|<ip>` (registro de aparelho, 60/h) e `username|<ip>` (consulta e definição de @, 600/h): lista de horários.
+- **LimiteConta:** `username|<usuario_id>` (consulta e definição de @, 30 por minuto; `userHits`). Anti-enumeração de @.
 - **TokenAntibotUsado:** conjunto de `rota|token` já gastos (uso único por rota). No mock, token válido = `fake-ok-<8 a 64 caracteres [A-Za-z0-9_-]>`.
 
 ### Midia — proposta
@@ -192,7 +196,7 @@ Usada por: PRE*, ADM06 · campos: id, nome (por idioma: pt-BR, en), categoria_id
 
 ### CategoriaInteresse — em uso no mock (`fixtures/profile.json` → `interests`; ordem = posição; `ativa` = campo `active`, padrão verdadeiro: inativa some da lista e é recusada) · Usada por: ENT12, DES (Fase 2) · id, nome_pt, nome_en, ordem, ativa.
 ### PalavraReservada — em uso no mock (`fixtures/profile.json` → `reservedUsernames` e `blockedNameWords`) · Usada por: ENT11, ENT08, RN-05 · termo, tipo (`username`, `nome`), origem (`plataforma`, `comprador`). Inclui a marca do tenant (id e nome) e variações (dígitos trocados, pontos).
-### IdentificadorBloqueado — em uso no mock (`blockedIdentifiers`) · Usada por: ENT10 (Q-65) · tipo (`telefone`, `email`, `google`), valor_hmac 🔒 (HMAC com chave do servidor), conta_id, criado_em. Impede cadastro novo com identificador de conta congelada.
+### IdentificadorBloqueado — em uso no mock (`blockedIdentifiers`) · Usada por: ENT10 (Q-65) · tipo (`telefone`, `email`, `google`), valor_hmac 🔒 (HMAC com chave do servidor), conta_id, criado_em. Impede cadastro novo com identificador de conta congelada. A chave é HMAC de `tipo:identificador`. Checado no cadastro por telefone e e-mail e no primeiro login com Google, depois de validar o código, e responde `403 menor_de_idade` com o protocolo da conta original. Liberado pela equipe (no mock, `unfreezeMinor`). O Google não liga método novo a conta congelada.
 
 ### EnvioPresente — proposta
 Usada por: PRE01–PRE11, PK06, CHA05, MSG02 · `POST /v1/gifts/send`
@@ -347,6 +351,9 @@ Usada por: ASS11, CHA08, MSG08, FEED06, SEG01, ADM05 · id, denunciante_id, alvo
 
 ## Configuração
 
+### ConfigTenant — em uso no mock (somente leitura; vem de `tenants/<id>/tenant.json`; no banco real, configuração do comprador, ADM14)
+Usada por: ENT08, ENT10, ENT11, RN-01, RN-05 · id, nome_app (`appName`), fuso (`timezone`, IANA; base do cálculo dos 18 anos, RN-01), email_suporte (`supportEmail`, público; tela de bloqueio de menor, Q-68; validado por `tools/tenant/schema.mjs`), url_portal (`portalBaseUrl`). `id` e `nome_app` entram nos @ reservados. O app recebe `supportEmail`; `timezone` só o servidor usa.
+
 ### ConfigAuth — em uso no mock (fora do `GET /config`; editável pelo comprador no painel, ADR 0007, ADM14)
 Usada por: ENT04–ENT07, ENT19 · access_token_minutos (15; piso 5, teto 60), sessao_ociosa_dias (30, Q-50), sessao_maxima_dias (180, Q-54), refresh_carencia_segundos (10), codigo_validade_s (60), codigo_reenvio_s (60), codigo_envios_hora (5), codigo_tentativas (5, RN-02), login_falhas_max (5), ip_falhas_max (50), bloqueio_base_s (60), envios_codigo_por_ip_hora (60), aparelhos_por_ip_hora (60), consultas_username_por_conta_minuto (30), consultas_username_por_ip_hora (600). Valores provisórios (`mock-server/src/auth/config.ts`).
 
@@ -414,7 +421,7 @@ Usada por: TRV04, ENT01 · `shared_preferences`, chave `config.lastValid.v1` = J
 
 ### Dados só de teste no mock (Fase 0)
 - **Usuários de teste** (`mock-server/fixtures/users.json`): `u-ana`, `u-bruno` (pt-BR) e `u-carla` (en); só id, username, nome_exibicao e idioma. Fictícios. Tokens de teste `dev-token-<id>` (ver EVENTOS-TEMPO-REAL.md).
-- **Contas de teste de login** (`mock-server/fixtures/auth.json`, fictícias): `u-ana` (ana@teste.local, senha `TEST_ONLY_Ana2026`, +5511900000001), `u-bruno` (só telefone +5511900000002), `u-carla` (carla@teste.local, `TEST_ONLY_Carla2026`), `u-banido` (banido@teste.local, `status: banida`). Todas confirmadas, com perfil completo (nome, @, data adulta, idioma, interesses vazios: sem passos pendentes), termos, privacidade e diretrizes v1 aceitos. As senhas só existem na fixture e viram scrypt na carga.
+- **Contas de teste de login** (`mock-server/fixtures/auth.json`, fictícias): `u-ana` (ana@teste.local, senha `TEST_ONLY_Ana2026`, +5511900000001), `u-bruno` (só telefone +5511900000002), `u-carla` (carla@teste.local, `TEST_ONLY_Carla2026`), `u-banido` (banido@teste.local, `status: banida`). `situacao_idade = nao_verificada`, `genero` nulo, `interesses = []`, só `ativa|suspensa|banida` (`congelada` só nasce por `freezeMinor`). Fixture `profile.json`: 12 interesses, 18 @ reservados e 3 palavras de nome bloqueadas. Todas confirmadas, com perfil completo (nome, @, data adulta, idioma, interesses vazios: sem passos pendentes), termos, privacidade e diretrizes v1 aceitos. As senhas só existem na fixture e viram scrypt na carga.
 - **Outbox dos fakes:** `FakeOutbox.sms[] = { channel, phoneE164 🔒, code 🔒 }` e `FakeOutbox.email[] = { email 🔒, code 🔒 }` ou `{ email, kind }` (avisos); mais `lastCodes` (destino → último código) para `GET /__mock/outbox`. Só em memória e só para testes; nunca em log nem fixture.
 - **VerificacaoIdade (fake):** sessão → resultado (`aprovada`/`reprovada`), só em memória.
 
@@ -454,3 +461,4 @@ Valor inicial no mock: flags de login e anti-bot de `mock-server/fixtures/config
 | 2026-11-21 | Plano 1c (proposta): CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; Usuario (gênero, interesses, sinal da loja, congelada) e Dispositivo (bloqueio de menor) | ENT08, ENT10, ENT11, ENT12 (Q-58, Q-59, Q-64, Q-65) |
 | 2026-11-21 | Plano 1c em uso no mock: Usuario com perfil e idade, Dispositivo com bloqueio de menor, CategoriaInteresse, PalavraReservada, IdentificadorBloqueado; ConfigAuth com limites de consulta de @; fixtures de contas com perfil | ENT08, ENT10, ENT11, ENT12, CFG14 |
 | 2026-11-21 | PreferenciasLocais.idioma (`app.language`) no app; o cadastro envia o idioma atual para `Usuario.idioma` | CFG14 |
+| 2026-11-22 | Revisões do plano 1c: Usuario (tipo de faixa_etaria_loja, congelada_em, valores de genero/interesses, protocolo derivado, birthDateSet), LimiteIp/LimiteConta de @, ConfigTenant (timezone, supportEmail), notas de Dispositivo e IdentificadorBloqueado | ENT08, ENT10, ENT11, RN-01, Q-68 |
